@@ -1,0 +1,12 @@
+// Needed for SFP to become portable library
+printers.c => done for mqx and bareboard timbre
+timeouts.c => need to factor back to timestamp
+
+// not needed by SFP but other code -> could be used by SFP tho
+machines.c => need to support atomic sections portably
+
+// Timbre lib 
+machines
+timeouts
+printers
+queues

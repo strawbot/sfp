@@ -1,0 +1,63 @@
+// Packet IDs. Declare byte value in hex or increment from last one by ++
+
+	ACK_BIT		0x80	used for tagging acked frames. High bit is set for acked frames. next high bit is sfs 1 or 2
+	SPS_BIT		0x40	used for indicating sfs type if an acked frame
+	PID_BITS	(0xFF&(~(ACK_BIT|SPS_BIT)))	used to mask off upper bits
+//
+	SPS			0x00	used for initializing SPS frame acks
+	SPS_ACK		++		confirm sps
+//
+	WHO_ARE_YOU	++		used to find out the cpu id for the other end of the link
+	MY_ID		++		send id to requester
+	SET_ID		++		set id of slot card - io or pm
+//
+	PING		++		to check other end
+	PING_BACK	++ 		expected response to a PING
+//
+	TEST_FRAME	++		test frame for throughput measurements
+	NWK_LOAD_FR 0X3F	network load frame
+//
+	WHO_PIDS	0x10	all pids greater than, use the who header for routing
+	GET_VERSION	++		get the version number
+	VERSION_NO	++		return the version number
+	ACKNOWLEDGE ++		general acknowledgement
+//
+	TALK_IN		++		keyboard input to be interpreted
+	TALK_OUT	++		used to send emits out usb port
+	EVAL		++		evaluate text with destination; who, text
+	CALL_CODE	++		call code starting at this location; who, addr32
+//
+	MEM_READ	++		read memory request; who, addr32, len8
+	MEM_DATA	++		memory contents; who, addr32, len8
+	CHECK_MEM	++		check memory contents; who, addr32, len32, method8
+	MEM_CHECK	++		value returned from checking memory contents; who, addr32, len32, method8, code
+	FILL_MEM	++		fill memory chunks with pattern of length bytes; who, addr32, len32, len8, pattern
+//
+	RAM_WRITE	++		request write to RAM; who, 32bit addr, 8bit length, bytes
+	FLASH_WRITE	++		request write to flash; who, 32bit addr, 8bit length, bytes
+	WRITE_CONF	++		confirm a write to memory; who, addr32, len8
+//
+	ERASE_MEM	++		erase memory range froms start to end
+	ERASE_CONF	++		confirm memory erased (0) or not (!0)
+//
+	GET_STATS 	++		get statistics from other end
+	CLEAR_STATS	++		clear stats from other end
+	STATS		++		stats
+// guids
+	SET_GUID	++		set a GUID value - array of pair of guid/value
+	GET_GUID	++		request GUID value - array of GUIDs
+	GUID		++		GUID followed by value - array of GUID value pairs
+//
+	GET_HW_DESC	++		request hardware description
+	HW_DESC		++		return hardware description
+//
+	SET_PARAM	++		set a parameter: 32 bit parameter tag followed by 32 bit value
+	GET_PARAM	++		get a parameter value
+	PARAM		++		parameter followed by value
+//
+	MODBUS		++		Modbus packet id
+	NXFILE		++		File transfer
+	ALT			++		Alarms, Logs, Trends
+//
+	FIRMWARE 	++		Deal with firmware versions
+// ? routing commands: set route x,y ?bind a who to a link but how to get link?

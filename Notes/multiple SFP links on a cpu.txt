@@ -1,0 +1,41 @@
+multiple SFP links on a cpu
+
+1. all run same protocol
+  - much like main
+  - polling is only used on master spi links
+
+2. SFSP on SPI and SFAP on async
+  - protocol selectable
+  - same services
+  - frame routing will have to reframe
+  - versions for 8 and 16 bit checksum?
+
+3. Refactor packets.c
+  + should not know SFSP or SFAP
+    - return value should set frame free or not? no
+      - how to use from one protocol to the next? copy
+  - need to hang on to packet if it is to be rerouted
+    - SPS from end to end
+  + specific packet handlers need to be moved to specific app files
+    > SHELL_COMMANDS, SHELL_OUTPUT, TIMBRE
+
+4. Who do I link to
+  - each end of a link is connected to the other end by hardware
+  - to connect to other end points routing is involved
+  - routing to a destination is straight forward and can be
+    accomplished by routing tables on each link
+  - the routing tables should have default settings
+  - the tables should be readable and writeable
+  - some packets require responses end to end
+  - the weak links are at routing points when a packet cannot
+    be forwarded
+  - SPS works between points but not over routing
+  - end to end routing with confirmation is beyond SPS
+  - when rerouting, the source packet service is not known and
+    can't be used to choose a destination service
+  - output back over a point is the same as routing it through a
+    point.
+
+10. Tran issues
+ - memory leak; how to catch it
+ - SFSP protocol plugin
