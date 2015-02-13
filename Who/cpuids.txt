@@ -4,12 +4,6 @@ YOU				0x0
 DIRECT			0x0
 
 MAIN_CPU		0x1
-DISPLAY_CPU		++
-SLOTA_CPU		++
-SLOTB_CPU		++
 MAIN_HOST		++ host ports on cpus
-DISPLAY_HOST	++
-SLOTA_HOST		++
-SLOTB_HOST		++
 ROUTING_POINTS	++	number of points for routing
 

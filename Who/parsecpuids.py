@@ -1,16 +1,15 @@
+#!/usr/bin/env python
 # common CPU ID generator  Rob Chapman  Feb 1, 2011
 
 # read in a text file and generate a C header file and a Python file so a
 # single list can be used to keep embedded and host software in sync
 
-pydests = ['../../../PC/bootApp/','../../../PC/QtTran/'] # place a copy here for Tran
+pydests = [] # place a copy here for Timbre Terminal
 
 cpuidlist = []
 
 ''' Text file source looks like:
 MAIN_CPU		0x1
-DISPLAY_CPU		++
-SLOTA_CPU		++
 '''
 
 def readCpuids(file):
@@ -55,13 +54,7 @@ def generateC(file):
 HOST=0x00	#  blah
 whoDict = {
 	'Main':MAIN_CPU,
-	'Display':DISPLAY_CPU,
-	'Slot A':SLOTA_CPU,
-	'Slot B':SLOTB_CPU,
 	'Main Host':MAIN_HOST,
-	'Display Host':DISPLAY_HOST,
-	'Slot A Host':SLOTA_HOST,
-	'Slot B Host':SLOTB_HOST,
 	'Direct':0,
 	'Host':0,
 	'':0
@@ -91,5 +84,5 @@ def genby(): # string for heading
 
 if __name__ == '__main__':
 	readCpuids('cpuids.txt')
-	generateC('who.h')
-	generatePython('cpuids.py')
+	generateC('../who.h')
+	generatePython('../cpuids.py')
