@@ -13,9 +13,9 @@
 #include "machines.h"
 #include "pids.h"
 #include "sfpStats.h"
-#include "sfsp.h"
+#include "sfpLink.h"
 #include "packets.h"
-#include "sfspTxSm.h"
+#include "sfpTxSm.h"
 
 bool pingBackResponse(Byte *, Byte);
 void pingTest(char *name, linkInfo_t *l, int p, int s);

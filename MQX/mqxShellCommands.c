@@ -6,7 +6,7 @@
 #include "timeout.h"
 #include "machines.h"
 #include "sfpStats.h"
-#include "sfsp.h"
+#include "sfpLink.h"
 #include "sfpStatus.h"
 #include "node.h"
 

@@ -6,8 +6,8 @@
 #include "timeout.h"
 #include "machines.h"
 #include "sfpStats.h"
-#include "sfsp.h"
-#include "sfspTxSm.h"
+#include "sfpLink.h"
+#include "sfpTxSm.h"
 #include "sfpStats.h"
 #include "pids.h"
 #include "routing.h"
@@ -122,7 +122,7 @@ bool sendNormalPacketLink(Byte *packet, Byte length, linkInfo_t *link) //! send 
 		return false;
 	}
 	
-	buildSfspFrame(length-1, &packet[1], packet[0], link->frameOutNps);
+	buildSfpFrame(length-1, &packet[1], packet[0], link->frameOutNps);
 	
 	return true;
 }
@@ -161,9 +161,9 @@ bool sendSecurePacketLink(Byte *packet, Byte length, linkInfo_t *link) //! send 
 	}
 	
 	pid = ACK_BIT|sps|packet[0];
-	buildSfspFrame(length-1, &packet[1], pid, link->frameOutSps);
-	setTimeout(SFSP_RESEND_TIME, &link->resendTo);
-	setTimeout(SFSP_GIVEUP_TIME, &link->giveupTo);
+	buildSfpFrame(length-1, &packet[1], pid, link->frameOutSps);
+	setTimeout(SFP_RESEND_TIME, &link->resendTo);
+	setTimeout(SFP_GIVEUP_TIME, &link->giveupTo);
 
 	return true;
 }

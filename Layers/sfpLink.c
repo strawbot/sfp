@@ -1,20 +1,20 @@
-// SFSP Link  Robert Chapman  Feb 23, 2012
+// SFP Link  Robert Chapman  Feb 23, 2012
 #include "bktypes.h"
 #include "timeout.h"
 #include "sfpStats.h"
-#include "sfsp.h"
+#include "sfpLink.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 // external
-void initSfspRxSM(linkInfo_t *);
-void initSfspTxSM(linkInfo_t *);
+void initSfpRxSM(linkInfo_t *);
+void initSfpTxSM(linkInfo_t *);
 
-void initSfsp(linkInfo_t *link) //! initialize SFSP state machines
+void initSfp(linkInfo_t *link) //! initialize SFP state machines
 {
-	initSfspRxSM(link);
-	initSfspTxSM(link);
+	initSfpRxSM(link);
+	initSfpTxSM(link);
 	link->rxErrFunction = NULL; // default is to do nothing
 	link->linkOwner = SFP_LINK;
 }
@@ -32,13 +32,13 @@ void calculateFletcherCheckSum(Byte *c1, Byte *c2, Byte length, Byte *data)
 		*c2 += *c1 += *data++;
 }
 
-void buildSfspFrame(Byte length, Byte *data, Byte pid, Byte *f)
+void buildSfpFrame(Byte length, Byte *data, Byte pid, Byte *f)
 {
-	sfspFrame *frame = (sfspFrame *)f;
+	sfpFrame *frame = (sfpFrame *)f;
 	Byte *dp = frame->payload, check1=0, check2=0;
 
-	frame->length = length + MIN_SFSP_LENGTH; // packet length + sync + pid + checksum
-	frame->sync = sfspSync(frame->length);
+	frame->length = length + MIN_SFP_LENGTH; // packet length + sync + pid + checksum
+	frame->sync = sfpSync(frame->length);
 	frame->pid = pid;
 	while(length--)
 		*dp++ = *data++;

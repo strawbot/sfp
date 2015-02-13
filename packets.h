@@ -1,5 +1,5 @@
 
-#include "sfsp.h"
+#include "sfpLink.h"
 #include "sfp.h"
 
 bool processPacket(Byte *packet, Byte length, linkInfo_t *link);

@@ -5,7 +5,7 @@
 #include "machines.h"
 #include "pids.h"
 #include "sfpStats.h"
-#include "sfsp.h"
+#include "sfpLink.h"
 #include "packets.h"
 
 // external

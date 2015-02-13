@@ -5,15 +5,15 @@
 #include "timbre.h"
 #include "asyncPort.h"
 #include "sfpStats.h"
-#include "sfsp.h"
-#include "sfspTxSm.h"
-#include "sfspRxSm.h"
+#include "sfpLink.h"
+#include "sfpTxSm.h"
+#include "sfpRxSm.h"
 #include "sfpStats.h"
 #include "links.h"
 
 // serial link servicing
 // receive
-#define ASYNCQ_SIZE (2 * MAX_SFSP_FRAME)
+#define ASYNCQ_SIZE (2 * MAX_SFP_FRAME)
 
 #if ASYNCQ_SIZE > MAX_BQ_SIZE
 	#error "async rx byte queue needs to be bigger"
@@ -87,7 +87,7 @@ void serviceAsyncTx(void)
 	
 	if (bytesToSend(link)) // needs a pointer
 		if (asyncTx())
-			transmitSfspByte(link);
+			transmitSfpByte(link);
 }
 
 // Task
@@ -96,8 +96,8 @@ void serviceAsyncLinkMachine(void) // interface same as mqx
 	if (asyncLink.linkOwner == SFP_LINK)
 	{
 		serviceAsyncTx();
-		sfspRxSm(&asyncLink);
-		sfspTxSm(&asyncLink);
+		sfpRxSm(&asyncLink);
+		sfpTxSm(&asyncLink);
 	}
 	activate(serviceAsyncLinkMachine);
 }

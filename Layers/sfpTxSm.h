@@ -1,6 +1,6 @@
 
-#ifndef SFSP_TM_SM_H
-#define SFSP_TM_SM_H
+#ifndef SFP_TM_SM_H
+#define SFP_TM_SM_H
 
 // tx flag bits
 #define SEND_POLL_BIT	0x01
@@ -14,7 +14,7 @@
 #define TX_WORK (SEND_POLL_BIT|SEND_ACK_BIT|SEND_NPS_BIT|SEND_SPS_BIT|RCVD_ACK_BIT|RESEND_BIT|GIVEUP_BIT)
 
 // Macros
-#define bytesToSend(link)		(link->sfspBytesToTx != 0)
+#define bytesToSend(link)		(link->sfpBytesToTx != 0)
 #define workToDo(link)			(link->txFlags & TX_WORK)
 
 #define testPollSend(link)		checkBit(SEND_POLL_BIT, link->txFlags)
@@ -46,20 +46,20 @@
 #define requestSps(result, link)	safe(testSetBit(SEND_SPS_BIT, link->txFlags, result))
 
 // Declarations
-void initSfspTxSM(linkInfo_t *);
+void initSfpTxSM(linkInfo_t *);
 void serviceTimeouts(void);
-void sfspTxSM(void);
-void sfspTxTimeouts(void);
+void sfpTxSM(void);
+void sfpTxTimeouts(void);
 
 // Link as a parameter
 void serviceTx(linkInfo_t *link);
-void transmitSfspByte(linkInfo_t *link);
+void transmitSfpByte(linkInfo_t *link);
 bool transmitFrame(Byte *frame, linkInfo_t *link);
 void spsAcknowledgedLink(linkInfo_t *link);
 void switchNpsFramesLink(linkInfo_t *link);
 bool giveupSpsLink(linkInfo_t *link);
 void resendSpsLink(linkInfo_t *link);
-void sfspTxSm(linkInfo_t *link);
+void sfpTxSm(linkInfo_t *link);
 
 #endif
 /*

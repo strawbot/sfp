@@ -5,7 +5,7 @@
 #include "timbre.h"
 #include "pids.h"
 #include "sfpStats.h"
-#include "sfsp.h"
+#include "sfpLink.h"
 #include "packets.h"
 #include "routing.h"
 #include "sfpStatus.h"
@@ -104,16 +104,16 @@ void linkStatusLink(linkInfo_t *link)
 {
 	Long flags;
 
-	print("\n Bytes to receive: "), printDec(link->sfspBytesToRx);
-	print("\n sfsp Rx State: "), printDec(link->sfspRxState);
+	print("\n Bytes to receive: "), printDec(link->sfpBytesToRx);
+	print("\n sfp Rx State: "), printDec(link->sfpRxState);
 	print("\n rx Sps "), printDec(link->rxSps);
 	print("\n frameIn "), printDec(link->frameIn[0]);
 	print(inFrameStates[link->inFrameState]);
 
-	print("\n Bytes To Tx "), printDec(link->sfspBytesToTx);
-	if (link->sfspTx != NULL)
-		print("\n can something be sent? "), printDec(link->sfspTx());
-	print("\n sfsp Tx State "), printDec(link->sfspTxState);
+	print("\n Bytes To Tx "), printDec(link->sfpBytesToTx);
+	if (link->sfpTx != NULL)
+		print("\n can something be sent? "), printDec(link->sfpTx());
+	print("\n sfp Tx State "), printDec(link->sfpTxState);
 	print("\n Link owner: "), printDec( link->linkOwner);
 	print("\n tx Sps "), printDec( link->txSps);
 	print("\n tx Flags ");

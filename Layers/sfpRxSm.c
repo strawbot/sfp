@@ -1,4 +1,4 @@
-// SFSP RX State Machine  Robert Chapman III  Feb 14, 2012
+// SFP RX State Machine  Robert Chapman III  Feb 14, 2012
 
 /*! \file
   The small frame synchronous protocol receiver state machine: Frame level
@@ -7,10 +7,10 @@
 // Includes
 #include "timbre.h"
 #include "sfpStats.h"
-#include "sfsp.h"
+#include "sfpLink.h"
 #include "pids.h"
-#include "sfspTxSm.h"
-#include "sfspRxSm.h"
+#include "sfpTxSm.h"
+#include "sfpRxSm.h"
 #include "packets.h"
 #include "node.h"
 #include "printers.h"
@@ -33,16 +33,16 @@ void traceOff(void)
 // Declarations
 void processRxFrames(void);
 void processLinkFrame(void *lq);
-void newRxSmState(sfspRxState_t state, linkInfo_t *link);
+void newRxSmState(sfpRxState_t state, linkInfo_t *link);
 
 // SPS State Machine support
-bool sfspLengthOk(Byte length, linkInfo_t *link) //! check length for a frame
+bool sfpLengthOk(Byte length, linkInfo_t *link) //! check length for a frame
 {
 	if (length)
 	{
-		if (length >= MIN_SFSP_LENGTH)
+		if (length >= MIN_SFP_LENGTH)
 		{
-			if (length <= MAX_SFSP_LENGTH)
+			if (length <= MAX_SFP_LENGTH)
 				return true;
 			else if (length < 255) // ignore float high lines
 				LongFrame(length, link->stats);
@@ -86,7 +86,7 @@ QUEUE(100, framewaitq); // where to put frames which are in waiting
 void processLinkFrame(void *lq)
 {
 	linkInfo_t *link = (linkInfo_t *)pullq(lq);
-	sfspFrame *frame = (sfspFrame*)(&link->frameIn[0]);
+	sfpFrame *frame = (sfpFrame*)(&link->frameIn[0]);
 	sfpNode_t *n = setNode(link->node);
 
 	link->inFrameState = FRAME_PROCESSED;
@@ -122,9 +122,9 @@ void processRxFrames(void) // machine to process received frames as packets
 	activate(processRxFrames);
 }
 	
-void processSfspFrame(linkInfo_t *link) //! extract pieces of the frame and process it
+void processSfpFrame(linkInfo_t *link) //! extract pieces of the frame and process it
 {
-	sfspFrame *frame = (sfspFrame*)(&link->frameIn[0]);
+	sfpFrame *frame = (sfpFrame*)(&link->frameIn[0]);
 
 	link->inFrameState = FRAME_FULL;
 	if ( (frame->pid & ACK_BIT) != 0 ) // see if ack needed
@@ -138,23 +138,23 @@ void processSfspFrame(linkInfo_t *link) //! extract pieces of the frame and proc
 		}
 		frame->pid &= PID_BITS; // strip ack and sps bits
 	}
-	setTimeout(SFSP_FRAME_PROCESS, &link->packetTo);
+	setTimeout(SFP_FRAME_PROCESS, &link->packetTo);
 	safe(pushq((Cell)link, rxframeq)); // process it using another machine
 	link->inFrameState = FRAME_QUEUED;
 	newRxSmState(PROCESSING, link);
 }
 
 // States definitions
-void newRxSmState(sfspRxState_t state, linkInfo_t *link)
+void newRxSmState(sfpRxState_t state, linkInfo_t *link)
 {
-	link->sfspRxState = state;
+	link->sfpRxState = state;
 }
 
 void Hunting(Byte length, linkInfo_t *link) //! waiting for a byte which will be interpreted as a length. It must be not too long and not too short
 {
-	if (sfspLengthOk(length, link))
+	if (sfpLengthOk(length, link))
 	{
-		link->sfspBytesToRx = length;
+		link->sfpBytesToRx = length;
 		newRxSmState(SYNCING, link);
 	}
 	else
@@ -163,23 +163,23 @@ void Hunting(Byte length, linkInfo_t *link) //! waiting for a byte which will be
 
 void Syncing(Byte sync, linkInfo_t *link) //! waiting for the complement of the length. If valid and a buffer is available, start receiving a frame
 {
-	if ( sfspSync(sync) == link->sfspBytesToRx )	// check for sync byte - 1's complement of length
+	if ( sfpSync(sync) == link->sfpBytesToRx )	// check for sync byte - 1's complement of length
 	{
-		link->sfspRxPtr = &link->frameIn[0];
-		*link->sfspRxPtr++ = link->sfspBytesToRx;
-		*link->sfspRxPtr++ = sync;
+		link->sfpRxPtr = &link->frameIn[0];
+		*link->sfpRxPtr++ = link->sfpBytesToRx;
+		*link->sfpRxPtr++ = sync;
 		newRxSmState(RECEIVING, link);
-		link->sfspBytesToRx--;
+		link->sfpBytesToRx--;
 	}
 	else
 	{
 		rxLinkError(link);
 		BadSync(link->stats);
-		if (sfspLengthOk(sync, link)) // assume sync is first byte of new frame
-			link->sfspBytesToRx = sync;
+		if (sfpLengthOk(sync, link)) // assume sync is first byte of new frame
+			link->sfpBytesToRx = sync;
 		else
 		{
-			link->sfspBytesToRx = 0;
+			link->sfpBytesToRx = 0;
 			newRxSmState(HUNTING, link);
 		}
 	}
@@ -187,16 +187,16 @@ void Syncing(Byte sync, linkInfo_t *link) //! waiting for the complement of the 
 
 void Receiving(Byte data, linkInfo_t *link) //! accumulate bytes in frame buffer until length is satisfied
 {
-	*link->sfspRxPtr++ = data; // store data
-	if (--link->sfspBytesToRx == 0) // done receiving bytes
+	*link->sfpRxPtr++ = data; // store data
+	if (--link->sfpBytesToRx == 0) // done receiving bytes
 	{
 		Byte c1=0, c2=0, length = link->frameIn[0]-1;
 		
 		calculateFletcherCheckSum(&c1, &c2, length, &link->frameIn[0]);
-		if ( (c1 == *(link->sfspRxPtr-2)) && (c2 == data) ) // check for good frame
+		if ( (c1 == *(link->sfpRxPtr-2)) && (c2 == data) ) // check for good frame
 		{
 			GoodFrame(link->stats);
-			processSfspFrame(link); // pass on to frame layer
+			processSfpFrame(link); // pass on to frame layer
 			if (tracePackets)
 			{
 				print(" Node: "), printDec(whoami());
@@ -212,30 +212,30 @@ void Receiving(Byte data, linkInfo_t *link) //! accumulate bytes in frame buffer
 	}
 }
 
-//! SFSP RX state machine
+//! SFP RX state machine
 // note: Timeouts set in one state will not be checked for unless there is data
-bool sfspRxSm(linkInfo_t *link) // return true if byte processed
+bool sfpRxSm(linkInfo_t *link) // return true if byte processed
 {
 	Byte data;
 
-	if (link->sfspRx() != 0) // process any received bytes
+	if (link->sfpRx() != 0) // process any received bytes
 	{
-		switch(link->sfspRxState)
+		switch(link->sfpRxState)
 		{
 			case HUNTING:
-				data = link->sfspGet();
+				data = link->sfpGet();
 				Hunting(data, link);
-				setTimeout(SFSP_FRAME_TIME, &link->frameTo);
+				setTimeout(SFP_FRAME_TIME, &link->frameTo);
 				return true;
 			case SYNCING:
-				data = link->sfspGet();
+				data = link->sfpGet();
 				Syncing(data, link);
-				setTimeout(SFSP_FRAME_TIME, &link->frameTo);
+				setTimeout(SFP_FRAME_TIME, &link->frameTo);
 				return true;
 			case RECEIVING:
-				data = link->sfspGet();
+				data = link->sfpGet();
 				Receiving(data, link);
-				setTimeout(SFSP_FRAME_TIME, &link->frameTo);
+				setTimeout(SFP_FRAME_TIME, &link->frameTo);
 				return true;
 			case PROCESSING:
 				break;
@@ -243,7 +243,7 @@ bool sfspRxSm(linkInfo_t *link) // return true if byte processed
 	}
 	else // no data so check for timeouts
 	{
-		switch(link->sfspRxState)
+		switch(link->sfpRxState)
 		{
 			case SYNCING:
 			case RECEIVING:
@@ -257,11 +257,11 @@ bool sfspRxSm(linkInfo_t *link) // return true if byte processed
 	return false;
 }
 
-void initSfspRxSM(linkInfo_t *link) //! initialize SFSP receiver state machine
+void initSfpRxSM(linkInfo_t *link) //! initialize SFP receiver state machine
 {
 	link->rxSps = ANY_SPS;
 	newRxSmState(HUNTING, link);
-	link->sfspBytesToRx = 0;
+	link->sfpBytesToRx = 0;
 	link->frameIn[0] = 0;
 	stopTimeout(&link->frameTo);
 	stopTimeout(&link->packetTo);
