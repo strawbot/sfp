@@ -29,7 +29,7 @@ packetHandler_t getPacketHandler(Byte pid)
 }
 
 // default packet handlers
-bool processPacket(Byte *packet, Byte length, linkInfo_t *link)
+bool processPacket(Byte *packet, Byte length, sfpLink_t *link)
 {
 	whoPacket_t *p = (whoPacket_t *)packet;
 	packetHandler_t handler;
@@ -38,7 +38,7 @@ bool processPacket(Byte *packet, Byte length, linkInfo_t *link)
 		if (p->who.to) // is there a destination?
 			if (p->who.to != whoami()) // is it not for me?
 			{
-				linkInfo_t *linkTo = routeTo(p->who.to);
+				sfpLink_t *linkTo = routeTo(p->who.to);
 				
 				if (whoami() == ME) // do i need an identity? (multi drop)
 					setMe(p->who.to); // become the destination
@@ -103,7 +103,7 @@ bool processPacket(Byte *packet, Byte length, linkInfo_t *link)
 // Packet services
 Byte packetError = 0; // result of packet error
 
-bool sendNormalPacketLink(Byte *packet, Byte length, linkInfo_t *link) //! send a packet using NPS
+bool sendNormalPacketLink(Byte *packet, Byte length, sfpLink_t *link) //! send a packet using NPS
 {
 	bool result;
 
@@ -127,7 +127,7 @@ bool sendNormalPacketLink(Byte *packet, Byte length, linkInfo_t *link) //! send 
 	return true;
 }
 
-bool sendSecurePacketLink(Byte *packet, Byte length, linkInfo_t *link) //! send a packet using SPS
+bool sendSecurePacketLink(Byte *packet, Byte length, sfpLink_t *link) //! send a packet using SPS
 {
 	Byte sps = 0, pid;
 	bool result;
@@ -168,7 +168,7 @@ bool sendSecurePacketLink(Byte *packet, Byte length, linkInfo_t *link) //! send 
 	return true;
 }
 
-bool sendPidLink(Byte pid, linkInfo_t *link) // send a pid
+bool sendPidLink(Byte pid, sfpLink_t *link) // send a pid
 {
 	if (link == 0) { BadLink(); return true; }
 
@@ -180,7 +180,7 @@ Long noDest;
 
 bool sendNpTo(Byte *packet, Byte length, Byte to) //! send a packet using NPS
 {
-	linkInfo_t *link = routeToLink(to);
+	sfpLink_t *link = routeToLink(to);
 
 	if (link)
 		return sendNormalPacketLink(packet, length, link);
@@ -193,7 +193,7 @@ bool sendNpTo(Byte *packet, Byte length, Byte to) //! send a packet using NPS
 
 bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 {
-	linkInfo_t *link = routeToLink(to);
+	sfpLink_t *link = routeToLink(to);
 
 	if (link)
 		return sendSecurePacketLink(packet, length, link);
@@ -206,7 +206,7 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 
 bool sendPidTo(Byte pid, Byte to) // send a pid
 {
-	linkInfo_t *link = routeToLink(to);
+	sfpLink_t *link = routeToLink(to);
 
 	if (link)
 		return sendNormalPacketLink(&pid, 1, link);

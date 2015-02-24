@@ -1,202 +1,63 @@
-#include "bktypes.h"
+// SFP interface  Robert Chapman III  Feb 13, 2015
+
+#include "timbre.h"
+#include "parameters.h"
 #include "pids.h"
-#include "who.h"
-#include "valueTransfer.h"
 
-#define SECURE_BIT	ACK_BIT //	same as ACK_BIT but more appropriate name - used to tag packets
+#ifndef _SFP_H_
+#define _SFP_H_
 
-extern Byte packetError; // result of packet error
+// defines - lengths in bytes
+#define MIN_FRAME_LENGTH 	(SYNC_LENGTH + PID_LENGTH + CHECKSUM_LENGTH)
+#define MAX_SFP_FRAME		(LENGTH_LENGTH + MAX_FRAME_LENGTH)
+#define MIN_SFP_FRAME 		(LENGTH_LENGTH + MIN_FRAME_LENGTH)
+#define MAX_PACKET_LENGTH	(MAX_FRAME_LENGTH - MIN_FRAME_LENGTH)
+#define MAX_PAYLOAD_LENGTH  (MAX_PACKET_LENGTH - PID_LENGTH)
+#define FRAME_OVERHEAD		(MIN_FRAME_LENGTH - PID_LENGTH)
+#define FRAME_HEADER        (LENGTH_LENGTH + SYNC_LENGTH)
+#define PACKET_HEADER       (PID_LENGTH)
 
-#ifndef SFP_H
-#define SFP_H
+#define LENGTH_LENGTH 	1
+#define SYNC_LENGTH		1
+#define PID_LENGTH		1
+#define CHECKSUM_LENGTH 2
 
-enum {PACKET_OK, PACKET_SIZE_BAD, PACKET_LINK_BUSY};
+// one's complement doesn't create a zero while two's complement does
+// one's complement should be better for checksum coverage
+#define sfpSync(length)	((Byte)~(length))	// define sync mechanism
 
-#define MAX_PACKET_LENGTH 100
-
-// basic sizes
+// Generic frame containter
 typedef struct {
-	Byte data[sizeof(long long)];
-} octet_t;
-
-typedef struct {
-	Byte data[sizeof(long)];
-} long_t;
-
-typedef struct {
-	Byte data[sizeof(short)];
-} short_t;
-
-// packet structures
-typedef struct { // 'B0B'
-	Byte pid;
-	Byte payload[];
-} Packet_t;
+    Byte sum;
+    Byte sumsum;
+} checkSum_t;
 
 typedef struct {
 	Byte to;
 	Byte from;
 } who_t;
 
-typedef struct {
-	Byte s;
-	Byte r;
-} tid_t;
+typedef struct { // ''
+	Byte length; // covers following bytes
+	Byte sync;	// two's complement of length used to sync start of frame
+	union {
+		struct {
+			Byte pid;  // packet id upper two bits are for ack and sps
+            union {
+            Byte payload[MAX_PAYLOAD_LENGTH];
+            who_t who;	// first part of payload if present
+            };
+        };
+        Byte packet[MAX_PAYLOAD_LENGTH];
+    };
+} sfpFrame;
 
-typedef struct { // 'BBB0B'
-	Byte pid;
-	who_t who;
-	Byte payload[];
-} whoPacket_t;
-
-typedef struct { // for modbus, guids
-	Byte pid;
-	who_t who;
-	tid_t tid;
-	Byte spid;
-	Byte payload[];
-} spidPacket_t;
-
-typedef struct { // like spid packet but without tid
-	Byte pid;
-	who_t who;
-	Byte spid;
-	Byte payload[];
-} smallSpidPacket_t;
-
-typedef struct { // 'BBB0B'
-	Byte pid;
-	who_t who;
-	Byte payload[];
-} evaluatePacket_t;
-
-// Application packet types
-typedef struct { // 32bit addr, 8bit length, bytes // 'BBBPB0B'
-	Byte pid;
-	who_t who;
-	Byte addr[sizeof(void *)];
-	Byte length;
-	Byte data[];
-} memoryPacket_t;
-
-typedef struct { // 32bit data bytes // 'BBB0L'
-	Byte pid;
-	who_t who;
-	long_t longs[];
-} longsPacket_t;
-
-typedef struct { // guid value pair
-	long_t guid;
-	short_t value;
-} gv_t;
-
-typedef struct { // guid groups
-	Byte pid;
-	who_t who;
-	gv_t gvpairs[];
-} gvPacket_t;
-
-typedef struct { // possible guid value pairs with a short guid
-	short_t guid;
-	Byte data[];	// could be 1, 2, 4, 8 bytes
-} sgv_t;
-
-typedef struct { // events for display storage
-	Byte pid;
-	who_t who;
-	Byte spid;
-	Byte eventnumber;
-	octet_t eventtime; // milliseconds since jan 1, 2000 UTC
-    Byte payload[];
-} eventPacket_t;
-
-#define EVENT_ENO_MASK 0xFF // for wrapping eno
-
-typedef struct { // Python format: 'B0B'
-	Byte pid;
-	who_t who;
-	Byte long_frame[4];
-	Byte short_frame[4];
-	Byte tossed[4];
-	Byte good_frame[4];
-	Byte bad_checksum[4];
-	Byte timeouts[4];
-	Byte resends[4];
-	Byte rx_overflow[4];
-	Byte sent_frames[4];
-	Byte unknown_packets[4];
-	Byte unrouted[4];
-} statsPacket;
-
-typedef struct {
-	Byte pid;
-	who_t who;
-	tid_t tid;
-	Byte spid;
-	Byte payload[];
-} filePacket_t;
-
-typedef struct {
-	Byte pid;
-	who_t who;
-	Byte major;
-	Byte minor;
-	short_t build;
-	Byte dateLength;
-	Byte date[20];
-	Byte nameLength;
-	Byte name[];
-} versionPacket_t;
-
-typedef struct { // version numbers for all the firmware in the box and which to run
-	Byte pid;
-	who_t who;
-	Byte spid;
-
-	Byte runningChoice; // actual set by boot
-	Byte pendingChoice; // preference set by launcher or display
-
-	long_t	mainboot;
-	long_t	database;
-
-	long_t packageLeft;
-	long_t launcherLeft;
-	long_t mainappLeft;
-	long_t ubootLeft;
-	long_t linuxLeft;
-	long_t displayappLeft;
-	long_t ioappLeft;
-	long_t swbappLeft;
-
-	long_t packageRight;
-	long_t launcherRight;
-	long_t mainappRight;
-	long_t ubootRight;
-	long_t linuxRight;
-	long_t displayappRight;
-	long_t ioappRight;
-	long_t swbappRight;
-
-	long_t slotaType;
-	long_t slotbType;
-} firmwarePacket_t;
-
-#define PACKET_OVERHEAD 1 		// pid
-#define WHO_PACKET_OVERHEAD (sizeof(whoPacket_t))   // pid, who
-#define SPID_PACKET_OVERHEAD (sizeof(spidPacket_t))   // pid, who, tid, spid
-#define EVALUATE_PACKET_OVERHEAD (WHO_PACKET_OVERHEAD) // pid, who
-#define MAX_PIDS (PID_BITS) // 64
-#define MAX_WHO_PACKET_PAYLOAD (MAX_PACKET_LENGTH - WHO_PACKET_OVERHEAD)
-#define MAX_SPID_PACKET_PAYLOAD (MAX_PACKET_LENGTH - SPID_PACKET_OVERHEAD)
-
-// vectorizable packet handlers
-// of the form:
-// bool ph(Byte *packet, Byte length);
-typedef bool (*packetHandler_t)(Byte *packet, Byte length);
+// timeouts
+#define SFP_POLL_TIME		(   2 TO_MSEC)		// polling in link down
+#define SFP_RESEND_TIME		( 250 TO_MSECS)	// time between retransmissions
+#define SFP_GIVEUP_TIME		(SFP_RESEND_TIME * 50)	// time for link to die
+#define SPS_STARTUP_TIME	( 300 TO_MSECS)	// time to start sps
+#define SFP_FRAME_TIME		(  50 TO_MSECS)	// maximum time to wait between bytes for a frame
+#define SFP_FRAME_PROCESS	(1000 TO_MSECS)	// maximum time to wait for frame processing
 
 #endif
-
-void setPacketHandler(Byte pid, packetHandler_t handler);
-packetHandler_t getPacketHandler(Byte pid);
-bool sendNpTo(Byte *packet, Byte length, Byte to);
-bool sendSpTo(Byte *packet, Byte length, Byte to);

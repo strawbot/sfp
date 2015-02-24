@@ -13,12 +13,12 @@ Byte pollTrain = 3; // how many consecutive polls to send - empirically determin
 static Byte pollFrame[MAX_SFP_FRAME] = {0};
 static Byte ackFrame[MIN_SFP_FRAME];
 
-void transmitPoll(Byte n, linkInfo_t *link);
+void transmitPoll(Byte n, sfpLink_t *link);
 
-void initSfpTxSM(linkInfo_t *link) //! initialize SFP receiver state machine
+void initSfpTxSM(sfpLink_t *link) //! initialize SFP receiver state machine
 {
 	if (link->enableSps)
-		setTimeout(STARTUPSPS_TIME, &link->giveupTo);  // startup sps service - use giveup timeout
+		setTimeout(SPS_STARTUP_TIME, &link->giveupTo);  // startup sps service - use giveup timeout
 	buildSfpFrame(0, NULL, SPS_ACK, ackFrame);
 	link->sfpTxState = IDLING;
 	link->sfpBytesToTx = 0;
@@ -27,7 +27,7 @@ void initSfpTxSM(linkInfo_t *link) //! initialize SFP receiver state machine
 	link->frameOutNps = link->frameOutNps1;
 }
 
-void switchNpsFramesLink(linkInfo_t *link)
+void switchNpsFramesLink(sfpLink_t *link)
 {
 	if (link->frameOutNps != &link->frameOutNps1[0])
 		link->frameOutNps = &link->frameOutNps1[0];
@@ -35,7 +35,7 @@ void switchNpsFramesLink(linkInfo_t *link)
 		link->frameOutNps = &link->frameOutNps2[0];
 }
 
-void transmitSfpByte(linkInfo_t *link)
+void transmitSfpByte(sfpLink_t *link)
 {
 	if (link->sfpTx())
 	{
@@ -44,7 +44,7 @@ void transmitSfpByte(linkInfo_t *link)
 	}
 }
 
-bool transmitFrame(Byte *frame, linkInfo_t *link) //! set a frame up for transmission
+bool transmitFrame(Byte *frame, sfpLink_t *link) //! set a frame up for transmission
 {
 	if (bytesToSend(link) == 0)
 	{
@@ -55,7 +55,7 @@ bool transmitFrame(Byte *frame, linkInfo_t *link) //! set a frame up for transmi
 	return false;
 }
 
-void transmitPoll(Byte n, linkInfo_t *link) //! set number of poll bytes for transmission
+void transmitPoll(Byte n, sfpLink_t *link) //! set number of poll bytes for transmission
 {
 	if (bytesToSend(link) == 0)
 	{
@@ -65,7 +65,7 @@ void transmitPoll(Byte n, linkInfo_t *link) //! set number of poll bytes for tra
 	}
 }
 
-void spsAcknowledgedLink(linkInfo_t *link) //! an ack has been received - process accordingly
+void spsAcknowledgedLink(sfpLink_t *link) //! an ack has been received - process accordingly
 {
 	clearAckReceived(link);
 	SpsAcked(link->stats);
@@ -75,7 +75,7 @@ void spsAcknowledgedLink(linkInfo_t *link) //! an ack has been received - proces
 		link->txSps = ONLY_SPS1;
 }
 
-void serviceTx(linkInfo_t *link)
+void serviceTx(sfpLink_t *link)
 {
 	if (bytesToSend(link))
 		if (link->sfpTx())
@@ -111,7 +111,7 @@ work to do bits
 
 Long spsRetries = 1; // for backing off on resends
 
-bool giveupSpsLink(linkInfo_t *link) // giveup on sps
+bool giveupSpsLink(sfpLink_t *link) // giveup on sps
 {
 	Byte sps = SPS;
 
@@ -130,7 +130,7 @@ bool giveupSpsLink(linkInfo_t *link) // giveup on sps
 			SpsFailed(link->stats);
 			link->txSps = ANY_SPS;
 			if (link->enableSps)
-				setTimeout(STARTUPSPS_TIME, &link->giveupTo);  // startup sps service - use giveup timeout
+				setTimeout(SPS_STARTUP_TIME, &link->giveupTo);  // startup sps service - use giveup timeout
 			stopTimeout(&link->resendTo);
 			spsRetries = 1;
 			break;
@@ -138,7 +138,7 @@ bool giveupSpsLink(linkInfo_t *link) // giveup on sps
 	return true;
 }
 
-void resendSpsLink(linkInfo_t *link) // resend an sps packet
+void resendSpsLink(sfpLink_t *link) // resend an sps packet
 {
 	switch(link->txSps)
 	{
@@ -158,7 +158,7 @@ void resendSpsLink(linkInfo_t *link) // resend an sps packet
 	}
 }
 
-void sfpTxSm(linkInfo_t *link) //! continue to send a frame or start a new one or just exit if all done
+void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or just exit if all done
 {
 	if (checkTimeout(&link->giveupTo))
 	{

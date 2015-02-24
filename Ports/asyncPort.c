@@ -1,15 +1,15 @@
 // Async serial port  Robert Chapman III  Aug 12, 2012
 #include <string.h>
-#include "AS1.h"
+//#include "AS1.h"
 
 #include "timbre.h"
-#include "asyncPort.h"
+//#include "asyncPort.h"
 #include "sfpStats.h"
 #include "sfpLink.h"
 #include "sfpTxSm.h"
 #include "sfpRxSm.h"
 #include "sfpStats.h"
-#include "links.h"
+//#include "links.h"
 
 // serial link servicing
 // receive
@@ -83,7 +83,7 @@ void asyncPut(Long chr)
 
 void serviceAsyncTx(void)
 {
-	linkInfo_t *link = &asyncLink; // pass link as a pointer
+	sfpLink_t *link = &asyncLink; // pass link as a pointer
 	
 	if (bytesToSend(link)) // needs a pointer
 		if (asyncTx())

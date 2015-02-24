@@ -13,7 +13,7 @@
 
 #include <stdlib.h>
 
-extern Long noDest; // packet that have no routeable destination
+static Long noDest; // packet that have no routeable destination
 extern Long reRoutes;
 extern Long badLink;
 bool sendStats(Byte *, Byte);
@@ -174,7 +174,7 @@ bool sendStats(Byte *packet, Byte x)
 	whoPacket_t *p = (whoPacket_t *)packet;
 	statsPacket *sp = (statsPacket *)statsPackage;
 	Byte length;
-	linkInfo_t *link;
+	sfpLink_t *link;
 
 	(void)x;
 	sp->who.to = p->who.from;

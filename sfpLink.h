@@ -1,18 +1,23 @@
 // SFP header file  Robert Chapman III  Feb 14, 2012
 
-#ifndef SFP_H
-#define SFP_H
+#ifndef SFP_LINK_H
+#define SFP_LINK_H
 
 #include "timeout.h"
 #include "sfp.h"
 #include "sfpStats.h"
 
 // defines
-#define MIN_SFP_FRAME 	(MIN_SFP_LENGTH + 1) // length, sync, pid, checksum(2)
+#define LENGTH_LENGTH 	1
+#define SYNC_LENGTH		1
+#define PID_LENGTH		1
+#define CHECKSUM_LENGTH 2
+#define MIN_SFP_LENGTH 	(SYNC_LENGTH + PID_LENGTH + CHECKSUM_LENGTH)
+#define MIN_SFP_FRAME 	(LENGTH_LENGTH + MIN_SFP_LENGTH)
+
+#define MAX_SFP_LENGTH	(MAX_PACKET_LENGTH + MIN_SFP_LENGTH)
 #define MAX_SFP_FRAME	(MAX_SFP_LENGTH + 1)
-#define MIN_SFP_LENGTH 4 // sync, pid, checksum(2)
 #define FRAME_OVERHEAD	(MIN_SFP_LENGTH - 1) // bytes used for transporting frame excluding pid
-#define MAX_SFP_LENGTH (MAX_PACKET_LENGTH + MIN_SFP_LENGTH)
 
 // one's complement doesn't create a zero while two's complement does
 // should be better for checksum coverage
@@ -21,17 +26,17 @@
 // timeouts
 #define SFP_POLL_TIME		(2 TO_MSEC)		// polling in link down
 #define SFP_RESEND_TIME	(250 TO_MSECS)	// time between retransmissions
-#define STARTUPSPS_TIME		(300 TO_MSECS)	// time to start sps
+#define SPS_STARTUP_TIME		(300 TO_MSECS)	// time to start sps
 #define SFP_GIVEUP_TIME	(50 * SFP_RESEND_TIME)	// time for link to die
 #define SFP_FRAME_TIME		(50 TO_MSECS)	// maximum time to wait between bytes for a frame
 #define SFP_FRAME_PROCESS	(1000 TO_MSECS)	// maximum time to wait for frame processing
 
 // Link state machine context
-typedef enum sfpRxStates{HUNTING, SYNCING, RECEIVING, PROCESSING} sfpRxState_t;
-typedef enum sfpTxStates{IDLING, TRANSMITTING} sfpTxState_t;
-typedef enum {ANY_SPS, ONLY_SPS0, ONLY_SPS1, WAIT_ACK0, WAIT_ACK1} spsState;
+typedef enum {HUNTING, SYNCING, RECEIVING, PROCESSING} sfpRxState_t;
+typedef enum {IDLING, TRANSMITTING} sfpTxState_t;
+typedef enum {ANY_SPS, ONLY_SPS0, ONLY_SPS1, WAIT_ACK0, WAIT_ACK1} spsState_t;
 
-
+// Link structure
 typedef struct {	// Link information
 	void *node;							// which node this link belongs to
 	// Receiver
@@ -42,7 +47,7 @@ typedef struct {	// Link information
 	Byte (*sfpGet)(void);				// get the byte
 	void (*rxErrFunction)(void);		// called for rx errors; vectored to allow link dependant action
 	sfpRxState_t sfpRxState;			// SFP RX states
-	spsState rxSps;						// which secure pid to look for next
+	spsState_t rxSps;						// which secure pid to look for next
 	Byte frameIn[MAX_SFP_FRAME];		// incoming frame; first byte is length
 
 	// Transmitter
@@ -51,7 +56,7 @@ typedef struct {	// Link information
 	bool (*sfpTx)(void);				// can something be sent?
 	void (*sfpPut)(Long);				// put the byte plus any upper bits
 	sfpTxState_t sfpTxState;			// SFP TX states
-	spsState txSps;						// which secure pid to send next
+	spsState_t txSps;						// which secure pid to send next
 	Byte *frameOutNps;
 	Byte frameOutNps1[MAX_SFP_FRAME];	// outgoing frame; first byte is length
 	Byte frameOutNps2[MAX_SFP_FRAME];	// outgoing frame; first byte is length
@@ -69,7 +74,7 @@ typedef struct {	// Link information
 	char *name;			// link name
 	Byte linkOwner;		// who owns the linke
 	Byte routeTo;		// which link to route to if linkOwner is ROUTE_LINK
-} linkInfo_t;
+} sfpLink_t;
 
 enum {NO_LINK, SFP_LINK, SERIAL_LINK, ROUTE_LINK}; // link owners
 /*
@@ -84,16 +89,14 @@ if linkOwner is ROUTE_LINK then data in is pushed to link specified in routeTo
 if linkOwner is SFP_LINK then data in and data out are pushed to sfp protocol
 */
 
-#define sfpLink_t linkInfo_t
-
 enum {FRAME_EMPTY, FRAME_FULL, FRAME_QUEUED, FRAME_PROCESSED, FRAME_REQUEUED};
 
 // External use
-void setSfpLink(linkInfo_t *l);
-void initSfp(linkInfo_t *);
+void setSfpLink(sfpLink_t *l);
+void initSfp(sfpLink_t *);
 void calculateFletcherCheckSum(Byte *c1, Byte *c2, Byte length, Byte *data);
 void buildSfpFrame(Byte length, Byte *data, Byte pid, Byte *f);
-void rxLinkError(linkInfo_t *link);
+void rxLinkError(sfpLink_t *link);
 
 typedef struct { // ''
 	Byte length; // covers following bytes

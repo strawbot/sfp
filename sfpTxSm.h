@@ -45,23 +45,29 @@
 #define requestNps(result, link)	safe(testSetBit(SEND_NPS_BIT, link->txFlags, result))
 #define requestSps(result, link)	safe(testSetBit(SEND_SPS_BIT, link->txFlags, result))
 
+#endif
+
 // Declarations
-void initSfpTxSM(linkInfo_t *);
+void initSfpTxSM(sfpLink_t *);
 void serviceTimeouts(void);
 void sfpTxSM(void);
 void sfpTxTimeouts(void);
 
 // Link as a parameter
-void serviceTx(linkInfo_t *link);
-void transmitSfpByte(linkInfo_t *link);
-bool transmitFrame(Byte *frame, linkInfo_t *link);
-void spsAcknowledgedLink(linkInfo_t *link);
-void switchNpsFramesLink(linkInfo_t *link);
-bool giveupSpsLink(linkInfo_t *link);
-void resendSpsLink(linkInfo_t *link);
-void sfpTxSm(linkInfo_t *link);
+void serviceTx(sfpLink_t *link);
+void transmitSfpByte(sfpLink_t *link);
+bool transmitFrame(Byte *frame, sfpLink_t *link);
+void spsAcknowledgedLink(sfpLink_t *link);
+void switchNpsFramesLink(sfpLink_t *link);
+bool giveupSpsLink(sfpLink_t *link);
+void resendSpsLink(sfpLink_t *link);
+void sfpTxSm(sfpLink_t *link);
 
-#endif
+// Mocks
+#define acceptSpsFrame(frame) true
+#undef setAckReceived
+#define setAckReceived(who)
+
 /*
  when sending sps, check sps state machine for any_sps, only_sps. If true then
  can send with an sps bit set. This is set upon building the frame by oring it in

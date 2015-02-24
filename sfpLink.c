@@ -8,10 +8,10 @@
 #include <string.h>
 
 // external
-void initSfpRxSM(linkInfo_t *);
-void initSfpTxSM(linkInfo_t *);
+void initSfpRxSM(sfpLink_t *);
+void initSfpTxSM(sfpLink_t *);
 
-void initSfp(linkInfo_t *link) //! initialize SFP state machines
+void initSfp(sfpLink_t *link) //! initialize SFP state machines
 {
 	initSfpRxSM(link);
 	initSfpTxSM(link);
@@ -19,7 +19,7 @@ void initSfp(linkInfo_t *link) //! initialize SFP state machines
 	link->linkOwner = SFP_LINK;
 }
 
-void rxLinkError(linkInfo_t *link) // called in each rx error
+void rxLinkError(sfpLink_t *link) // called in each rx error
 {
 	if (link->rxErrFunction)
 		link->rxErrFunction();

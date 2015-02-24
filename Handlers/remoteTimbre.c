@@ -26,11 +26,12 @@ bool keyPacket(Byte *packet, Byte length) // feed input into Timbre
 	return true;
 }
 
-bool evalPacket(Byte *p, Byte) // silently evaluate input string
+bool evalPacket(Byte *p, Byte l) // silently evaluate input string
 {
 	talkTo = ((whoPacket_t *)p)->who.from;
 	evaluate(((evaluatePacket_t *)p)->payload);
 	return true;
+	(void)l;
 }
 
 void initRemoteTimbre(void) // install packet handlers

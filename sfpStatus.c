@@ -16,11 +16,11 @@
 #define SHOW_STAT(stat) if (link->stats->stat) print( "\n " #stat ": "), printDec(link->stats->stat)
 #define SHOW_ERROR(stat) if (stat) print( "\n " #stat ": "), printDec(stat)
 
-void iterateFunction(void (*function)(linkInfo_t *));
-void iterateFunction(void (*function)(linkInfo_t *))
+void iterateFunction(void (*function)(sfpLink_t *));
+void iterateFunction(void (*function)(sfpLink_t *))
 {
 	int i = 0;
-	linkInfo_t *link;
+	sfpLink_t *link;
 
 	while ((link = sfpNode->links[i++]) != NULL)
 	{
@@ -34,8 +34,8 @@ void iterateFunction(void (*function)(linkInfo_t *))
 extern Long reRoutes, noDest; // number of packets rerouted
 Long badLink;
 
-void listStatsLink(linkInfo_t *link);
-void listStatsLink(linkInfo_t *link)
+void listStatsLink(sfpLink_t *link);
+void listStatsLink(sfpLink_t *link)
 {
 	Long n;
 	
@@ -92,15 +92,15 @@ void listStats(void)
 	print("\n");
 }
 
-void spsFails(linkInfo_t *link)
+void spsFails(sfpLink_t *link)
 {
 	SHOW_STAT( spsfailed );
 }
 
 char *inFrameStates[]= {"FRAME_EMPTY", "FRAME_FULL", "FRAME_QUEUED", "FRAME_PROCESSED", "FRAME_REQUEUED"};
 
-void linkStatusLink(linkInfo_t *link);
-void linkStatusLink(linkInfo_t *link)
+void linkStatusLink(sfpLink_t *link);
+void linkStatusLink(sfpLink_t *link)
 {
 	Long flags;
 
@@ -149,8 +149,8 @@ void linkStatus(void)
 extern Queue_t framewaitq;
 extern Queue_t rxframeq;
 
-void dumpFramesLink(linkInfo_t *link);
-void dumpFramesLink(linkInfo_t *link)
+void dumpFramesLink(sfpLink_t *link);
+void dumpFramesLink(sfpLink_t *link)
 {
 	print("\n In     "), printMemLine(link->frameIn);
 	print("\n OutNps1"), printMemLine(link->frameOutNps1);

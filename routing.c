@@ -33,33 +33,12 @@ Byte whatAmI(void);
 
 Byte talkTo = YOU; // set by incoming packets; used by TALK_OUT
 
-// for redirecting main to slots
-void talktoSlota(void);
-void talktoSlota(void)
-{
-	print("\nPress escape to return ");
-	talkTo = SLOTA_CPU;
-}
-
-void talktoSlotb(void);
-void talktoSlotb(void)
-{
-	print("\nPress escape to return ");
-	talkTo = SLOTB_CPU;
-}
-
 // This belongs in a file which is specific to the network -> nexusNetwork.c
 Long reRoutes = 0;
 char *routeNames[] = {
 	"Direct",		// 0
 	"Main",			// 1
-	"Display",		// 2
-	"Slota",		// 3
-	"Slotb",		// 4
 	"Main_Host",	// 5
-	"Display_Host",	// 6
-	"Slota_Host",	// 7
-	"Slotb_Host"	// 8
 };
 
 char *routeName(Byte r) // resolve to a name
@@ -69,16 +48,16 @@ char *routeName(Byte r) // resolve to a name
 	return routeNames[r];
 }
 
-linkInfo_t *routeToLink(Byte to) // link to send it to
+sfpLink_t *routeToLink(Byte to) // link to send it to
 {
-	linkInfo_t *link = routeTo(to);
+	sfpLink_t *link = routeTo(to);
 	
 	if (link)
 		return link;
 	return sfpNode->defaultLink;
 }
 
-bool reRoutePacket(Byte *packet, Byte length, linkInfo_t *link)
+bool reRoutePacket(Byte *packet, Byte length, sfpLink_t *link)
 {
 	reRoutes++;
 	return sendNormalPacketLink(packet, length, link);
@@ -101,7 +80,7 @@ void setMe(Byte who) // create my identity
 	sfpNode->whoiam = who;
 }
 
-void addRoute(Byte route, linkInfo_t *link)
+void addRoute(Byte route, sfpLink_t *link)
 {
 	if (route >= ROUTING_POINTS)
 		return;

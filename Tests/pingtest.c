@@ -18,7 +18,7 @@
 #include "sfpTxSm.h"
 
 bool pingBackResponse(Byte *, Byte);
-void pingTest(char *name, linkInfo_t *l, int p, int s);
+void pingTest(char *name, sfpLink_t *l, int p, int s);
 void runPingTest(void);
 
 static enum {WAIT_FOR_PINGBACK, WAIT_TO_PING, GOT_PINGBACK} pingback;
@@ -27,7 +27,7 @@ static Long responseTime, responses, no_timeouts, minrs, maxrs;
 static Timeout lengthTo;
 static Byte pidFrame[] = {PING};
 static Long giveup = 150 TO_MSECS, pings, service;
-static linkInfo_t *link;
+static sfpLink_t *link;
 
 bool pingBackResponse(Byte *packet, Byte length)
 {
@@ -37,7 +37,7 @@ bool pingBackResponse(Byte *packet, Byte length)
 	return true;
 }
 
-void pingTest(char *name, linkInfo_t *l, int p, int s)
+void pingTest(char *name, sfpLink_t *l, int p, int s)
 {
 	responseTime=0, responses=0, no_timeouts=0, minrs=1000, maxrs=0;
 	pingback = WAIT_TO_PING;

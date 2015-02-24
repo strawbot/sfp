@@ -23,7 +23,7 @@
 #include "machines.h"
 #include "printers.h"
 
-#include "pu.h"
+#include "packetUnits.h"
 
 #define MAX_PACKET_UNITS 100 // number of packet units in the system
 

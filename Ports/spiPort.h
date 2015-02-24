@@ -4,5 +4,5 @@ bool spiTx(void);
 void spiPut(Long b);
 
 void initSpiRxq(void);
-void serviceSpiTxLink(linkInfo_t *spilink);
+void serviceSpiTxLink(sfpLink_t *spilink);
 void serviceSpiRx(void);
