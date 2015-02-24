@@ -9,7 +9,7 @@ printme = 0
 # read in a text file and generate a C header file and a Python file so a
 # single list can be used to keep embedded and host software in sync
 
-pydest2 = '../../../PC/QtTran/' # place a copy here for QTran
+pydest2 = '' # place a copy here for Timbre Term
 hdest = '../'
 
 pidlist = []
@@ -34,7 +34,8 @@ def readPids(file):
 			if l[0] != '//' and len(l) > 1:
 				pid = l[1]
 				if pid[0] == '(':
-					pidlast = pid
+					pass
+					# pidlast = pid
 				else:
 					if pid == '++': # increment from last id
 						pidlast += 1
@@ -102,7 +103,8 @@ def generatePython(filename):
 		file.write('\n\t%s:"%s"%s\t# %s'%(pid[0], pid[0], comma, pid[2]))
 	file.write('\n}')
 	file.close()
-	shutil.copy(filename, pydest2+filename)
+	if pydest2:
+		shutil.copy(filename, pydest2+filename)
 
 def genby(): # string for heading
 	if printme: print "Executing: ", inspect.stack()[0][3]
