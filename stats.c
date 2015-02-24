@@ -2,107 +2,20 @@
 
 #include "bktypes.h"
 
-static Long UnRoutedStat = 0;
+#define SET_STAT(stat) \
+static Long stat##Stat = 0; \
+void stat(void) { stat##Stat++; }
 
-void UnRouted(void)
-{
-	UnRoutedStat++;
-}
-
-static Long ReRoutedStat = 0;
-
-void ReRouted(void)
-{
-	ReRoutedStat++;
-}
-
-static Long FrameProcessedStat = 0;
-
-void FrameProcessed(void)
-{
-	FrameProcessedStat++;
-}
-
-static Long PacketProcessedStat = 0;
-
-void PacketProcessed(void)
-{
-	PacketProcessedStat++;
-}
-
-static Long UnDeliveredStat = 0;
-
-void UnDelivered(void)
-{
-	UnDeliveredStat++;
-}
-
-static Long UnknownPidStat = 0;
-
-void UnknownPid(void)
-{
-	UnknownPidStat++;
-}
-
-static Long UnknownPacketStat = 0;
-
-void UnknownPacket(void)
-{
-	UnknownPacketStat++;
-}
-
-static Long NoDestStat = 0;
-
-void NoDest(void)
-{
-	NoDestStat++;
-}
-
-static Long IgnoreFrameStat = 0;
-
-void IgnoreFrame(void)
-{
-	IgnoreFrameStat++;
-}
-
-static Long FramePoolEmptyStat = 0;
-
-void FramePoolEmpty(void)
-{
-	FramePoolEmptyStat++;
-}
-
-static Long PacketSizeBadStat = 0;
-
-void PacketSizeBad(void)
-{
-	PacketSizeBadStat++;
-}
+FOR_EACH_STAT(SET_STAT)
 
 void initSfpStats(void)
 {
-	UnRoutedStat = 0;
-	FrameProcessedStat = 0;
-	PacketProcessedStat = 0;
-	UnDeliveredStat = 0;
-	UnknownPidStat = 0;
-	UnknownPacketStat = 0;
-	NoDestStat = 0;
-	IgnoreFrameStat = 0;
-	FramePoolEmptyStat = 0;
-	PacketSizeBadStat = 0;
+#define ZERO_STAT(stat) stat##Stat = 0;
+	FOR_EACH_STAT(ZERO_STAT)
 }
 
 void showSfpStats(void)
 {
-	if (UnRoutedStat) print("UnRouted "), printDec(UnRoutedStat);
-	if (FrameProcessedStat) print("FrameProcessed "), printDec(FrameProcessedStat);
-	if (PacketProcessedStat) print("PacketProcessed "), printDec(PacketProcessedStat);
-	if (UnDeliveredStat) print("UnDelivered "), printDec(UnDeliveredStat);
-	if (UnknownPidStat) print("UnknownPid "), printDec(UnknownPidStat);
-	if (UnknownPacketStat) print("UnknownPacket "), printDec(UnknownPacketStat);
-	if (NoDestStat) print("NoDest "), printDec(NoDestStat);
-	if (IgnoreFrameStat) print("IgnoreFrame "), printDec(IgnoreFrameStat);
-	if (FramePoolEmptyStat) print("FramePoolEmpty "), printDec(FramePoolEmptyStat);
-	if (PacketSizeBadStat) print("PacketSizeBad "), printDec(PacketSizeBadStat);
+#define PRINT_STAT(stat) if (stat##Stat) print(#stat" "), printDec(stat##Stat);
+	FOR_EACH_STAT(PRINT_STAT)
 }

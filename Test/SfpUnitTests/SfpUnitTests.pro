@@ -28,7 +28,8 @@ SOURCES += \
     ../../frame.c \
     testpool.cpp \
     ../../../Timbre/queue.c \
-    mocks.cpp
+    mocks.cpp \
+    testhandlers.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
@@ -48,4 +49,5 @@ HEADERS += \
     ../../../Timbre/timbre.h \
     ../../../Timbre/timeout.h \
     testpool.h \
-    mocks.h
+    mocks.h \
+    testhandlers.h

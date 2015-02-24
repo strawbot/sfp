@@ -1,14 +1,24 @@
-void UnRouted(void);
-void FrameProcessed(void);
-void PacketProcessed(void);
-void UnDelivered(void);
-void UnknownPid(void);
-void UnknownPacket(void);
-void NoDest(void);
-void IgnoreFrame(void);
-void FramePoolEmpty(void);
-void PacketSizeBad(void);
-void ReRouted(void);
+#ifndef _STATS_H_
+#define _STATS_H_
+
+#define FOR_EACH_STAT(F) \
+	F(FramePoolEmpty) \
+	F(FrameProcessed) \
+	F(IgnoreFrame) \
+	F(NoDest) \
+	F(PacketProcessed) \
+	F(PacketSizeBad) \
+	F(ReRouted) \
+	F(UnDelivered) \
+	F(UnknownPacket) \
+	F(UnknownPid) \
+	F(UnRouted)
+
+#define DECLARE_STAT(stat) void stat();
+
+#endif
+
+FOR_EACH_STAT(DECLARE_STAT)
 
 void initSfpStats(void);
 void showSfpStats(void);

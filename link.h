@@ -27,8 +27,7 @@ typedef struct {	// Link information
 	Byte *rxq;							// point to queue of incoming bytes
 	Byte *sfpRxPtr;						// point to frame being built
 	Byte sfpBytesToRx;					// bytes to receive
-    Qtype *frameq;					// incoming frame queue
-    Qtype *packetq;					// packets waiting to be processed
+    Qtype *frameq;						// incoming frame queue
 	bool (*sfpRx)(void);				// is there something to receive?
 	Byte (*sfpGet)(void);				// get the byte
 	void (*rxErrFunction)(void);		// called for rx errors; vectored to allow link dependant action

@@ -12,9 +12,10 @@
 #include "sfpTxSm.h"
 #include "routing.h"
 
-?Should handlers be in their own file? Services just contains sending services?
+// ?Should handlers be in their own file? Services just contains sending services?
+// but then one does not use one without the other - so keep in one file
 static Timeout frameTo;  // how long to hold on to a received frame before tossing it
-static QUEUE(MAX_FRAMES, frameq); // where to put frames which are in waiting
+static QUEUE(MAX_FRAMES, retryq); // where to put frames which are in waiting
 static packetHandler_t packetHandlers[MAX_PIDS] = {NULL};
 
 // local declarations
@@ -72,7 +73,7 @@ static void processFrames(void) // machine to process received frames from links
 			if (processFrame(frame))
 				FrameProcessed();
 			else
-				pushq((Cell)frame, frameq);
+				pushq((Cell)frame, retryq);
 		}
 	}
 	activate(processFrames);
@@ -80,16 +81,16 @@ static void processFrames(void) // machine to process received frames from links
 
 static void retryFrames(void) // machine to process packets for busy handlers
 {
-	if (queryq(frameq)) { // process waiting frames
-		sfpFrame *frame = (sfpFrame*)q(frameq);
+	if (queryq(retryq)) { // process waiting frames
+		sfpFrame *frame = (sfpFrame*)q(retryq);
 
         if (processPacket(frame)) {
 			PacketProcessed();
-            returnFrame((sfpFrame*)pullq(frameq));
+            returnFrame((sfpFrame*)pullq(retryq));
 		}
 		else if (checkTimeout(&frameTo)) {
 			UnDelivered();
-            returnFrame((sfpFrame*)pullq(frameq));
+            returnFrame((sfpFrame*)pullq(retryq));
 		}
 	}
 	activate(retryFrames);
@@ -108,7 +109,7 @@ static bool processFrame(sfpFrame * frame)
 	if (frame->pid > WHO_PIDS) // check for routing of packet
         if (frame->who.to) { // is there a destination?
 			if (whoami() == ME) // do i need an identity? (multi drop)
-				setMe(frame->who.to); // become the destination
+				setWhoami(frame->who.to); // become the destination
 			else if (frame->who.to != whoami()) { // is it not for me?				
 				reRouteFrame(frame);
 				return true;
@@ -118,34 +119,38 @@ static bool processFrame(sfpFrame * frame)
 	// give first crack at packet to vectored handlers
 	packetHandler_t handler = getPacketHandler(frame->pid);
 
-	if (handler != NULL)
-		if (!handler(frame->packet, frame->length - FRAME_OVERHEAD))
+	if (handler) {
+		if (handler(frame->packet, frame->length - FRAME_OVERHEAD))
+			PacketProcessed();
+		else
 			return false; // handler busy right now; will try later
-
-    switch(frame->pid) // intercept link only packets - no destination id
-	{
-		case PING: // other end is querying so reply
-			{	
-                Byte ping[3];
+	}
+	else {
+		switch(frame->pid) // intercept link only packets - no destination id
+		{
+			case PING: // other end is querying so reply
+				{	
+					Byte ping[3];
 				
-				ping[0] = PING_BACK;
-				ping[1] = frame->who.from;
-				ping[2] = whoami();
+					ping[0] = PING_BACK;
+					ping[1] = frame->who.from;
+					ping[2] = whoami();
 				
-				sendNpTo(ping, sizeof(ping), frame->who.from);
-			}
-			break;
-		case SPS_ACK: // ack frame for SPS
-			setAckReceived(frame->who.from); // pass notice to transmitter
-			break;
-		case SPS: // null packet used for initializing SPS and setting id
-		case PING_BACK: // ignore reply
-		case TEST_FRAME: // ignore test frames
-			IgnoreFrame();
-			break;
-		default:
-			UnknownPid();
-			break;
+					sendNpTo(ping, sizeof(ping), frame->who.from);
+				}
+				break;
+			case SPS_ACK: // ack frame for SPS
+				setAckReceived(frame->who.from); // pass notice to transmitter
+				break;
+			case SPS: // null packet used for initializing SPS and setting id
+			case PING_BACK: // ignore reply
+			case TEST_FRAME: // ignore test frames
+				IgnoreFrame();
+				break;
+			default:
+				UnknownPid();
+				break;
+		}
 	}
 	returnFrame(frame);
 	return true;
@@ -225,7 +230,7 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 void initServices(void) //! initialize SFP receiver state machine
 {
 	setTimeout(STALE_RX_FRAME, &frameTo);
-	zeroq(frameq);
+	zeroq(retryq);
 	activateOnce(processFrames); // note: gets called once for each link
 	activateOnce(retryFrames);
 }

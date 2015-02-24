@@ -4,6 +4,7 @@
 #include "testframing.h"
 #include "testpool.h"
 #include "testservices.h"
+#include "testhandlers.h"
 #include "testnetwork.h"
 #include "testrouting.h"
 #include "testspi.h"
@@ -26,6 +27,11 @@ int main(int argc, char** argv)
 
     {
         TestServices tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
+
+    {
+        TestHandlers tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
 

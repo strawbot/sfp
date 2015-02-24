@@ -29,7 +29,7 @@
 #define setAckSend(link)		safe(setBit(SEND_ACK_BIT, link->txFlags))
 #define setSpsSend(link)		safe(setBit(SEND_SPS_BIT, link->txFlags))
 #define setNpsSend(link)		safe(setBit(SEND_NPS_BIT, link->txFlags))
-#define setAckReceived(link)	safe(setBit(RCVD_ACK_BIT, link->txFlags))
+//#define setAckReceived(link)	safe(setBit(RCVD_ACK_BIT, link->txFlags))
 #define setResend(link)			safe(setBit(RESEND_BIT, link->txFlags))
 #define setGiveup(link)			safe(setBit(GIVEUP_BIT, link->txFlags))
 
@@ -62,11 +62,6 @@ void switchNpsFramesLink(sfpLink_t *link);
 bool giveupSpsLink(sfpLink_t *link);
 void resendSpsLink(sfpLink_t *link);
 void sfpTxSm(sfpLink_t *link);
-
-// Mocks
-#define acceptSpsFrame(frame) true
-#undef setAckReceived
-#define setAckReceived(who)
 
 /*
  when sending sps, check sps state machine for any_sps, only_sps. If true then

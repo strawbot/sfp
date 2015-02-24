@@ -10,8 +10,6 @@ public:
     explicit TestServices(QObject *parent = 0);
 
 private slots:
-    void TestGetHandler(void);
-    void TestSetHandler(void);
     void TestSendNpsNoLink(void);
     void TestNpsLink(void);
     void TestNpsNull();
