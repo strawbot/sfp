@@ -121,4 +121,6 @@ bool acceptSpsFrame(sfpFrame * frame) { acksout++; return spsaccept; (void)frame
 #undef setAckReceived
 void setAckReceived(Byte who) { acksin++; (void) who;}
 
+#include "sfpRxSm.c"
+
 }

@@ -5,77 +5,41 @@
 */
 
 // Includes
-#include "timbre.h"
-#include "sfpStats.h"
-#include "sfpLink.h"
-#include "pids.h"
-#include "sfpTxSm.h"
-#include "sfpRxSm.h"
-#include "packets.h"
-#include "node.h"
-#include "printers.h"
-#include "routing.h"
+#include "sfp.h"
+#include "stats.h"
+#include "link.h"
+#include "framePool.h"
 
-static Long tracePackets;
+// 
+// #include "sfpLink.h"
+// #include "pids.h"
+// #include "sfpTxSm.h"
+// #include "sfpRxSm.h"
+// #include "packets.h"
+// #include "node.h"
+// #include "printers.h"
+// #include "routing.h"
 
-void traceOn(void);
-void traceOn(void)
-{
-	tracePackets = 1;
-}
-
-void traceOff(void);
-void traceOff(void)
-{
-	tracePackets = 0;
-}
-
-// Declarations
-void processRxFrames(void);
-void processLinkFrame(void *lq);
-void newRxSmState(sfpRxState_t state, sfpLink_t *link);
-void pushFrame(sfpLink_t *link);
+// Local Declarations
+static bool sfpLengthOk(Byte length, sfpLink_t *link);
+static void Acquiring(sfpLink_t *link);
+static void Hunting(Byte length, sfpLink_t *link);
+static void Syncing(Byte sync, sfpLink_t *link);
+static void Receiving(Byte data, sfpLink_t *link);
+static void checkDataTimeout(sfpLink_t *link);
 
 // SPS State Machine support
-bool sfpLengthOk(Byte length, sfpLink_t *link) //! check length for a frame
+static bool sfpLengthOk(Byte length, sfpLink_t *link) //! check length for a frame
 {
-	if (length)
-	{
-		if (length >= MIN_SFP_LENGTH)
-		{
-			if (length <= MAX_SFP_LENGTH)
-				return true;
-			else if (length < 255) // ignore float high lines
-				LongFrame(length, link->stats);
-		}
-		else
-			ShortFrame(length, link->stats);
+	if ( (length != 0) && (length != 255) ) { // special cases for SPI	
+		if (length < MIN_FRAME_LENGTH)
+        { ShortFrame(length, link); }
+		else if (length > MAX_FRAME_LENGTH)
+           { LongFrame(length, link); }
+		else 
+			return true;
 	}
 	return false;
-}
-
-bool checkRxSps(Byte sps, sfpLink_t *link) //! accept or reject incoming sps
-{
-	switch (link->rxSps)
-	{
-		case ONLY_SPS0:
-			if (sps != 0)
-				return false;
-			link->rxSps = ONLY_SPS1;
-			break;
-		case ONLY_SPS1:
-			if (sps == 0)
-				return false;
-			link->rxSps = ONLY_SPS0;
-			break;
-		default:
-			if (sps)
-				link->rxSps = ONLY_SPS0;
-			else
-				link->rxSps = ONLY_SPS1;
-			break;
-	}
-	return true;
 }
 
 /* 
@@ -83,135 +47,101 @@ bool checkRxSps(Byte sps, sfpLink_t *link) //! accept or reject incoming sps
 */
 
 // States definitions
-void newRxSmState(sfpRxState_t state, sfpLink_t *link)
+static void Acquiring(sfpLink_t *link) // waiting to acquire a frame buffer
 {
-	link->sfpRxState = state;
+	link->frameIn = getFrame();
+	if (link->frameIn != NULL)
+		link->sfpRxState = HUNTING;
 }
 
-void Hunting(Byte length, sfpLink_t *link) //! waiting for a byte which will be interpreted as a length. It must be not too long and not too short
+static void Hunting(Byte length, sfpLink_t *link) //! waiting for a byte which will be interpreted as a length. It must be not too long and not too short
 {
-	if (sfpLengthOk(length, link))
-	{
+	if (sfpLengthOk(length, link)) {
 		link->sfpBytesToRx = length;
-		newRxSmState(SYNCING, link);
+		link->sfpRxState = SYNCING;
 	}
 	else
 		rxLinkError(link);
 }
 
-void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement of the length. If valid and a buffer is available, start receiving a frame
+static void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement of the length. If valid and a buffer is available, start receiving a frame
 {
-	if ( sfpSync(sync) == link->sfpBytesToRx )	// check for sync byte - 1's complement of length
-	{
-		link->sfpRxPtr = &link->frameIn[0];
-		*link->sfpRxPtr++ = link->sfpBytesToRx;
+	if ( sync == sfpSync(link->sfpBytesToRx) ) { // check for sync byte - 1's complement of length
+		link->sfpRxPtr = &link->frameIn->length;
+		*link->sfpRxPtr++ = link->sfpBytesToRx--;
 		*link->sfpRxPtr++ = sync;
-		newRxSmState(RECEIVING, link);
-		link->sfpBytesToRx--;
+		link->sfpRxState = RECEIVING;
 	}
-	else
-	{
+	else {
 		rxLinkError(link);
-		BadSync(link->stats);
+		BadSync(link);
+		
 		if (sfpLengthOk(sync, link)) // assume sync is first byte of new frame
-			link->sfpBytesToRx = sync;
+			link->sfpBytesToRx = sync; // use sync as length and stay in current state
 		else
-		{
-			link->sfpBytesToRx = 0;
-			newRxSmState(HUNTING, link);
-		}
+			link->sfpRxState = HUNTING;
 	}
 }
 
-void passFrameUp(sfpLink_t *link)
-{
-			pushq(link->frameIn, link->frameq); // pass on to frame layer
-			getNewFrame(link);
-	get a new frame for link and write into link->frameIn setting up
-	pointers and counters if necessary or just let it happen in HUNTING
-	Hunting is responsible for making sure a frame is available or dumping data if not
-	and then resetting frame pointers when first byte put into frame or perhaps Sync will
-	do that if sync if valid
-	RX SM link has 3 values to work with: frame, #bytes to rx, where to put next byte
-	SYNC must check for length too long
-	HUNTING must check for frame
-	RECEIVING gets bytes and looks for end and checks checksum
-}
-
-void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame buffer until length is satisfied
+static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame buffer until length is satisfied
 {
 	*link->sfpRxPtr++ = data; // store data
 	if (--link->sfpBytesToRx == 0) // done receiving bytes
 	{
-		Byte c1=0, c2=0, length = link->frameIn[0]-1;
+		Byte c1=0, c2=0, length = link->frameIn->length;
 		
-		calculateFletcherCheckSum(&c1, &c2, length, &link->frameIn[0]);
-		if ( (c1 == *(link->sfpRxPtr-2)) && (c2 == data) ) // check for good frame
-		{
-			GoodFrame(link->stats);
-			passFrameUp(link);
+		calculateFletcherCheckSum(&c1, &c2, length, &link->frameIn->length);
+
+		if ( (c1 == *(link->sfpRxPtr-2)) && (c2 == data) ) { // check for good frame
+			GoodFrame(link);
+			pushq((Cell)link->frameIn, link->frameq); // pass on to frame layer
+			link->sfpRxState = ACQUIRING;
 		}
-		else
-		{
+		else {
 			rxLinkError(link);
-			BadCheckSum(link->stats);
+			BadCheckSum(link);
+			link->sfpRxState = HUNTING;
 		}
-		newRxSmState(HUNTING, link);
+	}
+}
+
+static void checkDataTimeout(sfpLink_t *link)
+{
+	if (checkTimeout(&link->frameTo)) { // limit frame receive time for error detection
+		link->sfpRxState = HUNTING;
+		Gaveup(link);
 	}
 }
 
 //! SFP RX state machine
-// note: Timeouts set in one state will not be checked for unless there is data
 bool sfpRxSm(sfpLink_t *link) // return true if byte processed
 {
-	Byte data;
-
 	if (link->sfpRx() != 0) // process any received bytes
-	{
-		switch(link->sfpRxState)
-		{
+		switch(link->sfpRxState) {
+			case ACQUIRING:
+				Acquiring(link);
+				return false;
 			case HUNTING:
-				data = link->sfpGet();
-				Hunting(data, link);
-				setTimeout(SFP_FRAME_TIME, &link->frameTo);
+				Hunting(link->sfpGet(), link);
 				return true;
 			case SYNCING:
-				data = link->sfpGet();
-				Syncing(data, link);
 				setTimeout(SFP_FRAME_TIME, &link->frameTo);
+				Syncing(link->sfpGet(), link);
 				return true;
 			case RECEIVING:
-				data = link->sfpGet();
-				Receiving(data, link);
 				setTimeout(SFP_FRAME_TIME, &link->frameTo);
+				Receiving(link->sfpGet(), link);
 				return true;
 		}
-	}
-	else // no data so check for timeouts
-	{
-		switch(link->sfpRxState)
-		{
-			case SYNCING:
-			case RECEIVING:
-				if (checkTimeout(&link->frameTo)) // limit frame receive time for error detection
-				{
-					newRxSmState(HUNTING, link);
-					Gaveup(link->stats);
-				}
-		}
-	}
+	
+	if ( (link->sfpRxState == SYNCING) || (link->sfpRxState == RECEIVING) )
+		checkDataTimeout(link);
+
 	return false;
 }
 
 void initSfpRxSM(sfpLink_t *link) //! initialize SFP receiver state machine
 {
 	link->rxSps = ANY_SPS;
-	newRxSmState(HUNTING, link);
-	link->sfpBytesToRx = 0;
-	link->frameIn[0] = 0;
-	stopTimeout(&link->frameTo);
-	stopTimeout(&link->packetTo);
-	zeroq(rxframeq);
-	zeroq(framewaitq);
-	activateOnce(processRxFrames); // note: gets called once for each link
+	link->sfpRxState = ACQUIRING;
 }

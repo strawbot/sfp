@@ -4,7 +4,7 @@
 #define _LINK_H_
 
 // Link states
-typedef enum {HUNTING, SYNCING, RECEIVING} sfpRxState_t;
+typedef enum {ACQUIRING, HUNTING, SYNCING, RECEIVING} sfpRxState_t;
 typedef enum {IDLING, TRANSMITTING} sfpTxState_t;
 typedef enum {ANY_SPS, ONLY_SPS0, ONLY_SPS1, WAIT_ACK0, WAIT_ACK1} spsState_t;
 typedef enum {NO_LINK, SFP_LINK, SERIAL_LINK, ROUTE_LINK} linkOwner_t;
@@ -25,6 +25,7 @@ typedef struct {	// Link information
 	void *node;							// which node this link belongs to
 	// Receiver
 	Byte *rxq;							// point to queue of incoming bytes
+	sfpFrame * frameIn;					// pointer to frame used for receiving
 	Byte *sfpRxPtr;						// point to frame being built
 	Byte sfpBytesToRx;					// bytes to receive
     Qtype *frameq;						// incoming frame queue
