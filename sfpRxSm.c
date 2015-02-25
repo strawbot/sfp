@@ -33,9 +33,9 @@ static bool sfpLengthOk(Byte length, sfpLink_t *link) //! check length for a fra
 {
 	if ( (length != 0) && (length != 255) ) { // special cases for SPI	
 		if (length < MIN_FRAME_LENGTH)
-        { ShortFrame(length, link); }
+        	ShortFrame(length, link);
 		else if (length > MAX_FRAME_LENGTH)
-           { LongFrame(length, link); }
+        	LongFrame(length, link);
 		else 
 			return true;
 	}
@@ -64,7 +64,7 @@ static void Hunting(Byte length, sfpLink_t *link) //! waiting for a byte which w
 		rxLinkError(link);
 }
 
-static void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement of the length. If valid and a buffer is available, start receiving a frame
+static void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement of the length. If valid, start receiving a frame
 {
 	if ( sync == sfpSync(link->sfpBytesToRx) ) { // check for sync byte - 1's complement of length
 		link->sfpRxPtr = &link->frameIn->length;
@@ -88,11 +88,12 @@ static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame 
 	*link->sfpRxPtr++ = data; // store data
 	if (--link->sfpBytesToRx == 0) // done receiving bytes
 	{
-		Byte c1=0, c2=0, length = link->frameIn->length;
+		Byte sum=0, sumsum=0;
+		Byte length = link->frameIn->length - CHECKSUM_LENGTH + LENGTH_LENGTH;
 		
-		calculateFletcherCheckSum(&c1, &c2, length, &link->frameIn->length);
+		calculateFletcherCheckSum(&sum, &sumsum, length, &link->frameIn->length);
 
-		if ( (c1 == *(link->sfpRxPtr-2)) && (c2 == data) ) { // check for good frame
+		if ( (sum == *(link->sfpRxPtr-2)) && (sumsum == data) ) { // check for good frame
 			GoodFrame(link);
 			pushq((Cell)link->frameIn, link->frameq); // pass on to frame layer
 			link->sfpRxState = ACQUIRING;

@@ -5,7 +5,7 @@
 #include "framePool.h"
 
 static QUEUE(MAX_FRAMES, poolq);
-static Byte frames[MAX_FRAMES][MAX_SFP_LENGTH];
+static Byte frames[MAX_FRAMES][MAX_SFP_SIZE];
 
 bool returnFrame(void *frame)
 {

@@ -1,33 +1,18 @@
+#include "link.h"
+
 #ifndef _STATS_H_
 #define _STATS_H_
 
-#define FOR_EACH_STAT(F) \
-	F(FramePoolEmpty) \
-	F(FrameProcessed) \
-	F(IgnoreFrame) \
-	F(NoDest) \
-	F(PacketProcessed) \
-	F(PacketSizeBad) \
-	F(ReRouted) \
-	F(UnDelivered) \
-	F(UnknownPacket) \
-	F(UnknownPid) \
-	F(UnRouted)
-
 #define DECLARE_STAT(stat) void stat();
-
-#define LongFrame(length, link) { (void)length; (void)link; }
-#define ShortFrame(length, link) { (void)length; (void)link; }
-
-#define BadSync(link) (void)link;
-#define GoodFrame(link) (void)link;
-#define BadCheckSum(link) (void)link;
-#define Gaveup(link) (void)link;
-#define rxLinkError(link) (void)link;
+#define DECLARE_LINK_STAT(stat) void stat(sfpLink_t *link);
 
 #endif
 
 FOR_EACH_STAT(DECLARE_STAT)
+FOR_EACH_LINK_STAT(DECLARE_LINK_STAT)
+
+void LongFrame(Long length, sfpLink_t * link);
+void ShortFrame(Long length, sfpLink_t * link);
 
 void initSfpStats(void);
 void showSfpStats(void);

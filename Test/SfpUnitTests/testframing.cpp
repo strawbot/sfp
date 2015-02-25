@@ -79,7 +79,7 @@ void TestFraming::TestFrameBuild_data()
 
 void TestFraming::TestFrameBuild()
 {
-    Byte frame[MAX_SFP_LENGTH];
+    Byte frame[MAX_SFP_SIZE];
     sfpFrame *sf = (sfpFrame *)frame;
 
     QFETCH(Byte, Length);

@@ -15,7 +15,7 @@ void buildSfpFrame(Byte length, Byte *data, Byte pid, sfpFrame *frame)
 	frame->sync = sfpSync(frame->length);
 	frame->pid = pid;
 	memcpy(frame->payload, data, length);
-	calculateFletcherCheckSum(&sum, &sumsum, length + FRAME_HEADER + PACKET_HEADER, &frame->length);
+	calculateFletcherCheckSum(&sum, &sumsum, frame->length - CHECKSUM_LENGTH + LENGTH_LENGTH, &frame->length);
 	cs->sum = sum;
 	cs->sumsum = sumsum;
 }

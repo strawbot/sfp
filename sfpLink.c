@@ -37,7 +37,7 @@ void buildSfpFrame(Byte length, Byte *data, Byte pid, Byte *f)
 	sfpFrame *frame = (sfpFrame *)f;
 	Byte *dp = frame->payload, check1=0, check2=0;
 
-	frame->length = length + MIN_SFP_LENGTH; // packet length + sync + pid + checksum
+	frame->length = length + MIN_SFP_SIZE; // packet length + sync + pid + checksum
 	frame->sync = sfpSync(frame->length);
 	frame->pid = pid;
 	while(length--)

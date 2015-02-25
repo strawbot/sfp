@@ -39,8 +39,10 @@ bool framePoolFull()
 #include "stats.h"
 
 #define GET_STAT(stat) Long get##stat() { return stat##Stat; }
+#define GET_LINK_STAT(stat) Long get##stat(sfpLink_t * link) { return link->stat; }
 
 FOR_EACH_STAT(GET_STAT)
+FOR_EACH_LINK_STAT(GET_LINK_STAT)
 
 #include "services.c"
 
@@ -103,6 +105,8 @@ void rxFrame(sfpFrame * frame)
 #include "machines.c"
 
 #include "timeout.c"
+
+#include "byteq.c"
 
 static Long time;
 Long getTime()

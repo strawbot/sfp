@@ -1,4 +1,5 @@
 #include "timbre.h"
+#include "statGroups.h"
 
 #ifndef _LINK_H_
 #define _LINK_H_
@@ -20,9 +21,10 @@ typedef enum {NO_LINK, SFP_LINK, SERIAL_LINK, ROUTE_LINK} linkOwner_t;
 	if linkOwner is SFP_LINK then data in and data out are pushed to sfp protocol
 */
 
+#define LINK_STAT(stat) Long stat;
+
 // Link structure
 typedef struct {	// Link information
-	void *node;							// which node this link belongs to
 	// Receiver
 	Byte *rxq;							// point to queue of incoming bytes
 	sfpFrame * frameIn;					// pointer to frame used for receiving
@@ -34,6 +36,10 @@ typedef struct {	// Link information
 	void (*rxErrFunction)(void);		// called for rx errors; vectored to allow link dependant action
 	sfpRxState_t sfpRxState;			// SFP RX states
 	spsState_t rxSps;					// which secure pid to look for next
+	// rx stats
+	Long LongFrame;
+	Long ShortFrame;
+	FOR_EACH_LINK_STAT(LINK_STAT)
 
 	// Transmitter
 	Byte *sfpTxPtr;						// point to frame being sent
@@ -52,7 +58,6 @@ typedef struct {	// Link information
 	Timeout giveupTo;	// giveup timeout for SPS transmitter
 	Timeout frameTo;	// maximum time between bytes when framebuilding
 	Timeout packetTo;	// max time for processing a packet
-//	linkStats_t *stats;	// link to structure for stats
 	Byte inFrameState;	// track where the inframe is
 	char *name;			// link name
 	linkOwner_t linkOwner;		// who owns the linke
