@@ -6,8 +6,7 @@
 
 // Link states
 typedef enum {ACQUIRING, HUNTING, SYNCING, RECEIVING} sfpRxState_t;
-typedef enum {IDLING, TRANSMITTING} sfpTxState_t;
-typedef enum {ANY_SPS, ONLY_SPS0, ONLY_SPS1, WAIT_ACK0, WAIT_ACK1} spsState_t;
+typedef enum {ANY_SPS, NO_SPS = ANY_SPS, ONLY_SPS0, ONLY_SPS1, WAIT_ACK0, WAIT_ACK1} spsState_t;
 typedef enum {NO_LINK, SFP_LINK, SERIAL_LINK, ROUTE_LINK} linkOwner_t;
 /*
 	default: set linkOwner as SFP_LINK
@@ -26,42 +25,41 @@ typedef enum {NO_LINK, SFP_LINK, SERIAL_LINK, ROUTE_LINK} linkOwner_t;
 // Link structure
 typedef struct {	// Link information
 	// Receiver
-	Byte *rxq;							// point to queue of incoming bytes
+	Byte * rxq;							// point to queue of incoming bytes
 	sfpFrame * frameIn;					// pointer to frame used for receiving
-	Byte *sfpRxPtr;						// point to frame being built
+	Byte * sfpRxPtr;					// point to frame being built
 	Byte sfpBytesToRx;					// bytes to receive
-    Qtype *frameq;						// incoming frame queue
-	bool (*sfpRx)(void);				// is there something to receive?
-	Byte (*sfpGet)(void);				// get the byte
-	void (*rxErrFunction)(void);		// called for rx errors; vectored to allow link dependant action
+    Qtype * frameq;						// incoming frame queue
+	bool (* sfpRx)(void);				// is there something to receive?
+	Byte (* sfpGet)(void);				// get the byte
 	sfpRxState_t sfpRxState;			// SFP RX states
 	spsState_t rxSps;					// which secure pid to look for next
-	// rx stats
-	Long LongFrame;
-	Long ShortFrame;
-	FOR_EACH_LINK_STAT(LINK_STAT)
 
 	// Transmitter
-	Byte *sfpTxPtr;						// point to frame being sent
+	sfpFrame * frameOut;				// point to frame being sent if it is to be returned
+	Byte *sfpTxPtr;						// point to byte to be sent
 	Byte sfpBytesToTx;					// bytes to send
     Qtype *npsq;						// point to queue of nps frames to send
     Qtype *spsq;						// queue of SPS frames to send
 	bool (*sfpTx)(void);				// can something be sent?
 	void (*sfpPut)(Long);				// put the byte plus any upper bits
-	sfpTxState_t sfpTxState;			// SFP TX states
 	spsState_t txSps;					// which secure pid to send next
+	Timeout spsTo;						// sps timeout
+	Long spsRetries;					// how many times sps frame has been retried
 	Long txFlags;						// Pending Tx actions
-	Byte enableSps;						// on to enable SPS
 
 	// Both
-	Timeout resendTo;	// resend timeout for SPS transmitter
-	Timeout giveupTo;	// giveup timeout for SPS transmitter
 	Timeout frameTo;	// maximum time between bytes when framebuilding
 	Timeout packetTo;	// max time for processing a packet
 	Byte inFrameState;	// track where the inframe is
 	char *name;			// link name
 	linkOwner_t linkOwner;		// who owns the linke
 	Byte routeTo;		// which link to route to if linkOwner is ROUTE_LINK
+
+	// stats
+	Long LongFrame;
+	Long ShortFrame;
+	FOR_EACH_LINK_STAT(LINK_STAT)
 } sfpLink_t;
 
 #endif

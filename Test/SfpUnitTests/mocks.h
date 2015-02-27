@@ -12,19 +12,16 @@ bool framePoolFull();
 FOR_EACH_STAT(DECLARE_GET_STAT)
 FOR_EACH_LINK_STAT(DECLARE_GET_LINK_STAT)
 
-extern Long acksin, acksout;
+extern sfpLink_t alink;
 extern Byte packet[3];
+
 void initLink();
 void initNode();
-void rxFrame(sfpFrame * frame);
-void callProcessFrames();
-void callretryFrames();
-void setTime(Long t);
+Long acksIn();
+Long acksOut();
 
-bool acceptSpsFrame(sfpFrame * frame);
-#undef setAckReceived
-void setAckReceived(Byte who);
-extern bool spsaccept;
-extern sfpLink_t alink;
+void rxFrame(sfpFrame * frame);
+
+void setTime(Long t);
 
 #endif // MOCKS_H

@@ -6,6 +6,7 @@
 #include "testservices.h"
 #include "testhandlers.h"
 #include "testreceiverstatemachine.h"
+#include "testtransmitterstatemachine.h"
 #include "testnetwork.h"
 #include "testrouting.h"
 #include "testspi.h"
@@ -40,7 +41,13 @@ int main(int argc, char** argv)
         TestReceiverStateMachine tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
-    // test RX and TX SMs
+
+    {
+        TestTransmitterStateMachine tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
+
+    // test SPS
 //    {
 //        TestRouting tc;
 //        status |= QTest::qExec(&tc, argc, argv);

@@ -17,7 +17,6 @@ private slots:
     void TestStaleFrame();
     void TestAckPacket();
     void TestSpsAckRequest();
-    void TestSpsAckRequestIgnorePacket();
     void TestLinkLevelFrame();
     void TestNoHandler();
 };

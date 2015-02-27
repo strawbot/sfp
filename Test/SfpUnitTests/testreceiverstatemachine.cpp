@@ -33,7 +33,6 @@ Byte rxqGet()
 void initRxSm()
 {
     initNode();
-    initSfpRxSM(&alink);
     alink.sfpRx = rxqAvailable;
     alink.sfpGet = rxqGet;
     zerobq(testrxq);

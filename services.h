@@ -9,10 +9,10 @@ typedef bool (*packetHandler_t)(Byte *packet, Byte length);
 
 #endif
 
-packetHandler_t setPacketHandler(Byte pid, packetHandler_t handler);
 packetHandler_t getPacketHandler(Byte pid);
+packetHandler_t setPacketHandler(Byte pid, packetHandler_t handler);
 
-bool sendNpsFrame(sfpFrame *frame);
+void processFrames(void);
 
 bool sendNpTo(Byte *packet, Byte length, Byte to);
 bool sendSpTo(Byte *packet, Byte length, Byte to);

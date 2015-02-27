@@ -19,6 +19,9 @@
     F(GoodFrame) \
     F(BadCheckSum) \
     F(Gaveup) \
-    F(rxLinkError)
+    F(RxLinkError) \
+    F(SpsAcked) \
+    F(SpsSent) \
+    F(SendFrame)
 
 #endif

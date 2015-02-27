@@ -12,13 +12,12 @@
 
 // timeouts
 #define SFP_POLL_TIME		(   2 TO_MSEC)		// polling in link down
-#define SFP_RESEND_TIME		( 250 TO_MSECS)	// time between retransmissions
-#define SFP_GIVEUP_TIME		(SFP_RESEND_TIME * 50)	// time for link to die
-#define SPS_STARTUP_TIME	( 300 TO_MSECS)	// time to start sps
+#define SFP_SPS_TIME		( 250 TO_MSECS)	// time between retransmissions
 #define SFP_FRAME_TIME		(  50 TO_MSECS)	// maximum time to wait between bytes for a frame
 #define SFP_FRAME_PROCESS	(1000 TO_MSECS)	// maximum time to wait for frame processing
 #define STALE_RX_FRAME 		(1000 TO_MSECS)	// number of milliseconds to hang onto a received frame
 
+#define SPS_RETRIES			5
 
 #define NUM_LINKS 1				// number of links in this node
 

@@ -30,7 +30,8 @@ SOURCES += \
     ../../../Timbre/queue.c \
     mocks.cpp \
     testhandlers.cpp \
-    testreceiverstatemachine.cpp
+    testreceiverstatemachine.cpp \
+    testtransmitterstatemachine.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
@@ -52,4 +53,5 @@ HEADERS += \
     testpool.h \
     mocks.h \
     testhandlers.h \
-    testreceiverstatemachine.h
+    testreceiverstatemachine.h \
+    testtransmitterstatemachine.h

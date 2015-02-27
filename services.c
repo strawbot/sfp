@@ -14,17 +14,17 @@
 
 // ?Should handlers be in their own file? Services just contains sending services?
 // but then one does not use one without the other - so keep in one file
-static Timeout frameTo;  // how long to hold on to a received frame before tossing it
+static Timeout retryTo;  // how long to hold on to a received frame before tossing it
 static QUEUE(MAX_FRAMES, retryq); // where to put frames which are in waiting
 static packetHandler_t packetHandlers[MAX_PIDS] = {NULL};
 
 // local declarations
-static bool processFrame(sfpFrame * frame);
+static bool processLinkFrame(sfpFrame * frame);
 static bool processPacket(sfpFrame * frame);
 static void retryFrames(void);
-static void processFrames(void);
 static bool sendPacketToQ(Byte *packet, Byte length, Qtype *que);
 static void reRouteFrame(sfpFrame *frame);
+static bool acceptSpsFrame(sfpFrame * frame);
 
 // vectorizable packet handlers
 packetHandler_t setPacketHandler(Byte pid, packetHandler_t handler)
@@ -61,7 +61,7 @@ packetHandler_t getPacketHandler(Byte pid)
 	the packet, then it stays in the queue until it is accepted or a timeout occurs.
 */
 
-static void processFrames(void) // machine to process received frames from links
+void processFrames(void) //process received frames from links
 {
 	Long n = 0;
 	sfpLink_t *link;
@@ -70,40 +70,27 @@ static void processFrames(void) // machine to process received frames from links
 		if (queryq(link->frameq) != 0) {
 			sfpFrame *frame = (sfpFrame *)pullq(link->frameq);
 			
-			if (processFrame(frame))
+			if (processLinkFrame(frame))
 				FrameProcessed();
-			else
+			else {
+				if (queryq(retryq) == 0)
+					startTimeout(&retryTo);
 				pushq((Cell)frame, retryq);
+			}
 		}
 	}
-	activate(processFrames);
+	retryFrames();
 }
 
-static void retryFrames(void) // machine to process packets for busy handlers
+static bool processLinkFrame(sfpFrame * frame)
 {
-	if (queryq(retryq)) { // process waiting frames
-		sfpFrame *frame = (sfpFrame*)q(retryq);
-
-        if (processPacket(frame)) {
-			PacketProcessed();
-            returnFrame((sfpFrame*)pullq(retryq));
-		}
-		else if (checkTimeout(&frameTo)) {
-			UnDelivered();
-            returnFrame((sfpFrame*)pullq(retryq));
-		}
-	}
-	activate(retryFrames);
-}
-
-static bool processFrame(sfpFrame * frame)
-{
-	if ( (frame->pid & ACK_BIT) != 0 ) { // intercept SPS packets
+	if (frame->pid & ACK_BIT) { // intercept SPS packets
+		spsReceived(frame->who.from);
 		if (!acceptSpsFrame(frame)) {
 			returnFrame(frame);
 			return true;
 		}
-		frame->pid &= PID_BITS; // strip ack and sps bits
+		frame->pid &= PID_BITS; // strip sps bits
 	}
 
 	if (frame->pid > WHO_PIDS) // check for routing of packet
@@ -140,7 +127,7 @@ static bool processFrame(sfpFrame * frame)
 				}
 				break;
 			case SPS_ACK: // ack frame for SPS
-				setAckReceived(frame->who.from); // pass notice to transmitter
+				spsAcknowledged(frame->who.from); // pass notice to transmitter
 				break;
 			case SPS: // null packet used for initializing SPS and setting id
 			case PING_BACK: // ignore reply
@@ -156,6 +143,24 @@ static bool processFrame(sfpFrame * frame)
 	return true;
 }
 
+static void retryFrames(void) //process packets for busy handlers
+{
+	if (queryq(retryq)) { // process waiting frames
+		sfpFrame *frame = (sfpFrame*)q(retryq);
+
+        if (processPacket(frame)) {
+			PacketProcessed();
+            returnFrame((sfpFrame*)pullq(retryq));
+		}
+		else if (checkTimeout(&retryTo)) {
+			UnDelivered();
+            returnFrame((sfpFrame*)pullq(retryq));
+            if (queryq(retryq) != 0)
+				startTimeout(&retryTo);
+		}
+	}
+}
+
 static bool processPacket(sfpFrame * frame)
 {
 	packetHandler_t handler = getPacketHandler(frame->pid);
@@ -166,6 +171,33 @@ static bool processPacket(sfpFrame * frame)
 	UnknownPid();
 	return true;
 }
+
+bool acceptSpsFrame(sfpFrame * frame) //! accept or reject incoming sps
+{
+    sfpLink_t *link = routeTo(frame->who.from);
+    Byte sps = frame->pid & SPS_BIT;
+
+	switch (link->rxSps) {
+		case ONLY_SPS0:
+			if (sps)
+				return false;
+			link->rxSps = ONLY_SPS1;
+			break;
+		case ONLY_SPS1:
+			if (!sps)
+				return false;
+			link->rxSps = ONLY_SPS0;
+			break;
+		default:
+			if (sps)
+				link->rxSps = ONLY_SPS0;
+			else
+				link->rxSps = ONLY_SPS1;
+			break;
+	}
+	return true;
+}
+
 
 // Packet services
 static void reRouteFrame(sfpFrame *frame)
@@ -229,10 +261,8 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 // initialization
 void initServices(void) //! initialize SFP receiver state machine
 {
-	setTimeout(STALE_RX_FRAME, &frameTo);
+	setTimeout(STALE_RX_FRAME, &retryTo);
 	zeroq(retryq);
-	activateOnce(processFrames); // note: gets called once for each link
-	activateOnce(retryFrames);
 }
 
 /*

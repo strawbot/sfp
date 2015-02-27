@@ -4,6 +4,8 @@ extern "C" {
 #include <stdio.h>
 #include "printers.h"
 #include "mocks.h"
+#include "sfpRxSm.h"
+#include "sfpTxSm.h"
 
 void print(const char * message)
 {
@@ -46,57 +48,6 @@ FOR_EACH_LINK_STAT(GET_LINK_STAT)
 
 #include "services.c"
 
-void callProcessFrames()
-{
-    processFrames();
-}
-
-void callretryFrames()
-{
-    retryFrames();
-}
-
-#include "node.c"
-
-Byte packet[3];
-sfpLink_t alink;
-sfpNode_t anode;
-Long acksin, acksout;
-bool spsaccept;
-
-QUEUE(MAX_FRAMES, npsq);
-QUEUE(MAX_FRAMES, spsq);
-QUEUE(MAX_FRAMES, frameInq);
-
-void initLink()
-{
-    zeroq(npsq);
-    alink.npsq = npsq;
-    zeroq(spsq);
-    alink.spsq = spsq;
-    zeroq(frameInq);
-    alink.frameq = frameInq;
-    initSfpStats();
-    initFramePool();
-    packet[0] = TEST_FRAME;    // pid
-    packet[1] = DIRECT;        // to
-    packet[2] = DIRECT;        // from
-}
-
-void initNode()
-{
-    initLink();
-    setNode(&anode);
-    addLink(DIRECT, &alink);
-    setRouteTo(DIRECT, &alink);
-    setWhoami(DIRECT);
-    setWhatami(0);
-    acksin = acksout = 0;
-    spsaccept = true;
-    for (int i = 0; i < MAX_PIDS; i++)
-        setPacketHandler(i, NULL);
-}
-
 void rxFrame(sfpFrame * frame)
 {
     pushq((Cell)frame, alink.frameq);
@@ -119,12 +70,63 @@ void setTime(Long t)
     time = t;
 }
 
-// txsm mocs
-// Mocks
-bool acceptSpsFrame(sfpFrame * frame) { acksout++; return spsaccept; (void)frame; }
-#undef setAckReceived
-void setAckReceived(Byte who) { acksin++; (void) who;}
+#include "node.c"
+
+Byte packet[3];
+sfpLink_t alink;
+sfpNode_t anode;
+Long acksin, acksout;
+bool spsaccept;
+
+void initLink()
+{
+    setTime(0);
+    initSfpRxSM(&alink);
+    initSfpTxSM(&alink);
+    initSfpStats();
+    initFramePool();
+    packet[0] = TEST_FRAME;    // pid
+    packet[1] = DIRECT;        // to
+    packet[2] = DIRECT;        // from
+}
+
+void initNode()
+{
+    initLink();
+    setNode(&anode);
+    addLink(DIRECT, &alink);
+    setRouteTo(DIRECT, &alink);
+    setWhoami(DIRECT);
+    setWhatami(0);
+    acksin = acksout = 0;
+    spsaccept = true;
+    for (int i = 0; i < MAX_PIDS; i++)
+        setPacketHandler(i, NULL);
+}
 
 #include "sfpRxSm.c"
+#include "sfpTxSm.c"
+
+Long acksIn()
+{
+    sfpLink_t * link = &alink;
+
+    if (testAckReceived(link)) {
+        acksin++;
+        clearAckReceived(link);
+    }
+    return acksin;
+}
+
+Long acksOut()
+{
+    sfpLink_t * link = &alink;
+
+    if (testAckSend(link)) {
+        acksout++;
+        clearAckSend(link);
+    }
+    return acksout;
+}
 
 }

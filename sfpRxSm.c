@@ -10,16 +10,6 @@
 #include "link.h"
 #include "framePool.h"
 
-// 
-// #include "sfpLink.h"
-// #include "pids.h"
-// #include "sfpTxSm.h"
-// #include "sfpRxSm.h"
-// #include "packets.h"
-// #include "node.h"
-// #include "printers.h"
-// #include "routing.h"
-
 // Local Declarations
 static bool sfpLengthOk(Byte length, sfpLink_t *link);
 static void Acquiring(sfpLink_t *link);
@@ -28,7 +18,7 @@ static void Syncing(Byte sync, sfpLink_t *link);
 static void Receiving(Byte data, sfpLink_t *link);
 static void checkDataTimeout(sfpLink_t *link);
 
-// SPS State Machine support
+// length validation
 static bool sfpLengthOk(Byte length, sfpLink_t *link) //! check length for a frame
 {
 	if ( (length != 0) && (length != 255) ) { // special cases for SPI	
@@ -61,7 +51,7 @@ static void Hunting(Byte length, sfpLink_t *link) //! waiting for a byte which w
 		link->sfpRxState = SYNCING;
 	}
 	else
-		rxLinkError(link);
+		RxLinkError(link);
 }
 
 static void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement of the length. If valid, start receiving a frame
@@ -73,7 +63,7 @@ static void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement o
 		link->sfpRxState = RECEIVING;
 	}
 	else {
-		rxLinkError(link);
+		RxLinkError(link);
 		BadSync(link);
 		
 		if (sfpLengthOk(sync, link)) // assume sync is first byte of new frame
@@ -99,7 +89,7 @@ static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame 
 			link->sfpRxState = ACQUIRING;
 		}
 		else {
-			rxLinkError(link);
+			RxLinkError(link);
 			BadCheckSum(link);
 			link->sfpRxState = HUNTING;
 		}
@@ -141,8 +131,12 @@ bool sfpRxSm(sfpLink_t *link) // return true if byte processed
 	return false;
 }
 
+static QUEUE(MAX_FRAMES, frameInq);
+
 void initSfpRxSM(sfpLink_t *link) //! initialize SFP receiver state machine
 {
 	link->rxSps = ANY_SPS;
 	link->sfpRxState = ACQUIRING;
+    zeroq(frameInq);
+    link->frameq = frameInq;
 }

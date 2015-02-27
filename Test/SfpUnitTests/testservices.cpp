@@ -93,3 +93,18 @@ void TestServices::TestSpsOversize()
     QCOMPARE(getPacketSizeBad(), (Long)1);
     QVERIFY(framePoolFull());
 }
+
+/*
+ * need a check for multiple frames in the retry q and first one times out but the next one doesn't until next timeout
+ *
+ * NOTE: frames could get out of order if:
+ *  o frame a for handler a is pushed to the retryq because handler a is busy
+ *  o frame b for handler a comes in just as handler a is free and frame b is handled first
+ *  o frame a is handled later when handler a becomes free.
+ *  o the way to handle this is not to transfer to a retryq. keep frame in linkq and use timeout on frame in linkq
+ *  o this unfortuneately blocks other pid frames in the frameq from being handled
+ *  o it is if almost the pids need to come into play with the frameq. go through the entire frameq of frames. if there
+ *    is a block, note it for a pid. if there are multiple frames for the pid, only the first one is tried. there also
+ *    needs to be a timer on the first one for each pid in waiting. perhaps we go back to the retry q but add a pid
+ *    in waiting flag. preventing the out of order thing. then timeout is only for frame at front of retryq.
+ */

@@ -10,6 +10,7 @@ extern "C" {
 #include "node.h"
 #include "framepool.h"
 #include "frame.h"
+#include "sfpRxSm.h"
 }
 
 TestHandlers::TestHandlers(QObject *parent) :
@@ -62,7 +63,7 @@ void setupFrame()
 void TestHandlers::TestPacketIn()
 {
     setupFrame();
-    callProcessFrames();
+    processFrames();
     QCOMPARE(testframes, (Long)1);
 }
 
@@ -70,24 +71,28 @@ void TestHandlers::TestPacketRetry()
 {
     setupFrame();
     acceptframe = false;
-    callProcessFrames();
-    QCOMPARE(testframes, (Long)1);
-    acceptframe = true;
-    callretryFrames();
+    processFrames();
     QCOMPARE(testframes, (Long)2);
+    QCOMPARE(getFrameProcessed(), (Long)0);
+    acceptframe = true;
+    processFrames();
+    QCOMPARE(testframes, (Long)3);
+    QCOMPARE(getPacketProcessed(), (Long)1);
 }
 
 void TestHandlers::TestStaleFrame()
 {
     setupFrame();
     acceptframe = false;
-    callProcessFrames();
-    QCOMPARE(testframes, (Long)1);
+    processFrames();
+    QCOMPARE(testframes, (Long)2);
     setTime(STALE_RX_FRAME);
-    callretryFrames();
-    QCOMPARE(testframes, (Long)2);
-    callretryFrames();
-    QCOMPARE(testframes, (Long)2);
+    processFrames();
+    QCOMPARE(testframes, (Long)3);
+    processFrames();
+    QCOMPARE(testframes, (Long)3);
+    QCOMPARE(getFrameProcessed(), (Long)0);
+    QCOMPARE(getPacketProcessed(), (Long)0);
 }
 
 void TestHandlers::TestAckPacket()
@@ -95,8 +100,8 @@ void TestHandlers::TestAckPacket()
     initNode();
     packet[0] = SPS_ACK;
     qFrame();
-    callProcessFrames();
-    QCOMPARE(acksin, (Long)1);
+    processFrames();
+    QCOMPARE(acksIn(), (Long)1);
 }
 
 void TestHandlers::TestSpsAckRequest()
@@ -104,20 +109,13 @@ void TestHandlers::TestSpsAckRequest()
     initNode();
     packet[0] |= ACK_BIT;
     qFrame();
-    callProcessFrames();
-    QCOMPARE(acksout, (Long)1);
-    QCOMPARE(testframes, (Long)1);
-}
-
-void TestHandlers::TestSpsAckRequestIgnorePacket()
-{
-    initNode();
-    packet[0] |= ACK_BIT;
+    processFrames();
+    QCOMPARE(acksOut(), (Long)1);
+    QCOMPARE(testframes, (Long)1); // accept first one
     qFrame();
-    spsaccept = false;
-    callProcessFrames();
-    QCOMPARE(acksout, (Long)1);
-    QCOMPARE(testframes, (Long)0);
+    processFrames();
+    QCOMPARE(acksOut(), (Long)2);
+    QCOMPARE(testframes, (Long)0); // second one ignored
 }
 
 void TestHandlers::TestLinkLevelFrame()
@@ -126,7 +124,7 @@ void TestHandlers::TestLinkLevelFrame()
     packet[0] = SPS;
     qFrame();
     setPacketHandler(SPS, rxTestFrame);
-    callProcessFrames();
+    processFrames();
     QCOMPARE(testframes, (Long)1);
 }
 
@@ -135,7 +133,7 @@ void TestHandlers::TestNoHandler()
     initNode();
     packet[0] = SPS;
     qFrame();
-    callProcessFrames();
+    processFrames();
     QCOMPARE(testframes, (Long)0);
     QCOMPARE(getIgnoreFrame(), (Long)1);
 }
