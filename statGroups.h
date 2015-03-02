@@ -22,6 +22,7 @@
     F(RxLinkError) \
     F(SpsAcked) \
     F(SpsSent) \
-    F(SendFrame)
+    F(SendFrame) \
+    F(PollFrame)
 
 #endif

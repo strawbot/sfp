@@ -105,8 +105,7 @@ static void sendNpsFrame(sfpLink_t *link)
 	{
 		if (link->frameOut) // frame has been transmitted return if needed
 			returnFrame(link->frameOut);
-
-        link->frameOut = frame; // keep for returnin later
+        link->frameOut = frame; // set for returnin when done
         pullq(link->npsq);
 
 		SendFrame(link);
@@ -121,6 +120,7 @@ static void sendPollFrame(sfpLink_t *link)
 		n = bytesToReceive(link);
 	transmitPoll(n,link);
 	clearPollSend(link);
+	PollFrame(link);
 }
 
 // SPS transmitter state machine
@@ -233,6 +233,11 @@ void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or
     else if (testSpsSend(link))		sendSpsFrame(link);
     else if (queryq(link->npsq))    sendNpsFrame(link);
     else if (testPollSend(link))	sendPollFrame(link);
+    else if (bytesToSend(link) == 0) {
+		if (link->frameOut) // frame has been transmitted return if needed
+			returnFrame(link->frameOut);
+		link->frameOut = NULL;
+	}
 }
 
 static QUEUE(MAX_FRAMES, npsq);

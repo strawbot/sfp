@@ -14,6 +14,7 @@ private slots:
     void TestSendAck();
     void TestSendPoll();
     void TestSpsInit();
+    void TestFramePriority();
 };
 
 #endif // TESTTRANSMITTERSTATEMACHINE_H

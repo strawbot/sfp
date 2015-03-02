@@ -40,6 +40,11 @@ void initTxSm()
     lasttx = 0x1FF;
 }
 
+void qNpsFrame()
+{
+
+}
+
 void TestTransmitterStateMachine::TestSendFrame()
 {
     sfpFrame frame;
@@ -110,7 +115,33 @@ void TestTransmitterStateMachine::TestSpsInit()
     }
 }
 
-/*
- * Tests:
- * loopback sps test
- */
+void TestTransmitterStateMachine::TestFramePriority()
+{
+    sfpLink_t * link = &alink;
+
+    QVERIFY(framePoolFull());
+
+    initTxSm();
+    link->txSps = ONLY_SPS0;                    // need to put into sps ready state
+
+    sendNpTo(packet, sizeof(packet), DIRECT);   // induce an NPS txmssion
+    sendSpTo(packet, sizeof(packet), DIRECT);   // induce an SPS txmssion
+    spsReceived(DIRECT);                        // induce an ACK txmssion
+    setPollSend(link);                          // induce a poll txmssion
+
+    for(Long i = MAX_SFP_SIZE * 4; i; i--) { // run enough times to handle 4 full frames
+        sfpTxSm(link);
+        serviceTx(link);
+    }
+
+    QCOMPARE(getSpsSent(link), (Long)1);
+    QCOMPARE(getSendFrame(link), (Long)2);
+    QCOMPARE(getPollFrame(link), (Long)1);
+
+    QCOMPARE(getSpsAcked(link), (Long)0);
+    spsAcknowledged(DIRECT);
+    sfpTxSm(link);
+    QCOMPARE(getSpsAcked(link), (Long)1);
+
+    QVERIFY(framePoolFull());
+}
