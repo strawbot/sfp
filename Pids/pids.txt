@@ -6,14 +6,14 @@
 //
 //
 	TEST_FRAME	0x00	test frame for throughput measurements
+	SPS_ACK		++		confirm sps; link only - not networkable
 //
-	WHO_PIDS	(TEST_FRAME) all pids greater than, use the who header for routing
+	WHO_PIDS	(SPS_ACK) all pids greater than, use the who header for routing
+//
+	SPS			++		used for initializing SPS frame acks and setting id
 //
 	PING		++		to check other end
 	PING_BACK	++ 		expected response to a PING
-//
-	SPS			++		used for initializing SPS frame acks and setting id
-	SPS_ACK		++		confirm sps; must contain sender - who.from
 //
 	GET_VERSION	++		get the version number
 	VERSION_NO	++		return the version number
