@@ -18,45 +18,45 @@ int main(int argc, char** argv)
 {
     int status = 0;
 
-//    {
-//        TestFraming tc;
-//        status |= QTest::qExec(&tc, argc, argv);
-//    }
+    {
+        TestFraming tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
-//    {
-//        TestPool tc;
-//        status |= QTest::qExec(&tc, argc, argv);
-//    }
+    {
+        TestPool tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
-//    {
-//        TestServices tc;
-//        status |= QTest::qExec(&tc, argc, argv);
-//    }
+    {
+        TestServices tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
-//    {
-//        TestHandlers tc;
-//        status |= QTest::qExec(&tc, argc, argv);
-//    }
+    {
+        TestHandlers tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
-//    {
-//        TestReceiverStateMachine tc;
-//        status |= QTest::qExec(&tc, argc, argv);
-//    }
+    {
+        TestReceiverStateMachine tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
-//    {
-//        TestTransmitterStateMachine tc;
-//        status |= QTest::qExec(&tc, argc, argv);
-//    }
+    {
+        TestTransmitterStateMachine tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
-//    {
-//        TestSps tc;
-//        status |= QTest::qExec(&tc, argc, argv);
-//    }
+    {
+        TestSps tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
-//    {
-//        TestRouting tc;
-//        status |= QTest::qExec(&tc, argc, argv);
-//    }
+    {
+        TestRouting tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
     {
         TestNetwork tc;

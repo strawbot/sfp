@@ -1,7 +1,7 @@
 // Packet IDs. Declare byte value in hex or increment from last one by ++
 
-	ACK_BIT		0x80	used for tagging acked frames. High bit is set for acked frames. next high bit is sfs 1 or 2
-	SPS_BIT		0x40	used for indicating sfs type if an acked frame
+	ACK_BIT		0x80	used for indicating SPS frames
+	SPS_BIT		0x40	used for indicating type of an SPS frame
 	PID_BITS	(0xFF&(~(ACK_BIT|SPS_BIT)))	used to mask off upper bits
 //
 //

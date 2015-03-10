@@ -82,6 +82,16 @@ void processFrames(void) //process received frames from links
 	retryFrames();
 }
 
+/* SPS routing
+ SPS is only over a single link. To be network wide, there would have to be state
+ machines for each possible connection. While possible, it complicates matters.
+ To simplify, SPS is only over a single link. In the case of a frame from that only
+ goes over one link this is fine. But if the frame needs to go further then either:
+  o drop it and keep a stat
+  o send the ack, but route the frame as NPS
+  o send the ack and route the frame as SPS ? would this work?
+  > ACK frame should not have routing 
+*/
 static bool processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 {
 	if (frame->pid & ACK_BIT) { // intercept SPS packets
@@ -90,10 +100,9 @@ static bool processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 			returnFrame(frame);
 			return true;
 		}
-		frame->pid &= PID_BITS; // strip sps bits
 	}
 
-	if (frame->pid > WHO_PIDS) // check for routing of packet
+	if ( (frame->pid & PID_BITS) > WHO_PIDS) // check for routing of packet
         if (frame->who.to) { // is there a destination?
 			if (whoami() == ME) // do i need an identity? (multi drop)
 				setWhoami(frame->who.to); // become the destination
@@ -102,6 +111,8 @@ static bool processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 				return true;
 			}
         }
+
+	frame->pid &= PID_BITS; // strip sps bits
 
 	// give first crack at packet to vectored handlers
 	packetHandler_t handler = getPacketHandler(frame->pid);
@@ -212,7 +223,10 @@ static void reRouteFrame(sfpFrame *frame)
 	
 	if (link) {
 		ReRouted();
-		pushq((Cell)frame, link->npsq);
+		if (frame->pid & ACK_BIT) // check to see if SPS packet
+			pushq((Cell)frame, link->spsq);
+		else
+			pushq((Cell)frame, link->npsq);
 	}
 	else {
 		UnRouted();

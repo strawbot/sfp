@@ -13,6 +13,7 @@ bool framePoolFull();
 FOR_EACH_NODE_STAT(DECLARE_GET_NODE_STAT)
 FOR_EACH_LINK_STAT(DECLARE_GET_LINK_STAT)
 
+extern bool verbose;
 extern sfpLink_t alink;
 extern sfpNode_t anode;
 extern Byte packet[3];

@@ -12,6 +12,7 @@ extern struct qlink{
     NEW_BQ(MAX_FRAME_LENGTH-3, byteq);
 } links[6];
 
+void initNetworkStats();
 void initRoutes();
 void runNodes(Long i);
 void selectNode(Long n);

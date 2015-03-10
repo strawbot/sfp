@@ -149,33 +149,41 @@ void frameSay(sfpFrame * frame, const char * dir)
     Byte from = frame->who.from;
     Byte me = whoami();
     Long time = getTime();
+    const char * spstag = "";
 
     if (!verbose) return;
 
+    if (pid & ACK_BIT) {
+        if (pid & SPS_BIT)
+            spstag = "(SPS1)";
+        else
+            spstag = "(SPS0)";
+    }
+
     switch(pid&PID_BITS) {
-    case TEST_FRAME:     qDebug() << time << "Node" << me << "Frame" << dir << " - PID: TEST_FRAME " << to << "," << from; break;
-    case PING:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: PING " << to << "," << from; break;
-    case PING_BACK:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: PING_BACK " << to << "," << from; break;
-    case SPS:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: SPS " << to << "," << from; break;
-    case SPS_ACK:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: SPS_ACK " << to << "," << from; break;
-    case GET_VERSION:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: GET_VERSION " << to << "," << from; break;
-    case VERSION_NO:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: VERSION_NO " << to << "," << from; break;
-    case TALK_IN:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: TALK_IN " << to << "," << from; break;
-    case TALK_OUT:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: TALK_OUT " << to << "," << from; break;
-    case EVAL:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: EVAL " << to << "," << from; break;
-    case CALL_CODE:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: CALL_CODE " << to << "," << from; break;
-    case MEM_READ:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: MEM_READ " << to << "," << from; break;
-    case MEM_DATA:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: MEM_DATA " << to << "," << from; break;
-    case CHECK_MEM:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: CHECK_MEM " << to << "," << from; break;
-    case MEM_CHECK:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: MEM_CHECK " << to << "," << from; break;
-    case FILL_MEM:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: FILL_MEM " << to << "," << from; break;
-    case RAM_WRITE:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: RAM_WRITE " << to << "," << from; break;
-    case FLASH_WRITE:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: FLASH_WRITE " << to << "," << from; break;
-    case WRITE_CONF:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: WRITE_CONF " << to << "," << from; break;
-    case ERASE_MEM:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: ERASE_MEM " << to << "," << from; break;
-    case ERASE_CONF:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: ERASE_CONF " << to << "," << from; break;
-    case MAX_PIDS:     qDebug() << time << "Node" << me << "Frame" << dir << "- PID: MAX_PIDS " << to << "," << from; break;
-    default: qDebug() << time << "Node" << me << "Frame" << dir << "- Unknown PID: " << pid; break;
+    case TEST_FRAME:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << " - PID: TEST_FRAME " << to << "," << from; break;
+    case PING:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: PING " << to << "," << from; break;
+    case PING_BACK:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: PING_BACK " << to << "," << from; break;
+    case SPS:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: SPS " << to << "," << from; break;
+    case SPS_ACK:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: SPS_ACK " << to << "," << from; break;
+    case GET_VERSION:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: GET_VERSION " << to << "," << from; break;
+    case VERSION_NO:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: VERSION_NO " << to << "," << from; break;
+    case TALK_IN:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: TALK_IN " << to << "," << from; break;
+    case TALK_OUT:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: TALK_OUT " << to << "," << from; break;
+    case EVAL:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: EVAL " << to << "," << from; break;
+    case CALL_CODE:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: CALL_CODE " << to << "," << from; break;
+    case MEM_READ:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: MEM_READ " << to << "," << from; break;
+    case MEM_DATA:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: MEM_DATA " << to << "," << from; break;
+    case CHECK_MEM:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: CHECK_MEM " << to << "," << from; break;
+    case MEM_CHECK:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: MEM_CHECK " << to << "," << from; break;
+    case FILL_MEM:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: FILL_MEM " << to << "," << from; break;
+    case RAM_WRITE:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: RAM_WRITE " << to << "," << from; break;
+    case FLASH_WRITE:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: FLASH_WRITE " << to << "," << from; break;
+    case WRITE_CONF:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: WRITE_CONF " << to << "," << from; break;
+    case ERASE_MEM:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: ERASE_MEM " << to << "," << from; break;
+    case ERASE_CONF:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: ERASE_CONF " << to << "," << from; break;
+    case MAX_PIDS:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: MAX_PIDS " << to << "," << from; break;
+    default: qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- Unknown PID: " << pid; break;
     }
 }
 

@@ -81,18 +81,7 @@ static void sendSpsFrame(sfpLink_t * link)
         if (transmitFrame((sfpFrame *)q(link->spsq), link)) {
             clearSpsSend(link);
             SpsSent(link);
-
-            switch(link->txSps) {
-            case ONLY_SPS0:
-                setSpsState(link, WAIT_ACK0);
-                break;
-            case ONLY_SPS1:
-                setSpsState(link, WAIT_ACK1);
-                break;
-            default:
-                break;
-            }
-        }
+       }
     }
     else {
         clearSpsSend(link);
@@ -133,10 +122,14 @@ static void setSpsBits(sfpLink_t * link)
 	
 	frame->pid &= PID_BITS;
 
-	if (link->txSps == ONLY_SPS0)
+	if (link->txSps == ONLY_SPS0) {
 		frame->pid |= ACK_BIT;
-	else
+        setSpsState(link, WAIT_ACK0);
+    }
+	else {
 		frame->pid |= ACK_BIT | SPS_BIT;
+		setSpsState(link, WAIT_ACK1);
+	}
 	addChecksum(frame); // must recalculate since bits were changed
 }
 
@@ -171,6 +164,7 @@ static void checkSps(sfpLink_t * link)
 		}
 	}
 
+ 
 	switch(link->txSps) {
 	case NO_SPS:
         if (checkTimeout(&link->spsTo)) {

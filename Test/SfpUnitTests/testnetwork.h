@@ -12,6 +12,8 @@ public:
 private slots:
     void initTestCase();
     void testPing();
+    void testSpsDirect();
+    void testSpsInDirect();
 };
 
 #endif // TESTNETWORK_H
