@@ -86,7 +86,7 @@ void TestHandlers::TestStaleFrame()
     acceptframe = false;
     processFrames();
     QCOMPARE(testframes, (Long)2);
-    setTime(STALE_RX_FRAME);
+    setTime(STALE_RX_FRAME + 1);
     processFrames();
     QCOMPARE(testframes, (Long)3);
     processFrames();

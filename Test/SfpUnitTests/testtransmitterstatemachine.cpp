@@ -21,14 +21,16 @@ TestTransmitterStateMachine::TestTransmitterStateMachine(QObject *parent) :
 Long lasttx;
 bool txok;
 
-bool txOk()
+bool txOk(sfpLink_t * link)
 {
     return txok;
+    (void) link;
 }
 
-void putTx(Long x)
+void putTx(Long x, sfpLink_t * link)
 {
     lasttx = x;
+    (void) link;
 }
 
 void initTxSm()
@@ -67,12 +69,12 @@ void TestTransmitterStateMachine::TestSendFrame()
 void TestTransmitterStateMachine::TestSendAck()
 {
     sfpFrame frame;
-    Byte * pp = &frame.length, packet[1] = {SPS_ACK};
+    Byte * pp = &frame.length, packet[3] = {SPS_ACK, 0, 0};
 
     buildSfpFrame(sizeof(packet) - 1, &packet[1], packet[0], &frame);
 
     initTxSm();
-    spsReceived(DIRECT); // induce an ACK txmssion
+    spsReceived(&alink); // induce an ACK txmssion
     sfpTxSm(&alink);
     for(Long i = frame.length + LENGTH_LENGTH; i; i--) {
         serviceTx(&alink);
@@ -97,17 +99,15 @@ void TestTransmitterStateMachine::TestSendPoll()
 
 void TestTransmitterStateMachine::TestSpsInit()
 {
-    sfpLink_t * link = &alink;
     sfpFrame frame;
-    Byte * pp = &frame.length, packet[1] = {SPS};
+    Byte * pp = &frame.length, packet[3] = {SPS|ACK_BIT, 0, 0};
 
     buildSfpFrame(sizeof(packet) - 1, &packet[1], packet[0], &frame);
 
-
     initTxSm();
     sfpTxSm(&alink);
-    QVERIFY(testSpsInit(link) == false);
     setTime(SFP_SPS_TIME + 1);
+    sfpTxSm(&alink);
     sfpTxSm(&alink);
     for(Long i = frame.length + LENGTH_LENGTH; i; i--) {
         serviceTx(&alink);
@@ -119,6 +119,7 @@ void TestTransmitterStateMachine::TestFramePriority()
 {
     sfpLink_t * link = &alink;
 
+    initFramePool();
     QVERIFY(framePoolFull());
 
     initTxSm();
@@ -126,20 +127,19 @@ void TestTransmitterStateMachine::TestFramePriority()
 
     sendNpTo(packet, sizeof(packet), DIRECT);   // induce an NPS txmssion
     sendSpTo(packet, sizeof(packet), DIRECT);   // induce an SPS txmssion
-    spsReceived(DIRECT);                        // induce an ACK txmssion
+    spsReceived(link);                        // induce an ACK txmssion
     setPollSend(link);                          // induce a poll txmssion
 
     for(Long i = MAX_SFP_SIZE * 4; i; i--) { // run enough times to handle 4 full frames
         sfpTxSm(link);
         serviceTx(link);
     }
-
     QCOMPARE(getSpsSent(link), (Long)1);
     QCOMPARE(getSendFrame(link), (Long)2);
     QCOMPARE(getPollFrame(link), (Long)1);
 
     QCOMPARE(getSpsAcked(link), (Long)0);
-    spsAcknowledged(DIRECT);
+    spsAcknowledged(link);
     sfpTxSm(link);
     QCOMPARE(getSpsAcked(link), (Long)1);
 

@@ -9,10 +9,9 @@ class TestNetwork : public QObject
 public:
     explicit TestNetwork(QObject *parent = 0);
 
-signals:
-
-public slots:
-
+private slots:
+    void initTestCase();
+    void testPing();
 };
 
 #endif // TESTNETWORK_H

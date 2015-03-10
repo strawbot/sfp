@@ -15,6 +15,7 @@ private slots:
     void TestNpsNull();
     void TestNpsOversize();
     void TestSendSpsNoLink(void);
+    void TestSpsLinkDown();
     void TestSpsLink(void);
     void TestSpsNull();
     void TestSpsOversize();

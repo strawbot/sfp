@@ -13,6 +13,8 @@ bool returnFrame(void *frame)
 	return true;
 }
 
+void fpf(void);
+
 sfpFrame *getFrame(void)
 {
     if (queryq(poolq))

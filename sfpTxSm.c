@@ -28,24 +28,28 @@
 Byte pollTrain = 3; // how many consecutive polls to send - empirically determined
 static sfpFrame pollFrame;
 static sfpFrame ackFrame;
-static sfpFrame spsFrame;
 
 // Local Declarations
 static bool transmitFrame(sfpFrame *frame, sfpLink_t *link);
 static void transmitPoll(Byte n, sfpLink_t *link);
 static void sendAckFrame(sfpLink_t *link);
-static void sendSpsInit(sfpLink_t * link);
 static void sendSpsFrame(sfpLink_t * link);
 static void sendNpsFrame(sfpLink_t *link);
 static void sendPollFrame(sfpLink_t *link);
 static void setSpsBits(sfpLink_t * link);
 static void checkSps(sfpLink_t * link);
+static void setSpsState(sfpLink_t * link, spsState_t state);
+
+// debugging
+void frameOut(sfpFrame * frame);
+void txSpsState(sfpLink_t * link, spsState_t state);
 
 // setup for transmitter
 static bool transmitFrame(sfpFrame *frame, sfpLink_t *link) //! set a frame up for transmission
 {
 	if (bytesToSend(link) == 0)
 	{
+        frameOut(frame);
 		link->sfpTxPtr = &frame->length; // set this first
 		link->sfpBytesToTx = frame->length + LENGTH_LENGTH; // set this second
 		return true;
@@ -65,36 +69,35 @@ static void transmitPoll(Byte n, sfpLink_t *link) //! set number of poll bytes f
 // support Functions
 static void sendAckFrame(sfpLink_t *link)
 {
-	if (transmitFrame(&ackFrame, link))
-	{
+	if (transmitFrame(&ackFrame, link)) {
 		SendFrame(link);
 		clearAckSend(link);
 	}
 }
 
-static void sendSpsInit(sfpLink_t * link)
-{
-	if (transmitFrame(&spsFrame, link))
-        clearSpsInit(link);
-}
-
 static void sendSpsFrame(sfpLink_t * link)
 {
-	if (transmitFrame((sfpFrame *)q(link->spsq), link)) {
+    if (queryq(link->spsq)) {
+        if (transmitFrame((sfpFrame *)q(link->spsq), link)) {
+            clearSpsSend(link);
+            SpsSent(link);
+
+            switch(link->txSps) {
+            case ONLY_SPS0:
+                setSpsState(link, WAIT_ACK0);
+                break;
+            case ONLY_SPS1:
+                setSpsState(link, WAIT_ACK1);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    else {
         clearSpsSend(link);
-		SpsSent(link);
-		
-		switch(link->txSps) {
-		case ONLY_SPS0:
-			link->txSps = WAIT_ACK0;
-			break;
-		case ONLY_SPS1:
-			link->txSps = WAIT_ACK1;
-			break;
-        default:
-            break;
-		}
-	}
+        SpsqUnderflow(link);
+    }
 }
 
 static void sendNpsFrame(sfpLink_t *link)
@@ -128,10 +131,19 @@ static void setSpsBits(sfpLink_t * link)
 {
 	sfpFrame * frame = (sfpFrame *)q(link->spsq);
 	
+	frame->pid &= PID_BITS;
+
 	if (link->txSps == ONLY_SPS0)
 		frame->pid |= ACK_BIT;
 	else
 		frame->pid |= ACK_BIT | SPS_BIT;
+	addChecksum(frame); // must recalculate since bits were changed
+}
+
+static void setSpsState(sfpLink_t * link, spsState_t state)
+{
+	txSpsState(link, state);
+	link->txSps = state;
 }
 
 static void checkSps(sfpLink_t * link)
@@ -142,19 +154,19 @@ static void checkSps(sfpLink_t * link)
 
 		switch(link->txSps) {
 		case NO_SPS:
-            link->txSps = ONLY_SPS0;
+            setSpsState(link, ONLY_SPS0);
 			break;
 		case ONLY_SPS0:
 		case ONLY_SPS1:
-			link->txSps = NO_SPS;
+            UnexpectedAck(link);
 			break;
 		case WAIT_ACK0:
 			returnFrame((sfpFrame *)pullq(link->spsq));
-            link->txSps = ONLY_SPS1;
+            setSpsState(link, ONLY_SPS1);
 			break;
 		case WAIT_ACK1:
 			returnFrame((sfpFrame *)pullq(link->spsq));
-            link->txSps = ONLY_SPS0;
+            setSpsState(link, ONLY_SPS0);
             break;
 		}
 	}
@@ -162,14 +174,22 @@ static void checkSps(sfpLink_t * link)
 	switch(link->txSps) {
 	case NO_SPS:
         if (checkTimeout(&link->spsTo)) {
-            startTimeout(&link->spsTo);
-			setSpsInit(link);
-        }
+			who_t who = {DIRECT, whoami()};
+        	sfpFrame * frame = getFrame();
+        	
+        	if (frame) {
+    			buildSfpFrame(sizeof(who), &who.to, SPS, frame); // empty frame
+				stuffq((Cell)frame, link->spsq); // make sure it is first out
+                setSpsState(link, ONLY_SPS0);
+			}
+			else
+				setTimeout(SFP_SPS_TIME, &link->spsTo);
+		}
 		break;
 	case ONLY_SPS0:
 	case ONLY_SPS1:
 		if (queryq(link->spsq)) {
-            startTimeout(&link->spsTo);
+            setTimeout(SFP_SPS_TIME, &link->spsTo);
 			setSpsBits(link);
 			setSpsSend(link);
 			link->spsRetries = 0;
@@ -179,13 +199,13 @@ static void checkSps(sfpLink_t * link)
 	case WAIT_ACK1:
         if (checkTimeout(&link->spsTo)) {
             if (link->spsRetries < SPS_RETRIES) {
-                startTimeout(&link->spsTo);
+                setTimeout(SFP_SPS_TIME, &link->spsTo);
 				link->spsRetries += 1;
 				setSpsSend(link);
 			}
 			else {
 				returnFrame((sfpFrame *)pullq(link->spsq));
-                link->txSps = NO_SPS;
+                setSpsState(link, NO_SPS);
             }
 		}
 		break;
@@ -193,28 +213,22 @@ static void checkSps(sfpLink_t * link)
 }
 
 // API
-void spsAcknowledged(Byte from)
+void spsAcknowledged(sfpLink_t *link)
 {
-	sfpLink_t * link = routeTo(from);
-	
-	if (link)
-		setAckReceived(link);
+	setAckReceived(link);
 }
 
-void spsReceived(Byte from)
+void spsReceived(sfpLink_t *link)
 {
-	sfpLink_t * link = routeTo(from);
-	
-	if (link)
-		setAckSend(link);
+	setAckSend(link);
 }
 
 void transmitSfpByte(sfpLink_t *link) // send a byte if transmitter is able to
 {
-	if (link->sfpTx())
+    if (link->sfpTx(link))
 	{
 		link->sfpBytesToTx--;
-		link->sfpPut(*link->sfpTxPtr++);
+        link->sfpPut(*link->sfpTxPtr++, link);
 	}
 }
 
@@ -229,7 +243,6 @@ void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or
     checkSps(link);
 	// prioritized transmission actions
     if 		(testAckSend(link))		sendAckFrame(link);
-    else if (testSpsInit(link))		sendSpsInit(link);
     else if (testSpsSend(link))		sendSpsFrame(link);
     else if (queryq(link->npsq))    sendNpsFrame(link);
     else if (testPollSend(link))	sendPollFrame(link);
@@ -240,18 +253,16 @@ void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or
 	}
 }
 
-static QUEUE(MAX_FRAMES, npsq);
-static QUEUE(MAX_FRAMES, spsq);
-
-void initSfpTxSM(sfpLink_t *link) //! initialize SFP receiver state machine
+void initSfpTxSM(sfpLink_t *link, Qtype * npsq, Qtype * spsq) //! initialize SFP receiver state machine
 {
+	who_t who = {DIRECT, DIRECT};
+
 	setTimeout(SFP_SPS_TIME, &link->spsTo);  // startup sps service - use giveup timeout
 	memset(&pollFrame, 0, sizeof(pollFrame)); // set to all zeroes
-    buildSfpFrame(0, NULL, SPS_ACK, &ackFrame); // one time build of ACK starter frame
-    buildSfpFrame(0, NULL, SPS, &spsFrame); // one time build of SPS starter frame
+    buildSfpFrame(sizeof(who), &who.to, SPS_ACK, &ackFrame); // one time build of ACK starter frame
 
 	link->sfpBytesToTx = 0;
-	link->txSps = NO_SPS;
+    setSpsState(link, NO_SPS);
 	link->txFlags = 0;
     link->frameOut = 0;
 

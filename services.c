@@ -19,12 +19,12 @@ static QUEUE(MAX_FRAMES, retryq); // where to put frames which are in waiting
 static packetHandler_t packetHandlers[MAX_PIDS] = {NULL};
 
 // local declarations
-static bool processLinkFrame(sfpFrame * frame);
+static bool processLinkFrame(sfpFrame * frame, sfpLink_t *link);
 static bool processPacket(sfpFrame * frame);
 static void retryFrames(void);
 static bool sendPacketToQ(Byte *packet, Byte length, Qtype *que);
 static void reRouteFrame(sfpFrame *frame);
-static bool acceptSpsFrame(sfpFrame * frame);
+static bool acceptSpsFrame(sfpFrame * frame, sfpLink_t *link);
 
 // vectorizable packet handlers
 packetHandler_t setPacketHandler(Byte pid, packetHandler_t handler)
@@ -70,11 +70,11 @@ void processFrames(void) //process received frames from links
 		if (queryq(link->frameq) != 0) {
 			sfpFrame *frame = (sfpFrame *)pullq(link->frameq);
 			
-			if (processLinkFrame(frame))
+			if (processLinkFrame(frame, link))
 				FrameProcessed();
 			else {
 				if (queryq(retryq) == 0)
-					startTimeout(&retryTo);
+					setTimeout(STALE_RX_FRAME, &retryTo);
 				pushq((Cell)frame, retryq);
 			}
 		}
@@ -82,11 +82,11 @@ void processFrames(void) //process received frames from links
 	retryFrames();
 }
 
-static bool processLinkFrame(sfpFrame * frame)
+static bool processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 {
 	if (frame->pid & ACK_BIT) { // intercept SPS packets
-		spsReceived(frame->who.from);
-		if (!acceptSpsFrame(frame)) {
+		spsReceived(link);
+		if (!acceptSpsFrame(frame, link)) {
 			returnFrame(frame);
 			return true;
 		}
@@ -127,7 +127,7 @@ static bool processLinkFrame(sfpFrame * frame)
 				}
 				break;
 			case SPS_ACK: // ack frame for SPS
-				spsAcknowledged(frame->who.from); // pass notice to transmitter
+				spsAcknowledged(link); // pass notice to transmitter
 				break;
 			case SPS: // null packet used for initializing SPS and setting id
 			case PING_BACK: // ignore reply
@@ -156,7 +156,7 @@ static void retryFrames(void) //process packets for busy handlers
 			UnDelivered();
             returnFrame((sfpFrame*)pullq(retryq));
             if (queryq(retryq) != 0)
-				startTimeout(&retryTo);
+				setTimeout(STALE_RX_FRAME, &retryTo);
 		}
 	}
 }
@@ -171,30 +171,36 @@ static bool processPacket(sfpFrame * frame)
 	UnknownPid();
 	return true;
 }
+void breakPoint1(void);
 
-bool acceptSpsFrame(sfpFrame * frame) //! accept or reject incoming sps
+static bool acceptSpsFrame(sfpFrame * frame, sfpLink_t *link) //! accept or reject incoming sps
 {
-    sfpLink_t *link = routeTo(frame->who.from);
     Byte sps = frame->pid & SPS_BIT;
 
-	switch (link->rxSps) {
-		case ONLY_SPS0:
-			if (sps)
-				return false;
-			link->rxSps = ONLY_SPS1;
-			break;
-		case ONLY_SPS1:
-			if (!sps)
-				return false;
-			link->rxSps = ONLY_SPS0;
-			break;
-		default:
-			if (sps)
-				link->rxSps = ONLY_SPS0;
-			else
-				link->rxSps = ONLY_SPS1;
-			break;
-	}
+    if (link == 0) {
+    	breakPoint1();
+        NoDest();
+    }
+    else {
+        switch (link->rxSps) {
+        case ONLY_SPS0:
+            if (sps)
+                return false;
+            link->rxSps = ONLY_SPS1;
+            break;
+        case ONLY_SPS1:
+            if (!sps)
+                return false;
+            link->rxSps = ONLY_SPS0;
+            break;
+        default:
+            if (sps)
+                link->rxSps = ONLY_SPS0;
+            else
+                link->rxSps = ONLY_SPS1;
+            break;
+        }
+    }
 	return true;
 }
 
@@ -250,9 +256,12 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 {
 	sfpLink_t *link = routeTo(to);
 	
-	if (link)
-        return sendPacketToQ(packet, length, link->spsq);
-
+	if (link) {
+		if (link->txSps == NO_SPS)
+			return false;
+		return sendPacketToQ(packet, length, link->spsq);
+	}
+		
 	// TODO: If for me - accept it?
 	NoDest();
 	return true;

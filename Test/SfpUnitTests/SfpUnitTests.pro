@@ -31,7 +31,9 @@ SOURCES += \
     mocks.cpp \
     testhandlers.cpp \
     testreceiverstatemachine.cpp \
-    testtransmitterstatemachine.cpp
+    testtransmitterstatemachine.cpp \
+    testsps.cpp \
+    smallNetwork.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
@@ -54,4 +56,7 @@ HEADERS += \
     mocks.h \
     testhandlers.h \
     testreceiverstatemachine.h \
-    testtransmitterstatemachine.h
+    testtransmitterstatemachine.h \
+    testsps.h \
+    parameters.h \
+    smallNetwork.h

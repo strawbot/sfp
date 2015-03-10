@@ -37,20 +37,19 @@ void TestFraming::TestCheckSum_data()
 
 void TestFraming::TestCheckSum()
 {
-    Byte c1, c2;
+    checkSum_t cs;
 
     QFETCH(Byte, Sum);
     QFETCH(Byte, SumSum);
     QFETCH(Byte, Length);
     QFETCH(Byte *, Data);
 
-    c1 = c2 = 0;
-    calculateFletcherCheckSum(&c1, &c2, Length, Data);
+    calculateCheckSum(&cs, Length, Data);
 
 //    qDebug("Sum %d, c1 %d, SumSum %d, c2 %d, Length, %d",Sum,c1,SumSum,c2,Length);
 
-    QCOMPARE(c1, Sum);
-    QCOMPARE(c2, SumSum);
+    QCOMPARE(cs.sum, Sum);
+    QCOMPARE(cs.sumsum, SumSum);
 }
 
 void TestFraming::TestFrameBuild_data()

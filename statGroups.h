@@ -1,7 +1,7 @@
 #ifndef _STAT_GROUP_H_
 #define _STAT_GROUP_H_
 
-#define FOR_EACH_STAT(F) \
+#define FOR_EACH_NODE_STAT(F) \
 	F(FramePoolEmpty) \
 	F(FrameProcessed) \
 	F(IgnoreFrame) \
@@ -23,6 +23,10 @@
     F(SpsAcked) \
     F(SpsSent) \
     F(SendFrame) \
-    F(PollFrame)
+    F(PollFrame) \
+    F(BytesOut) \
+    F(BytesIn) \
+    F(UnexpectedAck) \
+    F(SpsqUnderflow)
 
 #endif

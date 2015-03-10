@@ -23,26 +23,27 @@ typedef enum {NO_LINK, SFP_LINK, SERIAL_LINK, ROUTE_LINK} linkOwner_t;
 #define LINK_STAT(stat) Long stat;
 
 // Link structure
-typedef struct {	// Link information
+typedef struct sfpLink_t{	// Link information
 	// Receiver
 	Byte * rxq;							// point to queue of incoming bytes
 	sfpFrame * frameIn;					// pointer to frame used for receiving
 	Byte * sfpRxPtr;					// point to frame being built
 	Byte sfpBytesToRx;					// bytes to receive
     Qtype * frameq;						// incoming frame queue
-	bool (* sfpRx)(void);				// is there something to receive?
-	Byte (* sfpGet)(void);				// get the byte
+	bool (* sfpRx)(struct sfpLink_t *);	// is there something to receive?
+	Byte (* sfpGet)(struct sfpLink_t *);// get the byte
 	sfpRxState_t sfpRxState;			// SFP RX states
 	spsState_t rxSps;					// which secure pid to look for next
 
 	// Transmitter
+	Byte * txq;							// point to queue of outgoing bytes
 	sfpFrame * frameOut;				// point to frame being sent if it is to be returned
 	Byte *sfpTxPtr;						// point to byte to be sent
 	Byte sfpBytesToTx;					// bytes to send
     Qtype *npsq;						// point to queue of nps frames to send
     Qtype *spsq;						// queue of SPS frames to send
-	bool (*sfpTx)(void);				// can something be sent?
-	void (*sfpPut)(Long);				// put the byte plus any upper bits
+	bool (*sfpTx)(struct sfpLink_t *);	// can something be sent?
+	void (*sfpPut)(Long, struct sfpLink_t *);// put the byte plus any upper bits
 	spsState_t txSps;					// which secure pid to send next
 	Timeout spsTo;						// sps timeout
 	Long spsRetries;					// how many times sps frame has been retried

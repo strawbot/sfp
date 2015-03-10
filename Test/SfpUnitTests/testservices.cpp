@@ -10,6 +10,12 @@ extern "C" {
 #include "node.h"
 }
 
+void initNodeServices(void)
+{
+    initNode();
+    alink.txSps = ONLY_SPS0;
+}
+
 TestServices::TestServices(QObject *parent) :
     QObject(parent)
 {
@@ -28,7 +34,7 @@ void TestServices::TestSendNpsNoLink()
 
 void TestServices::TestNpsLink()
 {
-    initNode();
+    initNodeServices();
 
     for (Long i= MAX_FRAMES; i; i--) // send all frames
         QCOMPARE(sendNpTo(packet, sizeof(packet), DIRECT), true);
@@ -40,7 +46,7 @@ void TestServices::TestNpsLink()
 
 void TestServices::TestNpsNull()
 {
-    initNode();
+    initNodeServices();
     QCOMPARE(sendNpTo(packet, 0, DIRECT), false);
     QCOMPARE(getPacketSizeBad(), (Long)1);
     QVERIFY(framePoolFull());
@@ -48,7 +54,7 @@ void TestServices::TestNpsNull()
 
 void TestServices::TestNpsOversize()
 {
-    initNode();
+    initNodeServices();
     QCOMPARE(sendNpTo(packet, MAX_PACKET_LENGTH + 1, DIRECT), false);
     QCOMPARE(getPacketSizeBad(), (Long)1);
     QVERIFY(framePoolFull());
@@ -56,7 +62,7 @@ void TestServices::TestNpsOversize()
 
 void TestServices::TestSendSpsNoLink()
 {
-    initNode();
+    initNodeServices();
     setRouteTo(DIRECT, NULL);
 
     for (Long i= MAX_FRAMES + 1; i; i--)
@@ -66,9 +72,15 @@ void TestServices::TestSendSpsNoLink()
     QVERIFY(0 == getPacketSizeBad());
 }
 
-void TestServices::TestSpsLink()
+void TestServices::TestSpsLinkDown()
 {
     initNode();
+    QCOMPARE(sendSpTo(packet, sizeof(packet), DIRECT), false); // try to send one more
+}
+
+void TestServices::TestSpsLink()
+{
+    initNodeServices();
 
     for (Long i= MAX_FRAMES; i; i--) // send all frames
         QCOMPARE(sendSpTo(packet, sizeof(packet), DIRECT), true);
@@ -80,7 +92,7 @@ void TestServices::TestSpsLink()
 
 void TestServices::TestSpsNull()
 {
-    initNode();
+    initNodeServices();
     QCOMPARE(sendSpTo(packet, 0, DIRECT), false);
     QCOMPARE(getPacketSizeBad(), (Long)1);
     QVERIFY(framePoolFull());
@@ -88,7 +100,7 @@ void TestServices::TestSpsNull()
 
 void TestServices::TestSpsOversize()
 {
-    initNode();
+    initNodeServices();
     QCOMPARE(sendSpTo(packet, MAX_PACKET_LENGTH + 1, DIRECT), false);
     QCOMPARE(getPacketSizeBad(), (Long)1);
     QVERIFY(framePoolFull());

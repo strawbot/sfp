@@ -10,6 +10,7 @@ public:
     explicit TestPool(QObject *parent = 0);
 
 private slots:
+    void initTestCase();
     void TestGetFrame();
     void TestInitPoolEmpty();
     void TestReturnFrame();

@@ -7,9 +7,8 @@
 // tx flag bits
 #define SEND_POLL_BIT		0x01
 #define SEND_ACK_BIT		0x02
-#define SEND_SPSINIT_BIT	0x04
-#define SEND_SPS_BIT		0x08
-#define RCVD_ACK_BIT		0x10
+#define SEND_SPS_BIT		0x04
+#define RCVD_ACK_BIT		0x08
 
 // Macros
 #define bytesToSend(link)		(link->sfpBytesToTx != 0)
@@ -17,29 +16,26 @@
 #define testPollSend(link)		checkBit(SEND_POLL_BIT, link->txFlags)
 #define testAckSend(link)		checkBit(SEND_ACK_BIT, link->txFlags)
 #define testSpsSend(link)		checkBit(SEND_SPS_BIT, link->txFlags)
-#define testSpsInit(link)		checkBit(SEND_SPSINIT_BIT, link->txFlags)
 #define testAckReceived(link)	checkBit(RCVD_ACK_BIT, link->txFlags)
 
 #define setPollSend(link)		safe(setBit(SEND_POLL_BIT, link->txFlags))
 #define setAckSend(link)		safe(setBit(SEND_ACK_BIT, link->txFlags))
 #define setSpsSend(link)		safe(setBit(SEND_SPS_BIT, link->txFlags))
-#define setSpsInit(link)		safe(setBit(SEND_SPSINIT_BIT, link->txFlags))
 #define setAckReceived(link)	safe(setBit(RCVD_ACK_BIT, link->txFlags))
 
 #define clearPollSend(link)		safe(clearBit(SEND_POLL_BIT, link->txFlags))
 #define clearAckSend(link)		safe(clearBit(SEND_ACK_BIT, link->txFlags))
 #define clearSpsSend(link)		safe(clearBit(SEND_SPS_BIT, link->txFlags))
-#define clearSpsInit(link)		safe(clearBit(SEND_SPSINIT_BIT, link->txFlags))
 #define clearAckReceived(link)	safe(clearBit(RCVD_ACK_BIT, link->txFlags))
 
 #endif
 
 // Declarations
-void spsAcknowledged(Byte from);
-void spsReceived(Byte from);
+void spsAcknowledged(sfpLink_t *link);
+void spsReceived(sfpLink_t *link);
 void transmitSfpByte(sfpLink_t *link);
 void serviceTx(sfpLink_t *link);
-void initSfpTxSM(sfpLink_t *);
+void initSfpTxSM(sfpLink_t *link, Qtype * npsq, Qtype * spsq);
 void sfpTxSm(sfpLink_t *link);
 
 /*

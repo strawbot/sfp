@@ -18,19 +18,21 @@ TestReceiverStateMachine::TestReceiverStateMachine(QObject *parent) :
 {
 }
 
-BQUEUE(10, testrxq);
+static BQUEUE(10, testrxq);
 
-bool rxqAvailable()
+static bool rxqAvailable(sfpLink_t * link)
 {
     return (qbq(testrxq) != 0);
+    (void) link;
 }
 
-Byte rxqGet()
+static Byte rxqGet(sfpLink_t * link)
 {
     return pullbq(testrxq);
+    (void) link;
 }
 
-void initRxSm()
+static void initRxSm()
 {
     initNode();
     alink.sfpRx = rxqAvailable;

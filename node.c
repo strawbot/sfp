@@ -4,6 +4,11 @@
 static sfpNode_t *currentNode = NULL;
 
 // Node 
+sfpNode_t *getNode(void)
+{
+	return currentNode;
+}
+
 sfpNode_t *setNode(sfpNode_t *node)
 {
 	sfpNode_t *previous = currentNode;
@@ -22,30 +27,37 @@ sfpLink_t *nodeLink(Long n)
 
 void addLink(Long n, sfpLink_t * link)
 {
-	if (n < NUM_LINKS)
-		currentNode->links[n] = link; 
+    if (currentNode)
+        if (n < NUM_LINKS)
+            currentNode->links[n] = link;
 }
 
 Byte whoami(void) // return my identity
 {
-	return currentNode->whoiam;
+    if (currentNode)
+        return currentNode->whoiam;
+    return ME;
 }
 
 void setWhoami(Byte who)
 {
 	if (who >= ROUTING_POINTS)
 		return;
-	currentNode->whoiam = who;
+    if (currentNode)
+        currentNode->whoiam = who;
 }
 
 Byte whatAmI(void)
 {
-	return currentNode->whatiam;
+    if (currentNode)
+        return currentNode->whatiam;
+    return NO_LINK;
 }
 
 void setWhatami(Byte what)
 {
-	currentNode->whatiam = what;
+    if (currentNode)
+        currentNode->whatiam = what;
 }
 
 // routing

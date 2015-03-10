@@ -13,6 +13,11 @@ TestPool::TestPool(QObject *parent) :
 {
 }
 
+void TestPool::initTestCase()
+{
+    setNode(&anode);
+}
+
 void TestPool::TestGetFrame()
 {
     QCOMPARE((Long)getFrame(), (Long)0);

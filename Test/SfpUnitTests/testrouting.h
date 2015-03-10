@@ -9,10 +9,16 @@ class TestRouting : public QObject
 public:
     explicit TestRouting(QObject *parent = 0);
 
-signals:
-
-public slots:
-
+private slots:
+    void TestInitRoutes();
+    void TestNoRoutes();
+    void TestRoutes();
+    void TestNoDest();
 };
 
+/*
+ * route to self, nps, sps
+ * route to non existant node, nps, sps
+ * route between 4 nodes; one with two links
+ */
 #endif // TESTROUTING_H
