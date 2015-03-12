@@ -35,6 +35,7 @@ void spsAcknowledged(sfpLink_t *link);
 void spsReceived(sfpLink_t *link);
 void transmitSfpByte(sfpLink_t *link);
 void serviceTx(sfpLink_t *link);
+void serviceMasterTx(sfpLink_t *link);
 void initSfpTxSM(sfpLink_t *link, Qtype * npsq, Qtype * spsq);
 void sfpTxSm(sfpLink_t *link);
 

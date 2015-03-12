@@ -14,20 +14,10 @@ TestNetwork::TestNetwork(QObject *parent) :
 {
 }
 
-Long pings;
-
 void TestNetwork::initTestCase()
 {
     initRoutes();
     pings = 0;
-}
-
-bool pingBack(Byte * packet, Byte length)
-{
-    pings++;
-    (void)packet;
-    (void)length;
-    return true;
 }
 
 void TestNetwork::testPing()

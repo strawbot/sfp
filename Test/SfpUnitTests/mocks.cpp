@@ -87,6 +87,7 @@ QUEUE(MAX_FRAMES, spsq);
 void initLink()
 {
     setTime(0);
+    alink.serviceTx = serviceTx;
     initSfpRxSM(&alink, frameinq);
     initSfpTxSM(&alink, npsq, spsq);
     initSfpStats();
@@ -221,11 +222,10 @@ void runSm(Long n) // run the transmitter and receiver state machines n times
     while(n-- && !exitflag) {
         setTime(getTime() + 1);
         sfpTxSm(&alink);
-        serviceTx(&alink);
+        alink.serviceTx(&alink);
         sfpRxSm(&alink);
         processFrames();
     }
 }
-
 
 }

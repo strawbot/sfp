@@ -39,11 +39,12 @@ typedef struct sfpLink_t{	// Link information
 	Byte * txq;							// point to queue of outgoing bytes
 	sfpFrame * frameOut;				// point to frame being sent if it is to be returned
 	Byte *sfpTxPtr;						// point to byte to be sent
-	Byte sfpBytesToTx;					// bytes to send
     Qtype *npsq;						// point to queue of nps frames to send
     Qtype *spsq;						// queue of SPS frames to send
 	bool (*sfpTx)(struct sfpLink_t *);	// can something be sent?
 	void (*sfpPut)(Long, struct sfpLink_t *);// put the byte plus any upper bits
+	void (*serviceTx)(struct sfpLink_t *); // service routine for transmitter
+	Byte sfpBytesToTx;					// bytes to send
 	spsState_t txSps;					// which secure pid to send next
 	Timeout spsTo;						// sps timeout
 	Long spsRetries;					// how many times sps frame has been retried
@@ -52,6 +53,7 @@ typedef struct sfpLink_t{	// Link information
 	// Both
 	Timeout frameTo;	// maximum time between bytes when framebuilding
 	Timeout packetTo;	// max time for processing a packet
+	Timeout pollTo;		// for polling links
 	Byte inFrameState;	// track where the inframe is
 	char *name;			// link name
 	linkOwner_t linkOwner;		// who owns the linke

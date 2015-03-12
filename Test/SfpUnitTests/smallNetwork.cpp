@@ -19,7 +19,32 @@ extern "C" {
 // N1 -- N2
 // |
 // N3 -- N4
-
+/*
+ * Network links consist of a byte queue connecting two end points together. Tx of one end point
+ * puts characters into a queue which is checked by the receiver of the connected end point. A
+ * link will have two queues for full duplex operation. This is similar to a UART. For SPI, the
+ * transmitter can only put a character out when a character comes in.
+ *
+ * For a SPI slave transmitter, if there is nothing to put in the tx q then a zero should be put
+ * out. Only transmit a character when receiving a character.
+ *
+ * Or make slave txq separate from master receive q and transfer from slave txq to master rxq only
+ * when master transmits. Make slave txq short. Either 2 bytes or 16 bytes like a SPI FIFO.  Who puts
+ * the zero in the queue? Does it stick? or does it need to be refurbished? If there are no characters
+ * in the receive q should it come in as an 0xFF?
+ *
+ * Master SPI:
+ *  o send a character and receive a character at the same time. Must send to receive. So every tx
+ *    causes an rx. If there are no characters to rx, then 0xFF is received. If the queue is down to
+ *    one, then that character is read repeatedly. If the queue is empty, then a 0xFF is read. The
+ *    receive queue is never read below 1.
+ * Slave SPI:
+ *  o characters are received and sent as UART. Queue size limits how much can be sent. If there is
+ *    nothing to be sent, then the last character sent is repeated. Initially it is an 0xFF. When a
+ *    frame has been sent and there is no followup frame to be sent, then a zero should be transmitted.
+ *
+ * A queue joins the master tx to the slave rx.
+ */
 sfpNode_t nodes[4];
 
 struct qlink links[6];
@@ -52,7 +77,7 @@ Qtype * frameqs[6] = {frame1q, frame2q, frame3q, frame4q, frame5q, frame6q};
 Qtype * npsqs[6] = {nps1q, nps2q, nps3q, nps4q, nps5q, nps6q};
 Qtype * spsqs[6] = {sps1q, sps2q, sps3q, sps4q, sps5q, sps6q};
 
-// drivers
+// UART drivers
 static bool rxAvailable(sfpLink_t * link)
 {
     return (qbq(link->rxq) != 0);
@@ -75,6 +100,9 @@ static void txPut(Long x, sfpLink_t * link)
     BytesOut(link);
 }
 
+// SPI drivers
+// use link->serviceTx(link) to service tx link; normally for UART this is the one in sfpTxSm.c
+// For SPI slave, use the one below
 //need to set parameters here like NUM_LINKS, ROUTING_POINTS
 //can we use undef? but that would have to be before includes or after sfp.f
 //                  or take parameters.h out of sfp.h; manually include everywhere and then replace it?
@@ -103,6 +131,7 @@ void initRoutes()
         link->sfpGet = rxGet;
         link->sfpTx = txOk;
         link->sfpPut = txPut;
+        link->serviceTx = serviceTx;
         link->name = (char *)names[i];
     }
 
@@ -153,12 +182,31 @@ void initRoutes()
     links[5].link.txq = links[4].link.rxq;
 }
 
-void runNodes(Long i)
+Long clockRatio = 1; // how many clock ticks per loop of network
+
+void timeTick()
 {
-    while (i--) {
+    static Long ticks = 1;
+
+    if (--ticks == 0) {
+        ticks = clockRatio;
+        setTime(getTime() + 1);
+    }
+}
+
+void setClockRatio(Long n)
+{
+    clockRatio = n;
+}
+
+void runNodes(Long i) // how many milliseconds to cycle through nodes in network
+{
+    Long end = getTime() + i;
+
+    while (getTime() < end) {
         Long j = elementsof(nodes);
 
-        setTime(getTime() + 1);
+        timeTick();
         while (j--) {
             setNode(&nodes[j]);
             for (Long k = 0; k < NUM_LINKS; k++) {
@@ -166,7 +214,7 @@ void runNodes(Long i)
 
                 if (link) {
                     sfpTxSm(link);
-                    serviceTx(link);
+                    link->serviceTx(link);
                     sfpRxSm(link);
                 }
             }
@@ -216,5 +264,15 @@ Long nodeStat(Long node, Long (*stat)())
 {
     selectNode(node);
     return stat();
+}
+
+Long pings;
+
+bool pingBack(Byte * packet, Byte length)
+{
+    pings++;
+    (void)packet;
+    (void)length;
+    return true;
 }
 

@@ -9,10 +9,9 @@ class TestSpi : public QObject
 public:
     explicit TestSpi(QObject *parent = 0);
 
-signals:
-
-public slots:
-
+private slots:
+    void TestOneSpiLink();
+    void TestSpiPoll();
 };
 
 #endif // TESTSPI_H

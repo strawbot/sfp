@@ -28,7 +28,6 @@ void frameIn(sfpFrame * frame);
 extern bool exitflag;
 void breakPoint1(void);
 
-
 void rxFrame(sfpFrame * frame);
 
 void setTime(Long t);

@@ -22,4 +22,8 @@ void networkStats();
 Long nodeStat(Long node, Long (*stat)(sfpLink_t *link));
 Long nodeStat(Long node, Long (*stat)());
 
+void setClockRatio(Long n);
+extern Long pings;
+bool pingBack(Byte * packet, Byte length);
+
 #endif // SMALLNETWORK_H

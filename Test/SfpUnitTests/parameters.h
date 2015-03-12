@@ -14,7 +14,7 @@
 #define MAX_FRAMES 100			// number of frames floating around system
 
 // timeouts
-#define SFP_POLL_TIME		(   2 TO_MSEC)		// polling in link down
+#define SFP_POLL_TIME		(   2 TO_MSEC)	// poll time for SPI
 #define SFP_SPS_TIME		( 250 TO_MSECS)	// time between retransmissions
 #define SFP_FRAME_TIME		(  50 TO_MSECS)	// maximum time to wait between bytes for a frame
 #define SFP_FRAME_PROCESS	(1000 TO_MSECS)	// maximum time to wait for frame processing

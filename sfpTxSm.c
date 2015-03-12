@@ -232,6 +232,16 @@ void serviceTx(sfpLink_t *link) // try to send a byte if there are bytes to send
 		transmitSfpByte(link);
 }
 
+void serviceMasterTx(sfpLink_t *link) // try to send a byte if there are bytes to send
+{
+    if (bytesToSend(link))
+        transmitSfpByte(link);
+    if (checkTimeout(&link->pollTo)) {
+        setPollSend(link);
+        setTimeout(SFP_POLL_TIME, &link->pollTo);
+    }
+}
+
 void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or just exit if all done
 {
     checkSps(link);
