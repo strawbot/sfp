@@ -2,11 +2,10 @@
 
 #include "bktypes.h"
 #include "timeout.h"
-#include "machines.h"
 #include "pids.h"
-#include "sfpStats.h"
-#include "sfpLink.h"
-#include "packets.h"
+#include "stats.h"
+#include "link.h"
+#include "sfp.h"
 
 // external
 void setParam(Long tag, Long value);

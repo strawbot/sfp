@@ -41,15 +41,11 @@ TODO:
 
 #include "bktypes.h"
 #include "timeout.h"
-#include "machines.h"
-#include "sfpStats.h"
-#include "sfpLink.h"
+#include "stats.h"
+#include "sfp.h"
+#include "link.h"
 #include "sfpTxSm.h"
-#include "sfpStats.h"
 #include "pids.h"
-#include "routing.h"
-#include "who.h"
-#include "packets.h"
 
 // external
 Byte flashWriteMemory(Byte *source, Long destination, Byte length);

@@ -12,9 +12,9 @@
 #include "timeout.h"
 #include "machines.h"
 #include "pids.h"
-#include "sfpStats.h"
-#include "sfpLink.h"
-#include "packets.h"
+#include "stats.h"
+#include "link.h"
+#include "sfp.h"
 #include "sfpTxSm.h"
 
 bool pingBackResponse(Byte *, Byte);

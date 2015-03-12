@@ -5,11 +5,7 @@
 #include "timeout.h"
 
 #include "pids.h"
-#include "sfpStats.h"
-#include "sfpLink.h"
-#include "packets.h"
 #include "printers.h"
-#include "routing.h"
 
 bool keyPacket(Byte *packet, Byte length);
 bool evalPacket(Byte *packet, Byte);

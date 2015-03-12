@@ -11,10 +11,8 @@
 #include "timeout.h"
 #include "machines.h"
 #include "pids.h"
-#include "sfpStats.h"
-#include "sfpLink.h"
-#include "packets.h"
-#include "routing.h"
+#include "stats.h"
+#include "link.h"
 
 static Timeout testLength_to, sendwait_to;
 static Long packetsInGroup = 1000, framesOut;

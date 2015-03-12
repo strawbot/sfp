@@ -10,7 +10,6 @@
 #include "node.h"
 #include "stats.h"
 #include "sfpTxSm.h"
-#include "routing.h"
 
 // ?Should handlers be in their own file? Services just contains sending services?
 // but then one does not use one without the other - so keep in one file
