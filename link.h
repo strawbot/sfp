@@ -1,5 +1,5 @@
-#include "timbre.h"
 #include "statGroups.h"
+#include "sfp.h"
 
 #ifndef _LINK_H_
 #define _LINK_H_
@@ -69,5 +69,4 @@ typedef struct sfpLink_t{	// Link information
 
 // External use
 void setSfpLink(sfpLink_t *l);
-void initSfp(sfpLink_t *);
 

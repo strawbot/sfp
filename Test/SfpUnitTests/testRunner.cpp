@@ -12,6 +12,7 @@
 #include "testrouting.h"
 #include "testspi.h"
 #include "testuart.h"
+#include "testtalk.h"
 
 // Note: This is equivalent to QTEST_APPLESS_MAIN for multiple test classes.
 int main(int argc, char** argv)
@@ -64,12 +65,12 @@ int main(int argc, char** argv)
     }
 
 //    {
-//        TestUart tc;
+//        TestSpi tc;
 //        status |= QTest::qExec(&tc, argc, argv);
 //    }
 
     {
-        TestSpi tc;
+        TestTalk tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
 

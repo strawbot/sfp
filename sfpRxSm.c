@@ -5,10 +5,10 @@
 */
 
 // Includes
-#include "sfp.h"
+#include "framepool.h"
+#include "frame.h"
 #include "stats.h"
 #include "link.h"
-#include "framePool.h"
 
 // Local Declarations
 static bool sfpLengthOk(Byte length, sfpLink_t *link);
@@ -87,7 +87,6 @@ static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame 
 
 		if ( (cs.sum == csf->sum) && (cs.sumsum == csf->sumsum) ) { // check for good frame
 			GoodFrame(link);
-			frameIn(link->frameIn);
 			pushq((Cell)link->frameIn, link->frameq); // pass on to frame layer
 			link->sfpRxState = ACQUIRING;
 		}

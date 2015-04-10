@@ -1,28 +1,58 @@
-// Remote Timbre connections  Robert Chapman III  Jun 25, 2012
+// Timbre talk handler  Robert Chapman III  Jun 25, 2012
 
-#include "printers.h"
 #include "bktypes.h"
-#include "timeout.h"
+#include "localio.h"
 #include "library.h"
 #include "pids.h"
-#include "stats.h"
-#include "link.h"
+#include "services.h"
+#include "talkhandler.h"
 #include "sfp.h"
 
-bool talkPacket(Byte *packet, Byte length);
-void initTalkHandler(void);
-void safe_emit(Byte c);
+static bool keyPacket(Byte *packet, Byte length);
+static bool evalPacket(Byte *packet, Byte);
+static bool talkPacket(Byte *packet, Byte length);
 
-bool talkPacket(Byte *packet, Byte length) // send packet output to timbre output
+static Byte talkTo = 0;
+
+static bool keyPacket(Byte * packet, Byte length) // feed input into Timbre
 {
-	Byte *payload = ((whoPacket_t *)packet)->payload;
+	packet_t * p = (packet_t *)packet;
+	Byte * payload = p->whoload;
 
-	while (length-- > WHO_PACKET_OVERHEAD)
+	talkTo = p->who.from;
+    while (length-- > WHO_HEADER_SIZE)
+		keyin(*payload++);
+	return true;
+}
+
+static bool evalPacket(Byte *packet, Byte l) // silently evaluate input string
+{
+	packet_t * p = (packet_t *)packet;
+
+	talkTo = p->who.from;
+	evaluate(p->whoload);
+	return true;
+	(void)l;
+}
+
+static bool talkPacket(Byte *packet, Byte length) // send packet output to timbre output
+{
+	packet_t * p = (packet_t *)packet;
+    Byte * payload = p->whoload;
+
+    while (length-- > WHO_HEADER_SIZE)
 		safe_emit(*payload++);
 	return true;
 }
 
+Byte talkWho(void) // who are we talking to
+{
+	return talkTo;
+}
+
 void initTalkHandler(void) // install packet handlers
 {
+	setPacketHandler(TALK_IN, keyPacket);
+	setPacketHandler(EVAL, evalPacket);
 	setPacketHandler(TALK_OUT, talkPacket);
 }

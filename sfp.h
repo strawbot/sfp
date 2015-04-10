@@ -13,6 +13,9 @@
 #define MIN_SFP_SIZE 		(LENGTH_LENGTH + MIN_FRAME_LENGTH)
 #define MAX_PACKET_LENGTH	(MAX_FRAME_LENGTH - MIN_FRAME_LENGTH)
 #define MAX_PAYLOAD_LENGTH  (MAX_PACKET_LENGTH - PID_LENGTH)
+#define WHO_LENGTH			sizeof(who_t)
+#define WHO_HEADER_SIZE		(PID_LENGTH + WHO_LENGTH)
+#define MAX_WHO_PAYLOAD_LENGTH  (MAX_PACKET_LENGTH - WHO_HEADER_SIZE)
 #define FRAME_OVERHEAD		(MIN_FRAME_LENGTH - PID_LENGTH)
 #define FRAME_HEADER        (LENGTH_LENGTH + SYNC_LENGTH)
 #define PACKET_HEADER       (PID_LENGTH)
@@ -26,30 +29,43 @@
 // one's complement should be better for checksum coverage
 #define sfpSync(length)	((Byte)~(length))	// define sync mechanism
 
+// for routing when part of packet
+typedef struct {
+    Byte to;
+    Byte from;
+} who_t;
+
 // Generic frame containter
+#define packet_union \
+union { \
+	struct { \
+		Byte pid;  /* packet id upper two bits are for ack and sps */ \
+		union { /* for packet with and without routing header who_t */ \
+			Byte payload[MAX_PAYLOAD_LENGTH]; \
+			struct { \
+				who_t who;	/* routing ids */ \
+				Byte whoload[MAX_WHO_PAYLOAD_LENGTH]; \
+			}; \
+		}; \
+	}; \
+	Byte packet[MAX_PAYLOAD_LENGTH]; \
+}
+
+typedef packet_union packet_t;
+
+typedef struct { // ''
+	Byte length; // covers following bytes
+	Byte sync;	// two's complement of length used to sync start of frame
+	packet_union;
+} sfpFrame;
+
+// trailer
 typedef struct {
     Byte sum;
     Byte sumsum;
 } checkSum_t;
 
-typedef struct {
-	Byte to;
-	Byte from;
-} who_t;
-
-typedef struct { // ''
-	Byte length; // covers following bytes
-	Byte sync;	// two's complement of length used to sync start of frame
-	union {
-		struct {
-			Byte pid;  // packet id upper two bits are for ack and sps
-            union {
-            Byte payload[MAX_PAYLOAD_LENGTH];
-            who_t who;	// first part of payload if present
-            };
-        };
-        Byte packet[MAX_PAYLOAD_LENGTH];
-    };
-} sfpFrame;
-
 #endif
+
+// define for system
+void initSfp(void);

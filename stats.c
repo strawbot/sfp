@@ -5,6 +5,7 @@
 #include "link.h"
 #include "printers.h"
 #include "timeout.h"
+#include "sfpTxSm.h"
 
 #define SET_NODE_STAT(stat) \
 void stat(void) { sfpNode_t * node = getNode(); node->stat++; }
@@ -107,7 +108,8 @@ static void printTxActions(Long flag)
 
 void showLinkStatus(sfpLink_t * link)
 {
-    print(link->name);
+	if (link->name)
+		print("\nlink name: "), print(link->name);
 // Receiver
 	if ((link->rxq) && (qbq(link->rxq)))
 		print("\nBytes in rxq: "), printDec(qbq(link->rxq));
@@ -140,8 +142,6 @@ void showLinkStatus(sfpLink_t * link)
 		print("\nexceeded maximum time between bytes when framebuilding");
 	if (checkTimeout(&link->packetTo))
 		print("\nexceeded max time for processing a packet");
-	if (link->name)
-		print("\nlink name:"), print(link->name);
 	if (link->linkOwner)
 		printOwner(link->linkOwner);
 	if (link->routeTo)

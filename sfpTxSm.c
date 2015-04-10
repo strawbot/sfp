@@ -1,20 +1,14 @@
 // SFP TX state machine  Robert Chapman III  Feb 16, 2012
 // Includes
-#include "timbre.h"
-#include "link.h"
+#include "node.h"
 #include "framepool.h"
 #include "services.h"
 #include "frame.h"
+#include "sfpRxSm.h"
+#include "sfpTxSm.h"
+#include "stats.h"
 
 #include <string.h>
-
-// #include "sfpStats.h"
-// #include "sfpLink.h"
-// #include "pids.h"
-// #include "sfpTxSm.h"
-// #include "sfpRxSm.h"
-// #include "packets.h"
-// #include <stdlib.h>
 
 /*
  Transmitter is either sending a frame, or waiting for a frame
@@ -49,7 +43,6 @@ static bool transmitFrame(sfpFrame *frame, sfpLink_t *link) //! set a frame up f
 {
 	if (bytesToSend(link) == 0)
 	{
-        frameOut(frame);
 		link->sfpTxPtr = &frame->length; // set this first
 		link->sfpBytesToTx = frame->length + LENGTH_LENGTH; // set this second
 		return true;
@@ -135,7 +128,7 @@ static void setSpsBits(sfpLink_t * link)
 
 static void setSpsState(sfpLink_t * link, spsState_t state)
 {
-	txSpsState(link, state);
+//	txSpsState(link, state);
 	link->txSps = state;
 }
 

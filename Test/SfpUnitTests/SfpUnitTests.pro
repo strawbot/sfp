@@ -15,7 +15,8 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 INCLUDEPATH += ../../ \
-	../../../Timbre
+	../../../Timbre \
+	../../Handlers
 
 SOURCES += \
     testframing.cpp \
@@ -33,7 +34,8 @@ SOURCES += \
     testreceiverstatemachine.cpp \
     testtransmitterstatemachine.cpp \
     testsps.cpp \
-    smallNetwork.cpp
+    smallNetwork.cpp \
+    testtalk.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
@@ -59,4 +61,5 @@ HEADERS += \
     testtransmitterstatemachine.h \
     testsps.h \
     parameters.h \
-    smallNetwork.h
+    smallNetwork.h \
+    testtalk.h

@@ -188,7 +188,6 @@ static bool acceptSpsFrame(sfpFrame * frame, sfpLink_t *link) //! accept or reje
     Byte sps = frame->pid & SPS_BIT;
 
     if (link == 0) {
-    	breakPoint1();
         NoDest();
     }
     else {
