@@ -9,7 +9,7 @@ printme = 0
 # read in a text file and generate a C header file and a Python file so a
 # single list can be used to keep embedded and host software in sync
 
-pydest2 = '' # place a copy here for Timbre Term
+pydest2 = '../../TimbreTerm/' # place a copy here for Timbre Term
 hdest = '../'
 
 pidlist = []
@@ -104,6 +104,7 @@ def generatePython(filename):
 	file.write('\n}')
 	file.close()
 	if pydest2:
+		print "Copy %s to %s"%(filename, pydest2)
 		shutil.copy(filename, pydest2+filename)
 
 def genby(): # string for heading
