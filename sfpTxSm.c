@@ -128,7 +128,6 @@ static void setSpsBits(sfpLink_t * link)
 
 static void setSpsState(sfpLink_t * link, spsState_t state)
 {
-//	txSpsState(link, state);
 	link->txSps = state;
 }
 

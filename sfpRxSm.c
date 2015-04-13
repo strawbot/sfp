@@ -73,8 +73,6 @@ static void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement o
 	}
 }
 
-void frameIn(sfpFrame * frame);
-
 static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame buffer until length is satisfied
 {
 	*link->sfpRxPtr++ = data; // store data
