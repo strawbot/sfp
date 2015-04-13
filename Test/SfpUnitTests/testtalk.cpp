@@ -7,6 +7,13 @@ extern "C" {
 
 #include "talkHandler.c"
 
+Byte eq[100];
+
+void setTalkOut(vector talkOutPtr)
+{
+    (void)talkOutPtr;
+}
+
 void evaluate(Byte *string)
 {
     (void)string;
