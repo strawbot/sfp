@@ -114,6 +114,7 @@ bool sfpRxSm(sfpLink_t *link) // return true if byte processed
 				return false;
 			case HUNTING:
                 Hunting(link->sfpGet(link), link);
+				setTimeout(SFP_FRAME_TIME, &link->frameTo); // need if moving to sync
 				return true;
 			case SYNCING:
 				setTimeout(SFP_FRAME_TIME, &link->frameTo);

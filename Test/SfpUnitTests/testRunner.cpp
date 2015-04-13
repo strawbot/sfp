@@ -64,13 +64,18 @@ int main(int argc, char** argv)
         status |= QTest::qExec(&tc, argc, argv);
     }
 
-//    {
-//        TestSpi tc;
-//        status |= QTest::qExec(&tc, argc, argv);
-//    }
+    {
+        TestSpi tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
 
     {
         TestTalk tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
+
+    {
+        TestUart tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
 

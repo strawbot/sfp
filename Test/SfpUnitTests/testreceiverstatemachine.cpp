@@ -115,7 +115,7 @@ void TestReceiverStateMachine::TestReceiving()
     QCOMPARE(alink.sfpRxState, HUNTING);
     QCOMPARE(getBadCheckSum(&alink), (Long)1);
 
-    for (i = 0; i < frame->length; i++) // frame timeout
+    for (i = 0; i < frame->length; i++)  // frame timeout
         pushbq(fp[i], testrxq);
     while (qbq(testrxq))
         sfpRxSm(&alink);
@@ -123,6 +123,14 @@ void TestReceiverStateMachine::TestReceiving()
     sfpRxSm(&alink);
     QCOMPARE(alink.sfpRxState, HUNTING);
     QCOMPARE(getGaveup(&alink), (Long)1);
+    setTime(2*SFP_FRAME_TIME+1);
+    QCOMPARE(getGoodFrame(&alink), (Long)1);
+    for (i = 0; i < frame->length + LENGTH_LENGTH; i++) { // good frame after timeout
+        pushbq(fp[i], testrxq);
+        sfpRxSm(&alink);
+        sfpRxSm(&alink);
+    }
+    QCOMPARE(alink.sfpRxState, ACQUIRING);
 }
 
 void TestReceiverStateMachine::TestOverflow()
