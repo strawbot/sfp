@@ -1,12 +1,10 @@
 // Timbre talk handler  Robert Chapman III  Jun 25, 2012
 
-#include "bktypes.h"
 #include "localio.h"
 #include "library.h"
-#include "pids.h"
 #include "services.h"
 #include "talkhandler.h"
-#include "sfp.h"
+#include "node.h"
 
 static bool keyPacket(Byte *packet, Byte length);
 static bool evalPacket(Byte *packet, Byte);
@@ -22,6 +20,7 @@ static bool keyPacket(Byte * packet, Byte length) // feed input into Timbre
 	talkTo = p->who.from;
     while (length-- > WHO_HEADER_SIZE)
 		keyin(*payload++);
+	sfpTalk();
 	return true;
 }
 
@@ -31,6 +30,7 @@ static bool evalPacket(Byte *packet, Byte l) // silently evaluate input string
 
 	talkTo = p->who.from;
 	evaluate(p->whoload);
+	sfpTalk();
 	return true;
 	(void)l;
 }
@@ -50,8 +50,44 @@ Byte talkWho(void) // who are we talking to
 	return talkTo;
 }
 
+void sendeqSfp(void)
+{
+	Byte c, *p, packet[MAX_PACKET_LENGTH];
+	whoPacket_t *w=(whoPacket_t *)packet;
+	Byte length = qbq(eq);
+
+	w->pid = TALK_OUT;
+	w->who.to = talkTo;
+	w->who.from = whoami();
+	p = &w->payload[0];
+	
+	if (length >= MAX_WHO_PAYLOAD_LENGTH)
+		length = MAX_WHO_PAYLOAD_LENGTH;
+	
+	while (length--)
+	{
+		c = pullbq(eq);
+		if (c != 0xD)
+			*p++ = c;
+	}
+	
+	length = (Byte)(p - &w->payload[0]);
+	if (length)
+	{
+		length += WHO_HEADER_SIZE;
+		while(!sendNpTo(packet, length, talkTo))
+			runMachines();
+	}
+}
+
+void sfpTalk(void)
+{
+	setTalkOut(sendeqSfp);
+}
+
 void initTalkHandler(void) // install packet handlers
 {
+	sfpTalk();
 	setPacketHandler(TALK_IN, keyPacket);
 	setPacketHandler(EVAL, evalPacket);
 	setPacketHandler(TALK_OUT, talkPacket);

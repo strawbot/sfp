@@ -65,6 +65,39 @@ typedef struct {
     Byte sumsum;
 } checkSum_t;
 
+// basic sizes
+typedef struct {
+	Byte data[sizeof(long long)];
+} octet_t;
+
+typedef struct {
+	Byte data[sizeof(long)];
+} long_t;
+
+typedef struct {
+	Byte data[sizeof(short)];
+} short_t;
+
+// Packet types
+typedef struct { // 'BBB0B'
+	Byte pid;
+	who_t who;
+	Byte payload[];
+} whoPacket_t;
+
+typedef struct {
+	Byte pid;
+	who_t who;
+	Byte major;
+	Byte minor;
+	short_t build;
+	Byte dateLength;
+	Byte date[20];
+	Byte nameLength;
+	Byte name[];
+} versionPacket_t;
+
+
 #endif
 
 // define for system
