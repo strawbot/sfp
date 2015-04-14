@@ -13,8 +13,6 @@ bool returnFrame(void *frame)
 	return true;
 }
 
-void fpf(void);
-
 sfpFrame *getFrame(void)
 {
     if (queryq(poolq))
@@ -30,4 +28,9 @@ void initFramePool(void)
     zeroq(poolq);
 	while (n--)
 		pushq((Cell)&frames[n][0], poolq);
+}
+
+Long framePoolLeft(void)
+{
+	return queryq(poolq);
 }

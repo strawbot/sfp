@@ -158,5 +158,9 @@ void showNodeStatus(void)
         if (link)
         	showLinkStatus(link);
     }
-    print("\n");
+    
+    print("\nNumber of frames in pool:");
+    printDec(framePoolLeft());
+    print(" out of ");
+    printDec(MAX_FRAMES);
 }

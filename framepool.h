@@ -6,3 +6,4 @@ bool returnFrame(void *frame);
 sfpFrame *getFrame(void);
 
 void initFramePool(void);
+Long framePoolLeft(void);
