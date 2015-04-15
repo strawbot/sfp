@@ -78,7 +78,7 @@ static void sendSpsFrame(sfpLink_t * link)
     }
     else {
         clearSpsSend(link);
-        SpsqUnderflow(link);
+        SpsqUnderflow(link); // this happens because frame was never sent!
     }
 }
 
@@ -190,7 +190,7 @@ static void checkSps(sfpLink_t * link)
 				setSpsSend(link);
 			}
 			else {
-				returnFrame((sfpFrame *)pullq(link->spsq));
+				returnFrame((sfpFrame *)pullq(link->spsq)); // what if frame not sent but pending?
                 setSpsState(link, NO_SPS);
             }
 		}

@@ -6,6 +6,7 @@
 #include "printers.h"
 #include "timeout.h"
 #include "sfpTxSm.h"
+#include "framepool.h"
 
 #define SET_NODE_STAT(stat) \
 void stat(void) { sfpNode_t * node = getNode(); node->stat++; }
@@ -46,13 +47,14 @@ void initSfpStats(void)
 	}
 }
 
+#define PRINT_NODE_STAT(stat) if (node->stat) print("\n"#stat" "), printDec(node->stat);
+#define PRINT_LINK_STAT(stat) if (link->stat) print("\n"#stat" "), printDec(link->stat);
+
 void showSfpStats(void)
 {
     Long i;
     sfpNode_t * node = getNode();
     
-#define PRINT_NODE_STAT(stat) if (node->stat) print("\n"#stat" "), printDec(node->stat);
-#define PRINT_LINK_STAT(stat) if (link->stat) print("\n"#stat" "), printDec(link->stat);
 	print("\nSfp Stats");
 	FOR_EACH_NODE_STAT(PRINT_NODE_STAT)
 

@@ -66,7 +66,3 @@ typedef struct sfpLink_t{	// Link information
 } sfpLink_t;
 
 #endif
-
-// External use
-void setSfpLink(sfpLink_t *l);
-
