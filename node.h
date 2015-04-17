@@ -27,6 +27,7 @@ void setWhatami(Byte what);
 
 sfpLink_t * routeTo(Byte to);
 void setRouteTo(Byte to, sfpLink_t * link);
+void initNode(sfpNode_t *node);
 
 #endif
 
