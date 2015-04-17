@@ -63,9 +63,9 @@ packetHandler_t getPacketHandler(Byte pid)
 void processFrames(void) //process received frames from links
 {
 	Long n = 0;
-	sfpLink_t *link;
 
-	while ((link = nodeLink(n++)) != NULL) {		
+	for (n = 0; n < NUM_LINKS; n++) {
+        sfpLink_t *link = nodeLink(n);
 		if (queryq(link->frameq) != 0) {
 			sfpFrame *frame = (sfpFrame *)pullq(link->frameq);
 			
