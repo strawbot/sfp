@@ -15,4 +15,4 @@ enum {FLASH_OK = 0x00, // No error
 
 #endif
 
-Byte rangeCheck(Byte *start, Byte *end);
+Byte rangeCheck(Long start, Long end);
