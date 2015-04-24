@@ -60,6 +60,14 @@ void initSfp(void)
 	link->serviceTx = serviceTx;
 	link->name = "Simple Network";
 
+    // initialize the node
+    setNode(&myNode);
+    setWhoami(1);
+    setWhatami(0);
+
+    addLink(0, link); // attached links
+    setRouteTo(0, link); // routes for other nodes
+    
 	// initialize pool of frame buffers
     initFramePool();
 
@@ -70,14 +78,6 @@ void initSfp(void)
 	// initialize services and stats
     initSfpStats();
 	initServices();
-    
-    // initialize the node
-    setNode(&myNode);
-    setWhoami(1);
-    setWhatami(0);
-
-    addLink(0, link); // attached links
-    setRouteTo(0, link); // routes for other nodes
     
     activateOnce(sfpMachine);
 }

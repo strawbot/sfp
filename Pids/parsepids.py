@@ -117,13 +117,20 @@ def fileModTime(file): # return file modified date
 	if printme: print "Executing: ", inspect.stack()[0][3]
 	return time.localtime(os.path.getmtime(file))
 
+def generatePids():
+	readPids('pids.txt')
+	generateC(hdest+'pids.h')
+	generatePython('pids.py')
+
 if __name__ == '__main__':
-	try:		
-		if	fileModTime('pids.txt') > fileModTime(hdest+'pids.h') or \
-			fileModTime('parsepids.py') > fileModTime('pids.txt'):
-			readPids('pids.txt')
-			generateC(hdest+'pids.h')
-			generatePython('pids.py')
+	try:
+		hfile = hdest+'pids.h'
+		if os.path.isfile(hfile):
+			if fileModTime('pids.txt') > fileModTime(hfile) or \
+				fileModTime('parsepids.py') > fileModTime('pids.txt'):
+				genratePids()
+		else:
+			generatePids()
 	except Exception as message:
 		print type(message)     # the exception instance
 		traceback.print_exc(file=sys.stderr)
