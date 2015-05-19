@@ -48,3 +48,4 @@ Updates:
    and ACKs which are a link only PID, are networkable.
 9. Subsumption of the terms SFAP and SFSP
 10.Separation of parameters and network setup code
+11.Consider combining cpu ids and pids into network thingees

@@ -261,6 +261,7 @@ void initSfpTxSM(sfpLink_t *link, Qtype * npsq, Qtype * spsq) //! initialize SFP
     setSpsState(link, NO_SPS);
 	link->txFlags = 0;
     link->frameOut = 0;
+    link->serviceTx = serviceTx;
 
     zeroq(npsq);
     zeroq(spsq);

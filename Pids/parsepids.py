@@ -128,7 +128,7 @@ if __name__ == '__main__':
 		if os.path.isfile(hfile):
 			if fileModTime('pids.txt') > fileModTime(hfile) or \
 				fileModTime('parsepids.py') > fileModTime('pids.txt'):
-				genratePids()
+				generatePids()
 		else:
 			generatePids()
 	except Exception as message:
