@@ -66,6 +66,8 @@ void processFrames(void) //process received frames from links
 
 	for (n = 0; n < NUM_LINKS; n++) {
         sfpLink_t *link = nodeLink(n);
+		if (link == 0)
+			continue;
 		if (queryq(link->frameq) != 0) {
 			sfpFrame *frame = (sfpFrame *)pullq(link->frameq);
 			
@@ -141,7 +143,7 @@ static bool processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 				break;
 			case SPS: // null packet used for initializing SPS and setting id
 			case PING_BACK: // ignore reply
-			case TEST_FRAME: // ignore test frames
+			case CONFIG: // ignore test frames
 				IgnoreFrame();
 				break;
 			default:

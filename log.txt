@@ -22,7 +22,10 @@ Issues:
  4. the whole system should have frames as a basis. The sfp frame is a union of all 
     possible frames. This makes it easier to pass it around, interpret it and reuse it. 
     The same frame that comes in can go out as a reply frame.
-
+ 5. negotiating frame for peer to peer, no network (perhaps a network equivelant) use
+    to exchange parameters such as maximum frame length; network on/off; SPS service;
+    get local time
+    
 Updates:
 1. SPS enhanced for network mode - multiple reliable links between two nodes form a
    chain for reliable delivery • SPS packet sent across network is ACKed across each link
