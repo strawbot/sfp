@@ -76,3 +76,13 @@ void setRouteTo(Byte to, sfpLink_t * link)
             currentNode->routes[to] = link;
 }
 
+void initNode(sfpNode_t *node)
+{
+	Byte i;
+	
+	for (i=0; i<ROUTING_POINTS; i++)
+		node->routes[i] = NULL;
+
+	for (i=0; i<NUM_LINKS; i++)
+		node->links[i] = NULL;
+}

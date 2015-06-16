@@ -39,96 +39,108 @@ TODO:
 
 #include <string.h>
 
-#include "bktypes.h"
 #include "timeout.h"
 #include "stats.h"
 #include "sfp.h"
 #include "link.h"
 #include "sfpTxSm.h"
 #include "pids.h"
-
-// external
-Byte flashWriteMemory(Byte *source, Long destination, Byte length);
-Byte flashEraseMemory(Long start, Long end);
-
-void intDisable(void);
-void intEnable(void);
-
-// internal
-void initFlash(void);
-bool flashWrite(Byte *packet, Byte length);
-bool checkMem(Byte *packet, Byte length);
-bool writeConfirm(Byte *packet, Byte flag);
-bool eraseMem(Byte *packet, Byte length);
-bool eraseConfirm(Byte *packet, Byte flag);
-Long fletcher32(Byte *addr, Long len);
-bool executeCode(Byte *packet, Byte);
-bool memRead(Byte *packet, Byte);
-bool ramWrite(Byte *packet, Byte);
+#include "flash.h"
+#include "services.h"
+#include "checksum.h"
+#include "valueTransfer.h"
 
 // definitions
-void initFlash(void)
+/* writing flash
+	green paths:
+	1. flash was written (and verified) - all good
+	2. flash was already programmed - all good
+	red paths:
+	1. flash write fails
+	2. flash write ok but mem compare fails (assume flash write returns error)
+   States:
+    1. received packet
+    2. writing
+    3. replying
+*/
+static memoryPacket_t wconfirm;
+
+static void writeReply(void)
 {
-	setPacketHandler(FLASH_WRITE, flashWrite);
-	setPacketHandler(CHECK_MEM, checkMem);
-	setPacketHandler(ERASE_MEM, eraseMem);
-	setPacketHandler(CALL_CODE, executeCode);
-	setPacketHandler(MEM_READ, memRead);
-	setPacketHandler(RAM_WRITE, ramWrite);
+	if (false == sendNpTo((Byte *)&wconfirm, sizeof(wconfirm), wconfirm.who.to))
+		activate(writeReply);
 }
 
-bool writeConfirm(Byte *packet, Byte flag) // confirm operation
+static void writeConfirm(void)
 {
-	Byte confPacket[sizeof(memoryPacket_t)+1];
-	memoryPacket_t *cp = (memoryPacket_t *)confPacket;
-	memoryPacket_t *mp = (memoryPacket_t *)packet;
-	
-	cp->pid = WRITE_CONF;
-	cp->who.to = mp->who.from;
-	cp->who.from = mp->who.to;
-	longToBytes(bytesToLong(&mp->addr[0]), &cp->addr[0]);
-	cp->length = mp->length;
-	cp->data[0] = flag;
-
-	return sendNpTo(confPacket, sizeof(confPacket), cp->who.to);
+	if (flashBusy())
+		activate(writeConfirm);
+	else {
+		wconfirm.data[0] = flashError();
+		writeReply();
+	}
 }
 
-bool flashWrite(Byte *packet, Byte)
+static bool flashWrite(Byte *packet, Byte length)
 {
 	memoryPacket_t *mp = (memoryPacket_t *)packet;
 	Long a = bytesToLong(&mp->addr[0]);
 	
-	if (0 == memcmp((const void*)mp->data, (const void*)a, mp->length)) // see if already programmed
-		return writeConfirm(packet, 0);
-	return writeConfirm(packet, flashWriteMemory(mp->data, a, mp->length));
-}
-
-bool eraseConfirm(Byte *packet, Byte flag) // confirm operation
-{
-	Byte confPacket[sizeof(longsPacket_t)+3*sizeof(long)];
-	longsPacket_t *cp = (longsPacket_t *)confPacket;
-	longsPacket_t *mp = (longsPacket_t *)packet;
+	wconfirm.pid = WRITE_CONF;
+	wconfirm.who.from = mp->who.to;
+	wconfirm.who.to = mp->who.from;
+	longToBytes(a, wconfirm.addr);
+	wconfirm.length = mp->length;
 	
-	cp->pid = ERASE_CONF;
-	cp->who.to = mp->who.from;
-	cp->who.from = mp->who.to;
-	longToBytes(bytesToLong(&mp->longs[0].data[0]), &cp->longs[0].data[0]);
-	longToBytes(bytesToLong(&mp->longs[1].data[0]), &cp->longs[1].data[0]);
-	longToBytes((Long)flag, &cp->longs[2].data[0]);
+	if (0 == memcmp(mp->data, (Byte *)a, mp->length)) { // see if already programmed ?bury in flashWriteMemory
+		wconfirm.data[0] = 0; // indicate no errors
+		writeReply();
+	}
+	else {
+		flashWriteMemory((Long)mp->data, a, (Long)mp->length);
+		writeConfirm();
+	}
 
-	return sendNpTo(confPacket, sizeof(confPacket), cp->who.to);
+	return true;
 }
+	
+static erasePacket_t econfirm;
 
-bool eraseMem(Byte *packet, Byte)
+static void eraseReply(void)
 {
-	longsPacket_t *lp = (longsPacket_t *)packet;
-	Long start = bytesToLong(&lp->longs[0].data[0]);
-	Long end = bytesToLong(&lp->longs[1].data[0]);
-
-	return eraseConfirm(packet, flashEraseMemory(start, end));
+	if (false == sendNpTo((Byte *)&econfirm, sizeof(econfirm), econfirm.who.to))
+		activate(eraseReply);
 }
 
-bool checkMem(Byte *packet, Byte) // check memory contents
+static void eraseConfirm(void)
+{
+	if (flashBusy())
+		activate(eraseConfirm);
+	else {
+		econfirm.flag = flashError();
+		eraseReply();
+	}
+}
+
+static bool eraseMem(Byte *packet, Byte length)
+{
+	erasePacket_t *ep = (erasePacket_t *)packet;
+	Long start = bytesToLong((Byte *)&ep->start);
+	Long end = bytesToLong((Byte *)&ep->end);
+	
+	econfirm.pid = ERASE_CONF;
+	econfirm.who.from = ep->who.to;
+	econfirm.who.to = ep->who.from;
+	longToBytes(start, (Byte *)&econfirm.start);
+	longToBytes(end, (Byte *)&econfirm.start);
+	
+	flashEraseMemory(start, end);
+	eraseConfirm();
+
+	return true;
+}
+	
+static bool checkMem(Byte *packet, Byte length) // check memory contents
 {
 	longsPacket_t *mp = (longsPacket_t *)packet;
 	Byte checkPacket[sizeof(longsPacket_t) + 3 * sizeof(long)];
@@ -148,19 +160,10 @@ bool checkMem(Byte *packet, Byte) // check memory contents
 	longToBytes(checksum, &rp->longs[2].data[0]);
 
 	return sendNpTo(checkPacket, sizeof(checkPacket), rp->who.to);
+	(void) length;
 }
 
-bool executeCode(Byte *packet, Byte) // execute code
-{
-	longsPacket_t *mp = (longsPacket_t *)packet;
-	
-	intDisable();
-	((vector)bytesToLong(&mp->longs[0].data[0]))();
-	intEnable();
-	return true;
-}
-
-bool memRead(Byte *packet, Byte) // read memory
+static bool memRead(Byte *packet, Byte length) // read memory
 {
 	Byte dataPacket[MAX_PACKET_LENGTH];
 	memoryPacket_t *dp = (memoryPacket_t *)dataPacket;
@@ -175,34 +178,50 @@ bool memRead(Byte *packet, Byte) // read memory
 	memcpy(dp->data, (Byte *)address, mp->length);
 	
 	return sendNpTo(dataPacket, sizeof(memoryPacket_t) + mp->length, dp->who.to);
+	(void)length;
 }
 
-bool ramWrite(Byte *packet, Byte) // write memory
+#include <libarm.h>
+//
+//#define intDisable()  libarm_disable_irq_fiq() 	// Disable Interrupts
+//#define intEnable()  libarm_enable_irq_fiq() 	// Enable Interrupts
+
+static bool executeCode(Byte *packet, Byte length) // execute code
+{
+	longsPacket_t *mp = (longsPacket_t *)packet;
+	vector function = (vector)bytesToLong(&mp->longs[0].data[0]);
+	
+	//libarm_disable_irq_fiq();
+	function();
+	//libarm_enable_irq_fiq();
+	return true;
+	(void) length;
+}
+
+static bool ramWrite(Byte *packet, Byte length) // write memory
 {
 	memoryPacket_t *mp = (memoryPacket_t *)packet;
 	Byte *address = (Byte *)bytesToLong(&mp->addr[0]);
 	
 	memcpy(address, mp->data, mp->length);
-	return writeConfirm(packet, 0);
+	wconfirm.pid = WRITE_CONF;
+	wconfirm.who.from = mp->who.to;
+	wconfirm.who.to = mp->who.from;
+	longToBytes((Long)address, wconfirm.addr);
+	wconfirm.length = mp->length;
+	wconfirm.data[0] = 0; // indicate no errors
+	writeReply();
+	return true;
+	(void) length;
 }
 
-// command line
-#include "botkernl.h"
-
-void writeFlashCmd(void);
-void writeFlashCmd(void) // ( source dest length - result )
+void initFlash(void)
 {
-	Byte length = (Byte)*sp++;
-	Long dest = *sp++;
-	Byte *source = (Byte *)*sp++;
-	
-	*--sp = (Long)flashWriteMemory(source, dest, length);
+	setPacketHandler(FLASH_WRITE, flashWrite);
+	setPacketHandler(CHECK_MEM, checkMem);
+	setPacketHandler(ERASE_MEM, eraseMem);
+	setPacketHandler(CALL_CODE, executeCode);
+	setPacketHandler(MEM_READ, memRead);
+	setPacketHandler(RAM_WRITE, ramWrite);
 }
 
-void eraseFlashCmd(void);
-void eraseFlashCmd(void) // ( start end - result )
-{
-	Long end = *sp++, start = *sp;
-	
-	*sp = (Long)flashEraseMemory(start, end);
-}

@@ -1,0 +1,9 @@
+HOST			0x0
+ME				0x0
+YOU				0x0
+DIRECT			0x0
+
+MAIN_CPU		0x1
+MAIN_HOST		++ host ports on cpus
+ROUTING_POINTS	++	number of points for routing
+

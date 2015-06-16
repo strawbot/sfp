@@ -2,6 +2,7 @@
 
 #include "timbre.h"
 #include "parameters.h"
+#include "who.h"
 #include "pids.h"
 
 #ifndef _SFP_H_
@@ -97,6 +98,27 @@ typedef struct {
 	Byte name[];
 } versionPacket_t;
 
+typedef struct { // 32bit addr, 8bit length, bytes // 'BBPB1B'
+	Byte pid;
+	who_t who;
+	Byte addr[sizeof(void *)];
+	Byte length;
+	Byte data[1];
+} memoryPacket_t;
+
+typedef struct { // 32bit data bytes // 'BBBLLB'
+	Byte pid;
+	who_t who;
+	long_t start;
+	long_t end;
+	Byte flag;
+} erasePacket_t;
+
+typedef struct { // 32bit data bytes // 'BBB0L'
+	Byte pid;
+	who_t who;
+	long_t longs[];
+} longsPacket_t;
 
 #endif
 
