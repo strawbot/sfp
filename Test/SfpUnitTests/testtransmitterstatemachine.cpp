@@ -35,7 +35,7 @@ void putTx(Long x, sfpLink_t * link)
 
 void initTxSm()
 {
-    initNode();
+    initTestNode();
     alink.sfpTx = txOk;
     alink.sfpPut = putTx;
     txok = true;

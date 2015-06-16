@@ -12,7 +12,7 @@ extern "C" {
 
 void initNodeServices(void)
 {
-    initNode();
+    initTestNode();
     alink.txSps = ONLY_SPS0;
 }
 
@@ -74,7 +74,7 @@ void TestServices::TestSendSpsNoLink()
 
 void TestServices::TestSpsLinkDown()
 {
-    initNode();
+    initTestNode();
     QCOMPARE(sendSpTo(packet, sizeof(packet), DIRECT), false); // try to send one more
 }
 

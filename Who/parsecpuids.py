@@ -40,12 +40,14 @@ def generateC(file):
 	file = open(file, 'w')
 	file.write('// CPU ID declarations  %s'%genby())
 	file.write("// don't modify this file. Make changes to cpuids.txt and regenerate\n")
+	file.write("#ifndef _WHO_H_\n#define _WHO_H_\n")
 	for cpuid in cpuidlist:
 		if cpuid is cpuidlist[-1]:
 			comma = ''
 		else:
 			comma = ','
 		file.write('#define %s %s \t// %s\n'%(cpuid[0], cpuid[1], cpuid[2]))
+	file.write('#endif\n\n')
 	file.write('unsigned char whoami(void);')
 	file.close()
 

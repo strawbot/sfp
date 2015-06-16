@@ -19,7 +19,7 @@ extern sfpNode_t anode;
 extern Byte packet[3];
 
 void initLink();
-void initNode();
+void initTestNode();
 Long acksIn();
 Long acksOut();
 void runSm(Long n);

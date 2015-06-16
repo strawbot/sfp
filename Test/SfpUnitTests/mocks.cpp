@@ -97,8 +97,9 @@ void initLink()
     packet[2] = DIRECT;        // from
 }
 
-void initNode()
+void initTestNode()
 {
+    initNode(&anode);
     setNode(&anode);
     addLink(DIRECT, &alink);
     initLink();

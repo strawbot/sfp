@@ -34,7 +34,7 @@ static Byte rxqGet(sfpLink_t * link)
 
 static void initRxSm()
 {
-    initNode();
+    initTestNode();
     alink.sfpRx = rxqAvailable;
     alink.sfpGet = rxqGet;
     zerobq(testrxq);
