@@ -66,6 +66,8 @@ void processFrames(void) //process received frames from links
 
 	for (n = 0; n < NUM_LINKS; n++) {
         sfpLink_t *link = nodeLink(n);
+		if (link == 0)
+			continue;
 		if (queryq(link->frameq) != 0) {
 			sfpFrame *frame = (sfpFrame *)pullq(link->frameq);
 			
