@@ -48,7 +48,7 @@ void qFrame()
 
     frame = getFrame();
     buildSfpFrame(sizeof(packet), packet, packet[0], frame);
-    setPacketHandler(TEST_FRAME, rxTestFrame);
+    setPacketHandler(CONFIG, rxTestFrame);
     rxFrame(frame);
     testframes = 0;
     acceptframe = true;
@@ -56,7 +56,7 @@ void qFrame()
 
 void setupFrame()
 {
-    initNode();
+    initTestNode();
     qFrame();
 }
 
@@ -97,7 +97,7 @@ void TestHandlers::TestStaleFrame()
 
 void TestHandlers::TestAckPacket()
 {
-    initNode();
+    initTestNode();
     packet[0] = SPS_ACK;
     qFrame();
     processFrames();
@@ -106,7 +106,7 @@ void TestHandlers::TestAckPacket()
 
 void TestHandlers::TestSpsAckRequest()
 {
-    initNode();
+    initTestNode();
     packet[0] |= ACK_BIT;
     qFrame();
     processFrames();
@@ -120,7 +120,7 @@ void TestHandlers::TestSpsAckRequest()
 
 void TestHandlers::TestLinkLevelFrame()
 {
-    initNode();
+    initTestNode();
     packet[0] = SPS;
     qFrame();
     setPacketHandler(SPS, rxTestFrame);
@@ -130,7 +130,7 @@ void TestHandlers::TestLinkLevelFrame()
 
 void TestHandlers::TestNoHandler()
 {
-    initNode();
+    initTestNode();
     packet[0] = SPS;
     qFrame();
     processFrames();

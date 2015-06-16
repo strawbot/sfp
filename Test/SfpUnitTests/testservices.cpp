@@ -12,7 +12,7 @@ extern "C" {
 
 void initNodeServices(void)
 {
-    initNode();
+    initTestNode();
     alink.txSps = ONLY_SPS0;
 }
 
@@ -23,7 +23,7 @@ TestServices::TestServices(QObject *parent) :
 
 void TestServices::TestSendNpsNoLink()
 {
-    initLink();
+    initTestLink();
 
     for (Long i= MAX_FRAMES + 1; i; i--)
         QCOMPARE(sendNpTo(packet, sizeof(packet), 0), true);
@@ -74,7 +74,7 @@ void TestServices::TestSendSpsNoLink()
 
 void TestServices::TestSpsLinkDown()
 {
-    initNode();
+    initTestNode();
     QCOMPARE(sendSpTo(packet, sizeof(packet), DIRECT), false); // try to send one more
 }
 

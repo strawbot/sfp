@@ -25,17 +25,5 @@
 #define NUM_LINKS 2				// number of links in this node
 
 // Routing
-enum {
-    HOST = 0x0,
-    ME = 0x0,
-    YOU = 0x0,
-    DIRECT = 0x0,
-    NODE1,
-    NODE2,
-    NODE3,
-    NODE4,
-    ROUTING_POINTS,
-};
-
 #endif
 #endif // PARAMETERS_H

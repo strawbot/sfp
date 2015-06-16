@@ -43,7 +43,7 @@ static void putTx(Long x, sfpLink_t * link)
 
 void initSps()
 {
-    initNode();
+    initTestNode();
     alink.rxq = loopq;
     alink.sfpRx = rxqAvailable;
     alink.sfpGet = rxqGet;
