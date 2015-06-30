@@ -43,7 +43,7 @@ static bool transmitFrame(sfpFrame *frame, sfpLink_t *link) //! set a frame up f
 {
 	if (bytesToSend(link) == 0)
 	{
-        frameOut(frame);
+//        frameOut(frame);
 		link->sfpTxPtr = &frame->length; // set this first
 		link->sfpBytesToTx = frame->length + LENGTH_LENGTH; // set this second
 		return true;
@@ -193,6 +193,9 @@ static void checkSps(sfpLink_t * link)
 			else {
 				returnFrame((sfpFrame *)pullq(link->spsq)); // what if frame not sent but pending?
                 setSpsState(link, NO_SPS);
+				SpsTimeout(link);
+				if (queryq(link->spsq) == 0)
+					clearSpsSend(link);
             }
 		}
 		break;

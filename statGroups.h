@@ -27,6 +27,7 @@
     F(BytesOut) \
     F(BytesIn) \
     F(UnexpectedAck) \
-    F(SpsqUnderflow)
+    F(SpsqUnderflow) \
+    F(SpsTimeout)
 
 #endif
