@@ -39,6 +39,8 @@ Issues:
     the calls. The philosophy is not to crash and to alert the programmer to changes
     that need to be made.
     Could also define defaults which just do most common thing but won't crash.
+ 7. make sps selectable and use long timeout for initial contact and short timeout for
+    retransmission
     
 Updates:
 1. SPS enhanced for network mode - multiple reliable links between two nodes form a
