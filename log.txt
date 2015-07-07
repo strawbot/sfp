@@ -1,0 +1,70 @@
+Log for SFP
+ This log is kept with the source code and is refined as the source code changes
+ providing a human readable summary of the past, present and future of the code
+ base. As issues are encountered, they are entered under the Issues: section. As
+ they are resolved or things are changed, they are entered under the Updates:
+ section. Once they are no longer relavent, they are removed. The repository will
+ contain tags or major milestones which delineate these removals so as to serve
+ as a signpost in the source code development preventing the accumulation of clutter.
+
+Issues:
+ 1. should be able to have multiple ports - links on the embedded processor with each
+    one having interpret capabilities and the return output going to the correct port.
+    If the port is SFP then by frame. If the port is serial, then by byte. The detection
+    of protocol should automatically be done at the link and traffic handled
+    appropriately.
+ 2. Parameters between embedded and host sides of SFP should be knowable. Settable in
+    GUI on host. Exchanged in protocol between two ends of a link. This way both ends 
+    of a link would respect each other’s limits. The maximum packet size would be the 
+    lesser of the 2. Bigger packets would either not get sent, get flagged as too big, 
+    allowed for, or segmented.
+ 3. link parameters should have a common file format for C and Python
+ 4. the whole system should have frames as a basis. The sfp frame is a union of all 
+    possible frames. This makes it easier to pass it around, interpret it and reuse it. 
+    The same frame that comes in can go out as a reply frame.
+ 5. negotiating frame for peer to peer, no network (perhaps a network equivelant) use
+    to exchange parameters such as maximum frame length; network on/off; SPS service;
+    get local time
+ 6. It is too easy to configure the state machines incorrectly and then cause a crash.
+    Because there are functions involved, if the function is zero this will cause a crash
+    if called. The order of setting up a link and then calling link inits is not
+    obvious and if called in the wrong order, this situation can arise. Say a different
+    function is set for serviceTx which doesn't use the putTx function and then the
+    init is called subsequently, then the serviceTx is replaced with the default one
+    which will call putTx which will crash. Perhaps a setFunctionsTx(...) should be
+    called which will set all functions at once. Perhaps the defaults should not be
+    0 so they can actually be called but they would either flag the error or print out
+    the error. Could do the same kinda thing for links in a node. Instead of mandating
+    a check for zero, there would be a link which would do nothing but work with all
+    the calls. The philosophy is not to crash and to alert the programmer to changes
+    that need to be made.
+    Could also define defaults which just do most common thing but won't crash.
+ 7. make sps selectable and use long timeout for initial contact and short timeout for
+    retransmission
+    
+Updates:
+1. SPS enhanced for network mode - multiple reliable links between two nodes form a
+   chain for reliable delivery • SPS packet sent across network is ACKed across each link
+   • packet is routed to end point as an SPS packet
+   • no end to end ACK but each link routes the SPS packets
+   • delay is only link delay not network delay
+2. Node 0 is default. Node numbering starts at 1. in a simple system with one link,
+   0 and 1 are the same. when a node has multiple links, a link can be chosen to be
+   0 or default but it also is associated with a route to other nodes. a route to
+   node 0 gets the nodes default link. node 0 is reserved. using who 0,0 is direct
+   or point to point over the zero link. when receiving a packet addressed to 0 it
+   is taken as being for that node. routing information is null
+3. SPS packets now have routing information
+4. Using a general queue for frames which contain enough space for frame header
+   and trailer. receiver and transmitter use the same frameq. a file called
+   parameters.h is used to set sfp parameters
+5. Machines have been factored out of SFP code. this makes it easier to integrate
+   into threads, RTOSs, and other systems
+6. Extensive test suite: unit testing has been applied throughout to the SFP code.
+7. Code base has been refactored, cleaned up and rebuilt making use of the Test
+   Suite to assure quality
+8. Inclusion of most PIDs in networking - all but test frames for a single link
+   and ACKs which are a link only PID, are networkable.
+9. Subsumption of the terms SFAP and SFSP
+10.Separation of parameters and network setup code
+11.Consider combining cpu ids and pids into network thingees

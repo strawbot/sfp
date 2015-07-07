@@ -48,7 +48,7 @@ void qFrame()
 
     frame = getFrame();
     buildSfpFrame(sizeof(packet), packet, packet[0], frame);
-    setPacketHandler(TEST_FRAME, rxTestFrame);
+    setPacketHandler(CONFIG, rxTestFrame);
     rxFrame(frame);
     testframes = 0;
     acceptframe = true;

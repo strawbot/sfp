@@ -5,7 +5,7 @@
 	PID_BITS	(0xFF&(~(ACK_BIT|SPS_BIT)))	used to mask off upper bits
 //
 //
-	TEST_FRAME	0x00	test frame for throughput measurements
+	CONFIG		0x00	for exchanging configurations on a link: spid + specifics; ie testframe
 	SPS_ACK		++		confirm sps; link only - not networkable
 //
 	WHO_PIDS	(SPS_ACK) all pids greater than, use the who header for routing

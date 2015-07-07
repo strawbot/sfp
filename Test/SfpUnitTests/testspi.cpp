@@ -44,7 +44,7 @@ void TestSpi::TestOneSpiLink()
     QCOMPARE(nodeStat(1,getReRouted), (Long)0);
     QCOMPARE(nodeStat(3,getReRouted), (Long)0);
     selectNode(3);
-    sendPacket(TEST_FRAME, 4);
+    sendPacket(CONFIG, 4);
     runNodes(SFP_SPS_TIME/2);
     QCOMPARE(pings, (Long)1);
     QCOMPARE(nodeStat(1,getReRouted), (Long)2);

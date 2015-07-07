@@ -191,7 +191,7 @@ static bool executeCode(Byte *packet, Byte length) // execute code
 	longsPacket_t *mp = (longsPacket_t *)packet;
 	vector function = (vector)bytesToLong(&mp->longs[0].data[0]);
 	
-	//libarm_disable_irq_fiq();
+	// libarm_disable_fiq();
 	function();
 	//libarm_enable_irq_fiq();
 	return true;

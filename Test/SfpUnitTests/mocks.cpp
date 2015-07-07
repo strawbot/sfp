@@ -84,7 +84,7 @@ QUEUE(MAX_FRAMES, frameinq);
 QUEUE(MAX_FRAMES, npsq);
 QUEUE(MAX_FRAMES, spsq);
 
-void initLink()
+void initTestLink()
 {
     setTime(0);
     alink.serviceTx = serviceTx;
@@ -92,7 +92,7 @@ void initLink()
     initSfpTxSM(&alink, npsq, spsq);
     initSfpStats();
     initFramePool();
-    packet[0] = TEST_FRAME;    // pid
+    packet[0] = CONFIG;    // pid
     packet[1] = DIRECT;        // to
     packet[2] = DIRECT;        // from
 }
@@ -102,7 +102,7 @@ void initTestNode()
     initNode(&anode);
     setNode(&anode);
     addLink(DIRECT, &alink);
-    initLink();
+    initTestLink();
     setRouteTo(DIRECT, &alink);
     setWhoami(DIRECT);
     setWhatami(0);
@@ -163,7 +163,7 @@ void frameSay(sfpFrame * frame, const char * dir)
     }
 
     switch(pid&PID_BITS) {
-    case TEST_FRAME:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << " - PID: TEST_FRAME " << to << "," << from; break;
+    case CONFIG:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << " - PID: TEST_FRAME " << to << "," << from; break;
     case PING:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: PING " << to << "," << from; break;
     case PING_BACK:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: PING_BACK " << to << "," << from; break;
     case SPS:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: SPS " << to << "," << from; break;
@@ -228,5 +228,11 @@ void runSm(Long n) // run the transmitter and receiver state machines n times
         processFrames();
     }
 }
+
+void sendeqSerial()
+{ }
+
+void serialTalk()
+{ }
 
 }

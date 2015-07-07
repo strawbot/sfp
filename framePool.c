@@ -5,7 +5,7 @@
 #include "framePool.h"
 
 static QUEUE(MAX_FRAMES, poolq);
-static Byte frames[MAX_FRAMES][MAX_SFP_SIZE];
+static Byte frames[MAX_FRAMES][(MAX_SFP_SIZE + 3) & ~0x3];
 
 bool returnFrame(void *frame)
 {
@@ -33,4 +33,12 @@ void initFramePool(void)
 Long framePoolLeft(void)
 {
 	return queryq(poolq);
+}
+
+void listFrames(void)
+{
+	Long n = MAX_FRAMES;
+
+	while (n--)
+		printHex(&frames[n][0]);
 }

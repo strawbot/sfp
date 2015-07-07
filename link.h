@@ -66,3 +66,5 @@ typedef struct sfpLink_t{	// Link information
 } sfpLink_t;
 
 #endif
+
+void initLink(sfpLink_t * link, char * name);

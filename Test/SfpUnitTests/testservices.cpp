@@ -23,7 +23,7 @@ TestServices::TestServices(QObject *parent) :
 
 void TestServices::TestSendNpsNoLink()
 {
-    initLink();
+    initTestLink();
 
     for (Long i= MAX_FRAMES + 1; i; i--)
         QCOMPARE(sendNpTo(packet, sizeof(packet), 0), true);

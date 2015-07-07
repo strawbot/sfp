@@ -37,25 +37,27 @@ void TestRouting::TestInitRoutes()
 
 void TestRouting::TestNoRoutes()
 {
+    Long numnodes = elementsof(nodes);
+
     initRoutes();
-    for (Long n = 1; n <= elementsof(nodes); n++)
-        for (Long i = 1; i <= elementsof(nodes); i++) {
+    for (Long n = 1; n <= numnodes; n++) // Have every node send to all other nodes with a nonroutable frame
+        for (Long i = 1; i <= numnodes; i++) {
             selectNode(n);
             if (i != n)
-                sendPacket(TEST_FRAME, i);
+                sendPacket(CONFIG, i);
         }
     runNodes(SFP_SPS_TIME/2);
 //    networkStats();
 
     QCOMPARE(nodeStat(2,getGoodFrame), (Long)1);
-    QCOMPARE(nodeStat(1,getGoodFrame), (Long)5);
-    QCOMPARE(nodeStat(3,getGoodFrame), (Long)5);
+    QCOMPARE(nodeStat(1,getGoodFrame), (Long)numnodes+1);
+    QCOMPARE(nodeStat(3,getGoodFrame), (Long)numnodes+1);
     QCOMPARE(nodeStat(4,getGoodFrame), (Long)1);
 
-    QCOMPARE(nodeStat(2,getSendFrame), (Long)3);
-    QCOMPARE(nodeStat(1,getSendFrame), (Long)3);
-    QCOMPARE(nodeStat(3,getSendFrame), (Long)3);
-    QCOMPARE(nodeStat(4,getSendFrame), (Long)3);
+    QCOMPARE(nodeStat(2,getSendFrame), (Long)numnodes-1);
+    QCOMPARE(nodeStat(1,getSendFrame), (Long)numnodes-1);
+    QCOMPARE(nodeStat(3,getSendFrame), (Long)numnodes-1);
+    QCOMPARE(nodeStat(4,getSendFrame), (Long)numnodes-1);
 }
 
 void TestRouting::TestRoutes()

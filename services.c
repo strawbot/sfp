@@ -143,7 +143,7 @@ static bool processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 				break;
 			case SPS: // null packet used for initializing SPS and setting id
 			case PING_BACK: // ignore reply
-			case TEST_FRAME: // ignore test frames
+			case CONFIG: // ignore test frames
 				IgnoreFrame();
 				break;
 			default:

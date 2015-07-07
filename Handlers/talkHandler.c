@@ -20,7 +20,6 @@ static bool keyPacket(Byte * packet, Byte length) // feed input into Timbre
 	talkTo = p->who.from;
     while (length-- > WHO_HEADER_SIZE)
 		keyin(*payload++);
-	sfpTalk();
 	return true;
 }
 
@@ -30,7 +29,6 @@ static bool evalPacket(Byte *packet, Byte l) // silently evaluate input string
 
 	talkTo = p->who.from;
 	evaluate(p->whoload);
-	sfpTalk();
 	return true;
 	(void)l;
 }
@@ -80,14 +78,23 @@ void sendeqSfp(void)
 	}
 }
 
-void sfpTalk(void)
+// TODO: need to direct input to rxq or keyq; keep Timbre separate from SFP
+void setSfpTalk(void)
 {
 	setTalkOut(sendeqSfp);
 }
 
+void sendeqSerial(void);
+
+void setSerialTalk(void)
+{
+	setTalkOut(sendeqSerial);
+	activate(serialTalk);
+}
+
 void initTalkHandler(void) // install packet handlers
 {
-	sfpTalk();
+	setSfpTalk();
 	setPacketHandler(TALK_IN, keyPacket);
 	setPacketHandler(EVAL, evalPacket);
 	setPacketHandler(TALK_OUT, talkPacket);
