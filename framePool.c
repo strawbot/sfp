@@ -40,5 +40,5 @@ void listFrames(void)
 	Long n = MAX_FRAMES;
 
 	while (n--)
-		printHex(&frames[n][0]);
+        printHex((Cell)&frames[n][0]);
 }
