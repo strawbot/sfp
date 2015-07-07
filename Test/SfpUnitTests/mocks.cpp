@@ -99,6 +99,7 @@ void initTestLink()
 
 void initTestNode()
 {
+    initNode(&anode);
     setNode(&anode);
     addLink(DIRECT, &alink);
     initTestLink();
