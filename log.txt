@@ -41,7 +41,10 @@ Issues:
     Could also define defaults which just do most common thing but won't crash.
  7. make sps selectable and use long timeout for initial contact and short timeout for
     retransmission
-    
+ 8. need to test new api:
+ void queueFrame(sfpFrame *frame, Byte packetlength) // frame and queue a frame pool frame
+    move towards single buffer moving through system - avoid copying.
+ 9. need api for information hiding of SPS: set, test, ?
 Updates:
 1. SPS enhanced for network mode - multiple reliable links between two nodes form a
    chain for reliable delivery • SPS packet sent across network is ACKed across each link

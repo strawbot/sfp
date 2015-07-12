@@ -3,6 +3,7 @@
 #include "sfp.h"
 #include "stats.h"
 #include "framePool.h"
+#include "printers.h"
 
 static QUEUE(MAX_FRAMES, poolq);
 static Byte frames[MAX_FRAMES][(MAX_SFP_SIZE + 3) & ~0x3];
