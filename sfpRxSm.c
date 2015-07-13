@@ -51,7 +51,7 @@ static void Hunting(Byte length, sfpLink_t *link) //! waiting for a byte which w
 		link->sfpRxState = SYNCING;
 	}
 	else
-		RxLinkError(link);
+		BadLength(link);
 }
 
 static void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement of the length. If valid, start receiving a frame
@@ -63,7 +63,6 @@ static void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement o
 		link->sfpRxState = RECEIVING;
 	}
 	else {
-		RxLinkError(link);
 		BadSync(link);
 		
 		if (sfpLengthOk(sync, link)) // assume sync is first byte of new frame
@@ -89,7 +88,6 @@ static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame 
 			link->sfpRxState = ACQUIRING;
 		}
 		else {
-			RxLinkError(link);
 			BadCheckSum(link);
 			link->sfpRxState = HUNTING;
 		}
@@ -100,7 +98,8 @@ static void checkDataTimeout(sfpLink_t *link)
 {
 	if (checkTimeout(&link->frameTo)) { // limit frame receive time for error detection
 		link->sfpRxState = HUNTING;
-		Gaveup(link);
+		link->sfpBytesToRx = 0;
+		RxTimeout(link);
 	}
 }
 

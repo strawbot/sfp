@@ -18,8 +18,8 @@
     F(BadSync) \
     F(GoodFrame) \
     F(BadCheckSum) \
-    F(Gaveup) \
-    F(RxLinkError) \
+    F(RxTimeout) \
+    F(BadLength) \
     F(SpsAcked) \
     F(SpsSent) \
     F(SendFrame) \

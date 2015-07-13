@@ -61,7 +61,7 @@ void showSfpStats(void)
 	for (i = 0; i < NUM_LINKS; i++) {
         sfpLink_t *link = nodeLink(i);
         if (link) {
-            print("\nLink#"), printDec(i);
+            print("\n*** Link#"), printDec(i);
             FOR_EACH_LINK_STAT(PRINT_LINK_STAT)
         }
     }
@@ -111,7 +111,10 @@ static void printTxActions(Long flag)
 void showLinkStatus(sfpLink_t * link)
 {
 	if (link->name)
-		print("\nlink name: "), print(link->name);
+		print("\n*** Link name: "), print(link->name);
+	if (link->disableSps)
+		print("\nSPS service disabled");
+		
 // Receiver
 	if ((link->rxq) && (qbq(link->rxq)))
 		print("\nBytes in rxq: "), printDec(qbq(link->rxq));
@@ -120,7 +123,8 @@ void showLinkStatus(sfpLink_t * link)
 	if (queryq(link->frameq))
 		print("\nincoming frame queue: "), printDec(queryq(link->frameq));
 	print("\nSFP RX state: "), printRxState(link->sfpRxState);
-	print("\nRx SPS state: "), printSpsState(link->rxSps);
+	if (!link->disableSps)
+		print("\nRx SPS state: "), printSpsState(link->rxSps);
 
 // Transmitter
 	if (link->frameOut)
@@ -129,13 +133,15 @@ void showLinkStatus(sfpLink_t * link)
 		print("\nbytes to send:"), printDec(link->sfpBytesToTx);
 	if (queryq(link->npsq))
 		print("\nnps frames to send:"), printDec(queryq(link->npsq));
-	if (queryq(link->spsq))
-		print("\nsps frames to send:"), printDec(queryq(link->spsq));
-	print("\nTx SPS state: "), printSpsState(link->txSps);
-	if (checkTimeout(&link->spsTo))
-		print("\nsps timed out");
-	if (link->spsRetries)
-		print("\nframe has been retried:"), printDec(link->spsRetries);
+	if (!link->disableSps)
+		if (queryq(link->spsq)) {
+			print("\nsps frames to send:"), printDec(queryq(link->spsq));
+			print("\nTx SPS state: "), printSpsState(link->txSps);
+		if (checkTimeout(&link->spsTo))
+			print("\nsps timed out");
+		if (link->spsRetries)
+			print("\nframe has been retried:"), printDec(link->spsRetries);
+		}
 	if (link->txFlags)
 		printTxActions(link->txFlags);
 
@@ -160,7 +166,9 @@ void showNodeStatus(void)
         if (link)
         	showLinkStatus(link);
     }
-    
+    print("\nRouteable IDs: ");
+    for (i = 0; i < ROUTING_POINTS; i++)
+    	if (routeTo(i)) printDec(i);
     print("\nNumber of frames in pool:");
     printDec(framePoolLeft());
     print(" out of ");
