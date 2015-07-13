@@ -38,6 +38,7 @@ void serviceTx(sfpLink_t *link);
 void serviceMasterTx(sfpLink_t *link);
 void initSfpTxSM(sfpLink_t *link, Qtype * npsq, Qtype * spsq);
 void sfpTxSm(sfpLink_t *link);
+void resetTransmitter(sfpLink_t *link);
 
 /*
  when sending sps, check sps state machine for any_sps, only_sps. If true then

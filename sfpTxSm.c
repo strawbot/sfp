@@ -91,7 +91,7 @@ static void sendNpsFrame(sfpLink_t *link)
 	{
 		if (link->frameOut) // frame has been transmitted return if needed
 			returnFrame(link->frameOut);
-        link->frameOut = frame; // set for returnin when done
+        link->frameOut = frame; // set for returning when done
         pullq(link->npsq);
 
 		SendFrame(link);
@@ -238,6 +238,19 @@ void serviceMasterTx(sfpLink_t *link) // try to send a byte if there are bytes t
         setPollSend(link);
         setTimeout(SFP_POLL_TIME, &link->pollTo);
     }
+}
+
+void resetTransmitter(sfpLink_t *link)
+{
+	link->sfpBytesToTx = 0;
+	link->txFlags = 0;
+
+	if (link->frameOut) // frame has been transmitted return if needed
+		returnFrame(link->frameOut);
+	link->frameOut = NULL;
+
+	while(queryq(link->npsq))
+		returnFrame((sfpFrame *)pullq(link->npsq));
 }
 
 void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or just exit if all done
