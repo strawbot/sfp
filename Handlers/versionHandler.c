@@ -16,10 +16,10 @@
 
 #include <string.h>
 
-bool getVersion(Byte *packet, Byte length);
+static bool getVersionHandler(Byte *packet, Byte length);
 void initVersion(void);
 
-bool getVersion(Byte *packet, Byte length)
+static bool getVersionHandler(Byte *packet, Byte length)
 {
 	whoPacket_t *sp = (whoPacket_t *)packet;
 	Byte reply[MAX_PACKET_LENGTH];
@@ -42,5 +42,5 @@ bool getVersion(Byte *packet, Byte length)
 
 void initVersion(void)
 {
-	setPacketHandler(GET_VERSION, getVersion);
+	setPacketHandler(GET_VERSION, getVersionHandler);
 }
