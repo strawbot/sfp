@@ -134,6 +134,8 @@ static void setSpsState(sfpLink_t * link, spsState_t state)
 
 static void checkSps(sfpLink_t * link)
 {
+	if (link->disableSps) return;
+
     if (testAckReceived(link)) {
         clearAckReceived(link);
 		SpsAcked(link);
@@ -268,8 +270,14 @@ void initSfpTxSM(sfpLink_t *link, Qtype * npsq, Qtype * spsq) //! initialize SFP
     link->serviceTx = serviceTx;
 
     zeroq(npsq);
-    zeroq(spsq);
-    link->npsq = npsq;
-    link->spsq = spsq;
+    if (spsq) {
+    	zeroq(spsq);
+     	link->spsq = spsq;
+    }
+    else {
+    	link->disableSps = 1;
+     	link->spsq = npsq;
+    }
+	link->npsq = npsq;
 }
 
