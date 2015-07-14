@@ -95,7 +95,14 @@ void processFrames(void) //process received frames from links
 */
 static bool processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 {
-	if (frame->pid & ACK_BIT) { // intercept SPS packets
+	if (link->disableSps) {
+		if (frame->pid > MAX_PIDS) {
+			UnknownPid();
+			returnFrame(frame);
+			return true;
+		}
+	}
+	else if (frame->pid & ACK_BIT) { // intercept SPS packets
 		spsReceived(link);
 		if (!acceptSpsFrame(frame, link)) {
 			returnFrame(frame);
