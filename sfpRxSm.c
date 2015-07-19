@@ -24,16 +24,17 @@ static void checkDataTimeout(sfpLink_t *link);
 // length validation
 static bool sfpLengthOk(Byte length, sfpLink_t *link)
 {
-	if ((length > EMPTY_SPI_FRAME) && (length < MIN_FRAME_LENGTH))
-		return false;
-	
-	if ((length < NO_SPI_RESPONSE) && (length > MAX_FRAME_LENGTH))
-		return false;
-	
 	if ((length == EMPTY_SPI_FRAME) || (length == NO_SPI_RESPONSE))
 		return false;
 
-	return true;
+	if (length < MIN_FRAME_LENGTH)
+	    ShortFrame(length, link);
+	else if (length > MAX_FRAME_LENGTH)
+        LongFrame(length, link);
+    else
+		return true;
+	
+	return false;
 }
 
 /* 
