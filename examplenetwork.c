@@ -49,6 +49,7 @@ void sfpMachine(void)
 	activate(sfpMachine);
 }
 
+
 void initSfp(void)
 {
 	sfpLink_t *link = &uartLink;

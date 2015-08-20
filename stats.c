@@ -61,11 +61,7 @@ void showSfpStats(void)
 	for (i = 0; i < NUM_LINKS; i++) {
         sfpLink_t *link = nodeLink(i);
         if (link) {
-<<<<<<< HEAD
-            print("\nLink#"), printDec(i);
-=======
             print("\n*** Link#"), printDec(i);
->>>>>>> cfdb340e73553904cd3c921a62d8d25bcdea5095
             FOR_EACH_LINK_STAT(PRINT_LINK_STAT)
         }
     }
@@ -115,14 +111,10 @@ static void printTxActions(Long flag)
 void showLinkStatus(sfpLink_t * link)
 {
 	if (link->name)
-<<<<<<< HEAD
-		print("\nlink name: "), print(link->name);
-=======
 		print("\n*** Link name: "), print(link->name);
 	if (link->disableSps)
 		print("\nSPS service disabled");
 		
->>>>>>> cfdb340e73553904cd3c921a62d8d25bcdea5095
 // Receiver
 	if ((link->rxq) && (qbq(link->rxq)))
 		print("\nBytes in rxq: "), printDec(qbq(link->rxq));
@@ -131,12 +123,8 @@ void showLinkStatus(sfpLink_t * link)
 	if (queryq(link->frameq))
 		print("\nincoming frame queue: "), printDec(queryq(link->frameq));
 	print("\nSFP RX state: "), printRxState(link->sfpRxState);
-<<<<<<< HEAD
-	print("\nRx SPS state: "), printSpsState(link->rxSps);
-=======
 	if (!link->disableSps)
 		print("\nRx SPS state: "), printSpsState(link->rxSps);
->>>>>>> cfdb340e73553904cd3c921a62d8d25bcdea5095
 
 // Transmitter
 	if (link->frameOut)
@@ -145,15 +133,6 @@ void showLinkStatus(sfpLink_t * link)
 		print("\nbytes to send:"), printDec(link->sfpBytesToTx);
 	if (queryq(link->npsq))
 		print("\nnps frames to send:"), printDec(queryq(link->npsq));
-<<<<<<< HEAD
-	if (queryq(link->spsq))
-		print("\nsps frames to send:"), printDec(queryq(link->spsq));
-	print("\nTx SPS state: "), printSpsState(link->txSps);
-	if (checkTimeout(&link->spsTo))
-		print("\nsps timed out");
-	if (link->spsRetries)
-		print("\nframe has been retried:"), printDec(link->spsRetries);
-=======
 	if (!link->disableSps)
 		if (queryq(link->spsq)) {
 			print("\nsps frames to send:"), printDec(queryq(link->spsq));
@@ -163,7 +142,6 @@ void showLinkStatus(sfpLink_t * link)
 		if (link->spsRetries)
 			print("\nframe has been retried:"), printDec(link->spsRetries);
 		}
->>>>>>> cfdb340e73553904cd3c921a62d8d25bcdea5095
 	if (link->txFlags)
 		printTxActions(link->txFlags);
 
@@ -188,13 +166,9 @@ void showNodeStatus(void)
         if (link)
         	showLinkStatus(link);
     }
-<<<<<<< HEAD
-    
-=======
     print("\nRouteable IDs: ");
     for (i = 0; i < ROUTING_POINTS; i++)
     	if (routeTo(i)) printDec(i);
->>>>>>> cfdb340e73553904cd3c921a62d8d25bcdea5095
     print("\nNumber of frames in pool:");
     printDec(framePoolLeft());
     print(" out of ");
