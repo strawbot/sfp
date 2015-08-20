@@ -35,11 +35,16 @@ static void txPut(Long x, sfpLink_t * link)
 
 void sfpMachine(void)
 {
-	sfpLink_t *link = &uartLink;
+	Byte i;
 
-	sfpTxSm(link);
-	link->serviceTx(link);
-	sfpRxSm(link);
+	for (i=0; i < NUM_LINKS; i++) {
+		sfpLink_t *link = nodeLink(i);
+		if (link) {
+			sfpTxSm(link);
+			link->serviceTx(link);
+			sfpRxSm(link);
+		}
+	}
 	processFrames();
 	activate(sfpMachine);
 }
@@ -47,33 +52,34 @@ void sfpMachine(void)
 void initSfp(void)
 {
 	sfpLink_t *link = &uartLink;
-	
-	// initialize link
+
+	// initialize pool of frame buffers
+    initFramePool();
+
+	// initialize the node
+    initNode(&myNode);
+    setNode(&myNode);
+    setWhoami(MAIN_CPU);
+    setWhatami(0);
+ 
+	// initialize UART link
+	link = &uartLink;
+	initLink(link, "UART Link");
 	link->rxq = rxq;
 	link->txq = txq; // would be loopback if use same q
-	
+
+	// initialize state machines
+	initSfpRxSM(link, frameq);
+	initSfpTxSM(link, npsq, spsq);
+
 	link->sfpRx = rxAvailable;
 	link->sfpGet = rxGet;
 	link->sfpTx = txOk;
 	link->sfpPut = txPut;
 
-	link->serviceTx = serviceTx;
-	link->name = "Simple Network";
-
-    // initialize the node
-    setNode(&myNode);
-    setWhoami(1);
-    setWhatami(0);
-
-    addLink(0, link); // attached links
-    setRouteTo(0, link); // routes for other nodes
-    
-	// initialize pool of frame buffers
-    initFramePool();
-
-	// initialize state machines
-	initSfpRxSM(link, frameq);
-	initSfpTxSM(link, npsq, spsq);
+	addLink(0, link); // attached links
+	setRouteTo(DIRECT, link);
+    setRouteTo(MAIN_HOST, link); // routes for other nodes
 
 	// initialize services and stats
     initSfpStats();

@@ -95,7 +95,14 @@ void processFrames(void) //process received frames from links
 */
 static bool processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 {
-	if (frame->pid & ACK_BIT) { // intercept SPS packets
+	if (link->disableSps) {
+		if (frame->pid > MAX_PIDS) {
+			UnknownPid();
+			returnFrame(frame);
+			return true;
+		}
+	}
+	else if (frame->pid & ACK_BIT) { // intercept SPS packets
 		spsReceived(link);
 		if (!acceptSpsFrame(frame, link)) {
 			returnFrame(frame);
@@ -247,7 +254,7 @@ static bool sendPacketToQ(Byte *packet, Byte length, Qtype *que)
 	if (frame == NULL)
 		return false;
 
-	buildSfpFrame(length-1, &packet[1], packet[0], frame);
+	buildSfpFrame(length-PID_LENGTH, &packet[1], packet[0], frame);
 
 	pushq((Cell)frame, que);
 
@@ -279,6 +286,24 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 	// TODO: If for me - accept it?
 	NoDest();
 	return true;
+}
+
+void queueFrame(sfpFrame *frame, Byte packetlength) // frame and queue a frame pool frame
+{
+	sfpLink_t *link = routeTo(frame->who.to);
+	
+	if (link) {
+		addSfpFrame(frame, packetlength);
+		if (frame->pid & ACK_BIT) // check for SPS bit; need to isolate this - data hide
+			pushq((Cell)frame, link->spsq);
+		else
+			pushq((Cell)frame, link->npsq);
+	}
+	else {
+		UnRouted();
+		returnFrame(frame);
+	}
+		
 }
 
 // initialization

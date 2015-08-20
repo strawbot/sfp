@@ -6,17 +6,21 @@
 #include "frame.h"
 
 // build a frame with the proper structure
-void buildSfpFrame(Byte length, Byte *data, Byte pid, sfpFrame *frame)
+void addSfpFrame(sfpFrame *frame, Byte length) // add frame header and trailer
 {
-	frame->length = length + MIN_FRAME_LENGTH; // sync + pid + checksum
+	frame->length = length + FRAME_OVERHEAD; // sync + checksum
 	frame->sync = sfpSync(frame->length);
-	frame->pid = pid;
-	memcpy(frame->payload, data, length);
 	addChecksum(frame);
 }
 
-// take checksum structure as argument; calculate with local variables, then put in structure
+void buildSfpFrame(Byte length, Byte *data, Byte pid, sfpFrame *frame)
+{
+	frame->pid = pid;
+	memcpy(frame->payload, data, length);
+	addSfpFrame(frame, length + PID_LENGTH);
+}
 
+// take checksum structure as argument; calculate with local variables, then put in structure
 void calculateCheckSum(checkSum_t *cs, Byte length, Byte *data)
 {
     Byte sum = 0, sumsum = 0;

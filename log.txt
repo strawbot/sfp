@@ -41,7 +41,12 @@ Issues:
     Could also define defaults which just do most common thing but won't crash.
  7. make sps selectable and use long timeout for initial contact and short timeout for
     retransmission
-    
+ 8. need to test new api:
+ void queueFrame(sfpFrame *frame, Byte packetlength) // frame and queue a frame pool frame
+    move towards single buffer moving through system - avoid copying.
+ 9. need api for information hiding of SPS: set, test, ?
+10.Consider combining cpu ids and pids into network thingees
+
 Updates:
 1. SPS enhanced for network mode - multiple reliable links between two nodes form a
    chain for reliable delivery • SPS packet sent across network is ACKed across each link
@@ -67,4 +72,7 @@ Updates:
    and ACKs which are a link only PID, are networkable.
 9. Subsumption of the terms SFAP and SFSP
 10.Separation of parameters and network setup code
-11.Consider combining cpu ids and pids into network thingees
+11.addition of the ability to turn off SPS
+12.can reset transmitter and have all unsent frames returned
+13.added queueFrame so that a frame unit can be filled and passed in. This saves
+   copying a packet into a frame for more efficient sending.

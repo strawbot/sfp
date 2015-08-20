@@ -18,17 +18,22 @@ static void Syncing(Byte sync, sfpLink_t *link);
 static void Receiving(Byte data, sfpLink_t *link);
 static void checkDataTimeout(sfpLink_t *link);
 
+#define EMPTY_SPI_FRAME 0
+#define NO_SPI_RESPONSE 0xFF
+
 // length validation
-static bool sfpLengthOk(Byte length, sfpLink_t *link) //! check length for a frame
+static bool sfpLengthOk(Byte length, sfpLink_t *link)
 {
-	if ( (length != 0) && (length != 255) ) { // special cases for SPI	
-		if (length < MIN_FRAME_LENGTH)
-        	ShortFrame(length, link);
-		else if (length > MAX_FRAME_LENGTH)
-        	LongFrame(length, link);
-		else 
-			return true;
-	}
+	if ((length == EMPTY_SPI_FRAME) || (length == NO_SPI_RESPONSE))
+		return false;
+
+	if (length < MIN_FRAME_LENGTH)
+	    ShortFrame(length, link);
+	else if (length > MAX_FRAME_LENGTH)
+        LongFrame(length, link);
+    else
+		return true;
+	
 	return false;
 }
 
@@ -51,7 +56,7 @@ static void Hunting(Byte length, sfpLink_t *link) //! waiting for a byte which w
 		link->sfpRxState = SYNCING;
 	}
 	else
-		RxLinkError(link);
+		BadLength(link);
 }
 
 static void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement of the length. If valid, start receiving a frame
@@ -63,7 +68,6 @@ static void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement o
 		link->sfpRxState = RECEIVING;
 	}
 	else {
-		RxLinkError(link);
 		BadSync(link);
 		
 		if (sfpLengthOk(sync, link)) // assume sync is first byte of new frame
@@ -89,7 +93,6 @@ static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame 
 			link->sfpRxState = ACQUIRING;
 		}
 		else {
-			RxLinkError(link);
 			BadCheckSum(link);
 			link->sfpRxState = HUNTING;
 		}
@@ -100,7 +103,8 @@ static void checkDataTimeout(sfpLink_t *link)
 {
 	if (checkTimeout(&link->frameTo)) { // limit frame receive time for error detection
 		link->sfpRxState = HUNTING;
-		Gaveup(link);
+		link->sfpBytesToRx = 0;
+		RxTimeout(link);
 	}
 }
 

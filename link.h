@@ -49,6 +49,7 @@ typedef struct sfpLink_t{	// Link information
 	Timeout spsTo;						// sps timeout
 	Long spsRetries;					// how many times sps frame has been retried
 	Long txFlags;						// Pending Tx actions
+	Byte disableSps;					// turn off sps service
 
 	// Both
 	Timeout frameTo;	// maximum time between bytes when framebuilding
