@@ -46,6 +46,7 @@ Issues:
     move towards single buffer moving through system - avoid copying.
  9. need api for information hiding of SPS: set, test, ?
 10.Consider combining cpu ids and pids into network thingees
+11. Phrases should alwasy send with EVAL
 
 Updates:
 1. SPS enhanced for network mode - multiple reliable links between two nodes form a
