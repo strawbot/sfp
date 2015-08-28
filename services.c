@@ -288,12 +288,11 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 	return true;
 }
 
-void queueFrame(sfpFrame *frame, Byte packetlength) // frame and queue a frame pool frame
+void queueFrame(sfpFrame *frame) // frame and queue a frame pool frame
 {
 	sfpLink_t *link = routeTo(frame->who.to);
 	
 	if (link) {
-		addSfpFrame(frame, packetlength);
 		if (frame->pid & ACK_BIT) // check for SPS bit; need to isolate this - data hide
 			pushq((Cell)frame, link->spsq);
 		else
