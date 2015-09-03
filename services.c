@@ -10,6 +10,8 @@
 #include "node.h"
 #include "stats.h"
 #include "sfpTxSm.h"
+#include "pids.h"
+#include "printers.h"
 
 // ?Should handlers be in their own file? Services just contains sending services?
 // but then one does not use one without the other - so keep in one file
@@ -42,6 +44,18 @@ packetHandler_t getPacketHandler(Byte pid)
 	return NULL;
 }
 
+// SFP Frame decoder 
+#define PRINT_PID(pid)	case pid: print(#pid); break;
+
+void decodeFrame(sfpFrame *frame)
+{
+	print("\n");
+	switch(frame->pid) {
+		FOR_EACH_PID(PRINT_PID)
+	}
+	print(" frame from "), printDec(frame->who.from), print("to "), printDec(frame->who.to);
+}
+
 /* default packet handlers
 	Frames come in over links and go to frame queues. A machine processes the
 	frame and then puts it into the retry queue if the packet handler is busy.
@@ -71,6 +85,9 @@ void processFrames(void) //process received frames from links
 		if (queryq(link->frameq) != 0) {
 			sfpFrame *frame = (sfpFrame *)pullq(link->frameq);
 			
+			if (link->listFrames)
+				decodeFrame(frame);
+
 			if (processLinkFrame(frame, link))
 				FrameProcessed();
 			else {
@@ -288,12 +305,11 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 	return true;
 }
 
-void queueFrame(sfpFrame *frame, Byte packetlength) // frame and queue a frame pool frame
+void queueFrame(sfpFrame *frame) // frame and queue a frame pool frame
 {
 	sfpLink_t *link = routeTo(frame->who.to);
 	
 	if (link) {
-		addSfpFrame(frame, packetlength);
 		if (frame->pid & ACK_BIT) // check for SPS bit; need to isolate this - data hide
 			pushq((Cell)frame, link->spsq);
 		else

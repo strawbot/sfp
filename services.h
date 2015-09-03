@@ -17,6 +17,6 @@ void processFrames(void);
 
 bool sendNpTo(Byte *packet, Byte length, Byte to);
 bool sendSpTo(Byte *packet, Byte length, Byte to);
-void queueFrame(sfpFrame *frame, Byte packetlength);
+void queueFrame(sfpFrame *frame);
 
 void initServices(void);

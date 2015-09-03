@@ -59,6 +59,7 @@ typedef struct sfpLink_t{	// Link information
 	char *name;			// link name
 	linkOwner_t linkOwner;		// who owns the linke
 	Byte routeTo;		// which link to route to if linkOwner is ROUTE_LINK
+	bool listFrames;	// if set, then list the frames in frameq
 
 	// stats
 	Long LongFrame;

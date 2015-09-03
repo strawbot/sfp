@@ -67,4 +67,5 @@ void initLink(sfpLink_t * link, char * name)
 	link->sfpTx = voidSfpTx;
 	link->sfpPut = voidSfpPut;
 	link->serviceTx = voidServiceTx;
+	link->listFrames = false;
 }

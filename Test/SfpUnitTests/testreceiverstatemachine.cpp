@@ -122,7 +122,7 @@ void TestReceiverStateMachine::TestReceiving()
     setTime(SFP_FRAME_TIME+1);
     sfpRxSm(&alink);
     QCOMPARE(alink.sfpRxState, HUNTING);
-    QCOMPARE(getGaveup(&alink), (Long)1);
+    QCOMPARE(getRxTimeout(&alink), (Long)1);
     setTime(2*SFP_FRAME_TIME+1);
     QCOMPARE(getGoodFrame(&alink), (Long)1);
     for (i = 0; i < frame->length + LENGTH_LENGTH; i++) { // good frame after timeout
