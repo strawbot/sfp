@@ -3,13 +3,19 @@
 
 import os, sys, time, traceback
 import inspect
+import os.path
+
+# make script runable from anywhere from any os
+abspath = os.path.abspath(__file__)
+dirname = os.path.dirname(abspath)
+os.chdir(dirname)
 
 printme = 0
 
 # read in a text file and generate a C header file and a Python file so a
 # single list can be used to keep embedded and host software in sync
 
-pydest2 = '../../TimbreTalk/' # place a copy here for Timbre Term
+pydest = '../../TimbreTalk/' # place a copy here for Timbre Talk
 hdest = '../'
 
 pidlist = []
@@ -57,6 +63,10 @@ def readPids(file):
 #define SPS_BIT 0x40 	// used for indicating sfs type if an acked frame
 #define PID_BITS 0x2F 	// used to mask off upper bits
 ...
+
+// provide a macro of all pids - should only be for pids > WHO_PIDS and < MAX_PIDS
+#define FOR_EACH_PID(P) \
+	P(PID) \
 #endif
 '''
 def generateC(file):
@@ -65,11 +75,16 @@ def generateC(file):
 	file.write('// PID declarations  %s'%genby())
 	file.write('#ifndef PID_H\n#define PID_H\n\n')
 	for pid in pidlist:
-		if pid is pidlist[-1]:
-			comma = ''
-		else:
-			comma = ','
 		file.write('#define %s %s \t// %s\n'%(pid[0], pid[1], pid[2]))
+	file.write('\n#define FOR_EACH_PID(P) \\\n')
+	unique = {}
+	for p in pidlist:
+		try:
+			int(p[1], 16)
+			unique[p[1]] = p[0] # get unique list using hex value as key
+		except:
+			pass
+	for pid in unique: file.write('\tP(%s) /* %s */ \\\n'%(unique[pid], pid))
 	file.write('\n#endif')
 	file.close()
 
@@ -103,9 +118,6 @@ def generatePython(filename):
 		file.write('\n\t%s:"%s"%s\t# %s'%(pid[0], pid[0], comma, pid[2]))
 	file.write('\n}')
 	file.close()
-	if pydest2:
-		print "Copy %s to %s"%(filename, pydest2)
-		shutil.copy(filename, pydest2+filename)
 
 def genby(): # string for heading
 	if printme: print "Executing: ", inspect.stack()[0][3]
@@ -120,7 +132,8 @@ def fileModTime(file): # return file modified date
 def generatePids():
 	readPids('pids.txt')
 	generateC(hdest+'pids.h')
-	generatePython('pids.py')
+	if pydest:
+		generatePython(pydest+'pids.py')
 
 if __name__ == '__main__':
 	try:
