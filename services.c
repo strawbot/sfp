@@ -245,7 +245,7 @@ static void reRouteFrame(sfpFrame *frame)
 {
     sfpLink_t *link = routeTo(frame->who.to);
 	
-	if (link) {
+	if ((link != 0) && (link->reroute)) {
 		ReRouted();
 		if (frame->pid & ACK_BIT) // check to see if SPS packet
 			pushq((Cell)frame, link->spsq);

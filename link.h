@@ -34,6 +34,7 @@ typedef struct sfpLink_t{	// Link information
 	Byte (* sfpGet)(struct sfpLink_t *);// get the byte
 	sfpRxState_t sfpRxState;			// SFP RX states
 	spsState_t rxSps;					// which secure pid to look for next
+	bool reroute;						// set to true if rerouting can be done
 
 	// Transmitter
 	Byte * txq;							// point to queue of outgoing bytes

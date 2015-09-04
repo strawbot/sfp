@@ -154,6 +154,10 @@ void showLinkStatus(sfpLink_t * link)
 		printOwner(link->linkOwner);
 	if (link->routeTo)
 		print("\nwhich link to route to if linkOwner is ROUTE_LINK"), printDec(link->routeTo);
+	if (!link->reroute)
+		print("\nrerouting disabled");
+	if (link->listFrames)
+		print("\ndisplay incoming frames");
 }
 
 void showNodeStatus(void)
