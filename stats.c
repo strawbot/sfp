@@ -156,7 +156,9 @@ void showLinkStatus(sfpLink_t * link)
 		print("\nwhich link to route to if linkOwner is ROUTE_LINK"), printDec(link->routeTo);
 	if (!link->reroute)
 		print("\nrerouting disabled");
-	if (link->listFrames)
+	if (link->listTxFrames)
+		print("\ndisplay outgoing frames");
+	if (link->listRxFrames)
 		print("\ndisplay incoming frames");
 }
 

@@ -85,7 +85,7 @@ void processFrames(void) //process received frames from links
 		if (queryq(link->frameq) != 0) {
 			sfpFrame *frame = (sfpFrame *)pullq(link->frameq);
 			
-			if (link->listFrames)
+			if (link->listRxFrames)
 				decodeFrame(frame);
 
 			if (processLinkFrame(frame, link))

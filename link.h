@@ -35,6 +35,7 @@ typedef struct sfpLink_t{	// Link information
 	sfpRxState_t sfpRxState;			// SFP RX states
 	spsState_t rxSps;					// which secure pid to look for next
 	bool reroute;						// set to true if rerouting can be done
+	bool listRxFrames;	// if set, then list the frames in frameq
 
 	// Transmitter
 	Byte * txq;							// point to queue of outgoing bytes
@@ -51,6 +52,7 @@ typedef struct sfpLink_t{	// Link information
 	Long spsRetries;					// how many times sps frame has been retried
 	Long txFlags;						// Pending Tx actions
 	Byte disableSps;					// turn off sps service
+	bool listTxFrames;					// display frames if enabled
 
 	// Both
 	Timeout frameTo;	// maximum time between bytes when framebuilding
@@ -60,7 +62,6 @@ typedef struct sfpLink_t{	// Link information
 	char *name;			// link name
 	linkOwner_t linkOwner;		// who owns the linke
 	Byte routeTo;		// which link to route to if linkOwner is ROUTE_LINK
-	bool listFrames;	// if set, then list the frames in frameq
 
 	// stats
 	Long LongFrame;
