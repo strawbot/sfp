@@ -16,7 +16,7 @@ printme = 0
 # single list can be used to keep embedded and host software in sync
 
 pydest = '../../TimbreTalk/' # place a copy here for Timbre Talk
-hdest = '../'
+hdest = '../' # for testing
 
 pidlist = []
 pidused = [0]*256
