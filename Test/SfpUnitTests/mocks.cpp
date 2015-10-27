@@ -72,6 +72,7 @@ void setTime(Long t)
     ticktime = t;
 }
 
+#include "link.c"
 #include "node.c"
 
 Byte packet[3];

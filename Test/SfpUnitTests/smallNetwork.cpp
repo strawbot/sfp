@@ -123,6 +123,7 @@ void initRoutes()
     for (Long i=0; i<elementsof(links); i++) { // initialize link SM's and queues
         sfpLink_t * link = &links[i].link;
 
+        initLink(link, (char *)names[i]);
         initSfpRxSM(link, frameqs[i]);
         initSfpTxSM(link, npsqs[i], spsqs[i]);
         INIT_BQ(links[i].byteq);
@@ -132,7 +133,6 @@ void initRoutes()
         link->sfpTx = txOk;
         link->sfpPut = txPut;
         link->serviceTx = serviceTx;
-        link->name = (char *)names[i];
     }
 
     for (Long i=0; i<elementsof(nodes); i++) { // setup node who and what
