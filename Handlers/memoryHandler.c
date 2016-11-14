@@ -65,12 +65,14 @@ TODO:
 */
 static memoryPacket_t wconfirm;
 
+// Send reply when the communication link is available
 static void writeReply(void)
 {
 	if (false == sendNpTo((Byte *)&wconfirm, sizeof(wconfirm), wconfirm.who.to))
 		activate(writeReply);
 }
 
+// Notify when the flash has finished writing
 static void writeConfirm(void)
 {
 	if (flashBusy())
@@ -106,12 +108,14 @@ static bool flashWrite(Byte *packet, Byte length)
 	
 static erasePacket_t econfirm;
 
+// Send reply when the communication link is available
 static void eraseReply(void)
 {
 	if (false == sendNpTo((Byte *)&econfirm, sizeof(econfirm), econfirm.who.to))
 		activate(eraseReply);
 }
 
+// Reply once flash is finished erasing
 static void eraseConfirm(void)
 {
 	if (flashBusy())
