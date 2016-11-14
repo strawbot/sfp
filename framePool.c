@@ -1,4 +1,10 @@
 // SFP Frame pool  Robert Chapman III  Feb 21, 2015
+/*
+ * Using both ends of a queue, the pool allows machines and interrupts to share a pool
+ * of frames without requiring protection. This works by allowing machines to take the
+ * pool to empty but interrupts can only take it down to 1 frame left. For interrupts
+ * interrupting interrupts, protection must be used on the interrupt side.
+*/
 
 #include "sfp.h"
 #include "stats.h"
@@ -7,20 +13,6 @@
 
 static QUEUE(MAX_FRAMES, poolq);
 static Byte frames[MAX_FRAMES][(MAX_SFP_SIZE + 3) & ~0x3];
-
-bool returnFrame(void *frame)
-{
-	pushq((Cell)frame, poolq);
-	return true;
-}
-
-sfpFrame *getFrame(void)
-{
-    if (queryq(poolq))
-        return (sfpFrame *)pullq(poolq);
-	FramePoolEmpty();
-	return NULL;
-}
 
 void initFramePool(void)
 {
@@ -36,6 +28,46 @@ Long framePoolLeft(void)
 	return queryq(poolq);
 }
 
+// machine access
+sfpFrame * getFrame(void)
+{
+    if (framePoolLeft() > 0)
+        return (sfpFrame *)pullq(poolq);
+	FramePoolEmpty();
+	return NULL;
+}
+
+void putFrame(void * frame)
+{
+	stuffq((Cell)frame, poolq);
+}
+
+// interrupt access
+sfpFrame * igetFrame(void)
+{
+    if (framePoolLeft() > 1)
+        return (sfpFrame *)popq(poolq);
+	FramePoolEmpty();
+	return NULL;
+}
+
+void iputFrame(void * frame)
+{
+	pushq((Cell)frame, poolq);
+}
+
+// interrupts interrupting interrupts
+sfpFrame * iigetFrame(void)
+{
+	return safe(igetFrame());
+}
+
+void iiputFrame(void * frame)
+{
+	safe(iputFrame(frame));
+}
+
+// CLI
 void listFrames(void)
 {
 	Long n = MAX_FRAMES;

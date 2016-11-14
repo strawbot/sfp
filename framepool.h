@@ -2,8 +2,13 @@
 
 #include "sfp.h"
 
-bool returnFrame(void *frame);
-sfpFrame *getFrame(void);
-
 void initFramePool(void);
 Long framePoolLeft(void);
+
+sfpFrame * getFrame(void);
+void putFrame(void * frame);
+sfpFrame * igetFrame(void);
+void iputFrame(void * frame);
+sfpFrame * iigetFrame(void);
+void iiputFrame(void * frame);
+void listFrames(void);
