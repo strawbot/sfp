@@ -18,13 +18,13 @@ Issues:
     of a link would respect each other’s limits. The maximum packet size would be the 
     lesser of the 2. Bigger packets would either not get sent, get flagged as too big, 
     allowed for, or segmented.
+    - negotiating frame for peer to peer, no network (perhaps a network equivelant) use
+    to exchange parameters such as maximum frame length; network on/off; SPS service;
+    get local time
  3. link parameters should have a common file format for C and Python
  4. the whole system should have frames as a basis. The sfp frame is a union of all 
     possible frames. This makes it easier to pass it around, interpret it and reuse it. 
     The same frame that comes in can go out as a reply frame.
- 5. negotiating frame for peer to peer, no network (perhaps a network equivelant) use
-    to exchange parameters such as maximum frame length; network on/off; SPS service;
-    get local time
  6. It is too easy to configure the state machines incorrectly and then cause a crash.
     Because there are functions involved, if the function is zero this will cause a crash
     if called. The order of setting up a link and then calling link inits is not
@@ -45,13 +45,11 @@ Issues:
  void queueFrame(sfpFrame *frame, Byte packetlength) // frame and queue a frame pool frame
     move towards single buffer moving through system - avoid copying.
  9. need api for information hiding of SPS: set, test, ?
-10.Consider combining cpu ids and pids into network thingees
+10. Consider combining cpu ids and pids into network thingees
 11. Phrases should alwasy send with EVAL
-12. SFP semaphore for frames. initially 0. Return frame will put a frame in the pool if
-    it is zero. copyFrame will increment the semaphore. returnFrame will decrement the
-    semaphore if it is not zero. This allows the same frame - once built - to be used by 
-    multiple machines and asynchronously returned. Perhaps copyFrame is not the best
-    name tho since it is a read only copy.
+12. The return value from: bool sfpRxSm(sfpLink_t *link) 
+    never gets used anywhere. Either that means it is useless or something is falling
+    through the cracks.
 
 Updates:
 1. SPS enhanced for network mode - multiple reliable links between two nodes form a
@@ -82,3 +80,9 @@ Updates:
 12.can reset transmitter and have all unsent frames returned
 13.added queueFrame so that a frame unit can be filled and passed in. This saves
    copying a packet into a frame for more efficient sending.
+14.updated interface to allow frame processing on inputs and bypass using rx and
+   tx queues. Frames are used directly for input and output. Rx state machine is
+   run from interrupt. Frame pool is no longer used and instead frames are split
+   amongst input and output pools in a link to support frame interrupts. Removed
+   queueFrame as it was not used and didn't work with update. It also contained
+   a bug in that if link was zero, then it was used in the else case!

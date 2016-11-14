@@ -1,9 +1,9 @@
 // SFP TX state machine  Robert Chapman III  Feb 16, 2012
 // Includes
 #include "node.h"
-#include "framepool.h"
 #include "services.h"
 #include "frame.h"
+#include "framePool.h"
 #include "sfpRxSm.h"
 #include "sfpTxSm.h"
 #include "stats.h"
@@ -23,17 +23,6 @@ Byte pollTrain = 3; // how many consecutive polls to send - empirically determin
 static sfpFrame pollFrame;
 static sfpFrame ackFrame;
 
-// Local Declarations
-static bool transmitFrame(sfpFrame *frame, sfpLink_t *link);
-static void transmitPoll(Byte n, sfpLink_t *link);
-static void sendAckFrame(sfpLink_t *link);
-static void sendSpsFrame(sfpLink_t * link);
-static void sendNpsFrame(sfpLink_t *link);
-static void sendPollFrame(sfpLink_t *link);
-static void setSpsBits(sfpLink_t * link);
-static void checkSps(sfpLink_t * link);
-static void setSpsState(sfpLink_t * link, spsState_t state);
-
 // debugging
 void frameOut(sfpFrame * frame);
 void txSpsState(sfpLink_t * link, spsState_t state);
@@ -41,11 +30,9 @@ void txSpsState(sfpLink_t * link, spsState_t state);
 // setup for transmitter
 static bool transmitFrame(sfpFrame *frame, sfpLink_t *link) //! set a frame up for transmission
 {
-	if (bytesToSend(link) == 0)
+	if (link->sfpBytesToTx == 0)
 	{
 //        frameOut(frame);
-		if (link->listTxFrames)
-			decodeFrame(frame);
 		link->sfpTxPtr = &frame->length; // set this first
 		link->sfpBytesToTx = frame->length + LENGTH_LENGTH; // set this second
 		return true;
@@ -55,7 +42,7 @@ static bool transmitFrame(sfpFrame *frame, sfpLink_t *link) //! set a frame up f
 
 static void transmitPoll(Byte n, sfpLink_t *link) //! set number of poll bytes for transmission
 {
-	if (bytesToSend(link) == 0)
+	if (link->sfpBytesToTx == 0)
 	{
 		link->sfpTxPtr = &pollFrame.length; // set this first
 		link->sfpBytesToTx = n; // set this second
@@ -92,7 +79,7 @@ static void sendNpsFrame(sfpLink_t *link)
     if (transmitFrame(frame, link))
 	{
 		if (link->frameOut) // frame has been transmitted return if needed
-			returnFrame(link->frameOut);
+			iputFrame(link->frameOut);
         link->frameOut = frame; // set for returning when done
         pullq(link->npsq);
 
@@ -112,6 +99,11 @@ static void sendPollFrame(sfpLink_t *link)
 }
 
 // SPS transmitter state machine
+static void setSpsState(sfpLink_t * link, spsState_t state)
+{
+	link->txSps = state;
+}
+
 static void setSpsBits(sfpLink_t * link)
 {
 	sfpFrame * frame = (sfpFrame *)q(link->spsq);
@@ -127,11 +119,6 @@ static void setSpsBits(sfpLink_t * link)
 		setSpsState(link, WAIT_ACK1);
 	}
 	addChecksum(frame); // must recalculate since bits were changed
-}
-
-static void setSpsState(sfpLink_t * link, spsState_t state)
-{
-	link->txSps = state;
 }
 
 static void checkSps(sfpLink_t * link)
@@ -151,11 +138,11 @@ static void checkSps(sfpLink_t * link)
             UnexpectedAck(link);
 			break;
 		case WAIT_ACK0:
-			returnFrame((sfpFrame *)pullq(link->spsq));
+			iputFrame((sfpFrame *)pullq(link->spsq));
             setSpsState(link, ONLY_SPS1);
 			break;
 		case WAIT_ACK1:
-			returnFrame((sfpFrame *)pullq(link->spsq));
+			iputFrame((sfpFrame *)pullq(link->spsq));
             setSpsState(link, ONLY_SPS0);
             break;
 		}
@@ -165,10 +152,11 @@ static void checkSps(sfpLink_t * link)
 	switch(link->txSps) {
 	case NO_SPS:
         if (checkTimeout(&link->spsTo)) {
-			who_t who = {DIRECT, whoami()};
-        	sfpFrame * frame = getFrame();
-        	
-        	if (frame) {
+         	sfpFrame * frame = igetFrame();
+       	
+        	if (frame != NULL) {
+				who_t who = {DIRECT, whoami()};
+
     			buildSfpFrame(sizeof(who), &who.to, SPS, frame); // empty frame
 				stuffq((Cell)frame, link->spsq); // make sure it is first out
                 setSpsState(link, ONLY_SPS0);
@@ -195,7 +183,7 @@ static void checkSps(sfpLink_t * link)
 				setSpsSend(link);
 			}
 			else {
-				returnFrame((sfpFrame *)pullq(link->spsq)); // what if frame not sent but pending?
+				iputFrame((sfpFrame *)pullq(link->spsq)); // what if frame not sent but pending?
                 setSpsState(link, NO_SPS);
 				SpsTimeout(link);
 				if (queryq(link->spsq) == 0)
@@ -228,13 +216,13 @@ void transmitSfpByte(sfpLink_t *link) // send a byte if transmitter is able to
 
 void serviceTx(sfpLink_t *link) // try to send a byte if there are bytes to send
 {
-	if (bytesToSend(link))
+	if (link->sfpBytesToTx)
 		transmitSfpByte(link);
 }
 
 void serviceMasterTx(sfpLink_t *link) // try to send a byte if there are bytes to send
 {
-    if (bytesToSend(link))
+    if (link->sfpBytesToTx)
         transmitSfpByte(link);
     if (checkTimeout(&link->pollTo)) {
         setPollSend(link);
@@ -248,11 +236,11 @@ void resetTransmitter(sfpLink_t *link)
 	link->txFlags = 0;
 
 	if (link->frameOut) // frame has been transmitted return if needed
-		returnFrame(link->frameOut);
+		iputFrame(link->frameOut);
 	link->frameOut = NULL;
 
 	while(queryq(link->npsq))
-		returnFrame((sfpFrame *)pullq(link->npsq));
+		iputFrame((sfpFrame *)pullq(link->npsq));
 }
 
 void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or just exit if all done
@@ -263,9 +251,9 @@ void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or
     else if (testSpsSend(link))		sendSpsFrame(link);
     else if (queryq(link->npsq))    sendNpsFrame(link);
     else if (testPollSend(link))	sendPollFrame(link);
-    else if (bytesToSend(link) == 0) {
+    else if (link->sfpBytesToTx == 0) {
 		if (link->frameOut) // frame has been transmitted return if needed
-			returnFrame(link->frameOut);
+			iputFrame(link->frameOut);
 		link->frameOut = NULL;
 	}
 }

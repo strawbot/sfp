@@ -13,91 +13,56 @@
 #include "pids.h"
 #include "printers.h"
 
-// ?Should handlers be in their own file? Services just contains sending services?
-// but then one does not use one without the other - so keep in one file
-static Timeout retryTo;  // how long to hold on to a received frame before tossing it
-static QUEUE(MAX_FRAMES, retryq); // where to put frames which are in waiting
-static packetHandler_t packetHandlers[MAX_PIDS] = {NULL};
-
-// local declarations
-static bool processLinkFrame(sfpFrame * frame, sfpLink_t *link);
-static bool processPacket(sfpFrame * frame);
-static void retryFrames(void);
-static bool sendPacketToQ(Byte *packet, Byte length, Qtype *que);
-static void reRouteFrame(sfpFrame *frame);
-static bool acceptSpsFrame(sfpFrame * frame, sfpLink_t *link);
+// Handlers and frame list
+static struct {
+	packetHandler_t handler;
+	sfpFrame * list;
+} packetHandlers[MAX_PIDS] = {{NULL,NULL}};
 
 // vectorizable packet handlers
+packetHandler_t getPacketHandler(Byte pid)
+{
+	if (pid < MAX_PIDS)
+		return packetHandlers[pid].handler;
+	return NULL;
+}
+
 packetHandler_t setPacketHandler(Byte pid, packetHandler_t handler)
 {
 	packetHandler_t oldHandler = getPacketHandler(pid);
 	
 	if (pid < MAX_PIDS)
-		packetHandlers[pid] = handler;
+		packetHandlers[pid].handler = handler;
 	return oldHandler;
 }
 
-packetHandler_t getPacketHandler(Byte pid)
+static void linkFrame(sfpFrame *frame)
 {
-	if (pid < MAX_PIDS)
-		return packetHandlers[pid];
-	return NULL;
+	sfpFrame * link = (sfpFrame *)&packetHandlers[frame->pid].list;
+	
+	while (link->list != NULL) // find end of list
+		link = link->list;
+	link = frame;
+	frame->list = NULL;
+}
+
+static void unlinkFrame(Byte n)
+{
+	sfpFrame * link = (sfpFrame *)&packetHandlers[n].list;
+	
+	link = link->list;
 }
 
 // SFP Frame decoder 
 #define PRINT_PID(pid)	case pid: print(#pid); break;
 
-void decodeFrame(sfpFrame *frame)
+static void decodeFrame(sfpFrame *frame)
 {
 	print("\n");
 	switch(frame->pid) {
 		FOR_EACH_PID(PRINT_PID)
 	}
 	print(" frame from "), printDec(frame->who.from), print("to "), printDec(frame->who.to);
-}
-
-/* default packet handlers
-	Frames come in over links and go to frame queues. A machine processes the
-	frame and then puts it into the retry queue if the packet handler is busy.
-	Another machine processes the retry queue.
-	
-	There are multiple possible actions and paths for frames:
-	 o an ACK packet signals the SPS service and is done
-	 o an SPS packet signals the SPS service and is queued
-	 o a network packet not for this node is rerouted
-	 o other frame level services are handled
-	 o if none of the above, the frame is pushed to the nodes packet queue
-	 
-	Link level frames that have no higher level purpose. They have a pid but not
-	all have networking. All frames are processed by packet handlers. If there is
-	not one, then some have default handlers. If a packet handler does not accept
-	the packet, then it stays in the queue until it is accepted or a timeout occurs.
-*/
-
-void processFrames(void) //process received frames from links
-{
-	Long n = 0;
-
-	for (n = 0; n < NUM_LINKS; n++) {
-        sfpLink_t *link = nodeLink(n);
-		if (link == 0)
-			continue;
-		if (queryq(link->frameq) != 0) {
-			sfpFrame *frame = (sfpFrame *)pullq(link->frameq);
-			
-			if (link->listRxFrames)
-				decodeFrame(frame);
-
-			if (processLinkFrame(frame, link))
-				FrameProcessed();
-			else {
-				if (queryq(retryq) == 0)
-					setTimeout(STALE_RX_FRAME, &retryTo);
-				pushq((Cell)frame, retryq);
-			}
-		}
-	}
-	retryFrames();
 }
 
 /* SPS routing
@@ -110,105 +75,6 @@ void processFrames(void) //process received frames from links
   o send the ack and route the frame as SPS ? would this work?
   > ACK frame should not have routing 
 */
-static bool processLinkFrame(sfpFrame * frame, sfpLink_t *link)
-{
-	if (link->disableSps) {
-		if (frame->pid > MAX_PIDS) {
-			UnknownPid();
-			returnFrame(frame);
-			return true;
-		}
-	}
-	else if (frame->pid & ACK_BIT) { // intercept SPS packets
-		spsReceived(link);
-		if (!acceptSpsFrame(frame, link)) {
-			returnFrame(frame);
-			return true;
-		}
-	}
-
-	if ( (frame->pid & PID_BITS) > WHO_PIDS) // check for routing of packet
-        if (frame->who.to) { // is there a destination?
-			if (whoami() == ME) // do i need an identity? (multi drop)
-				setWhoami(frame->who.to); // become the destination
-			else if (frame->who.to != whoami()) { // is it not for me?				
-				reRouteFrame(frame);
-				return true;
-			}
-        }
-
-	frame->pid &= PID_BITS; // strip sps bits
-
-	// give first crack at packet to vectored handlers
-	packetHandler_t handler = getPacketHandler(frame->pid);
-
-	if (handler) {
-		if (handler(frame->packet, frame->length - FRAME_OVERHEAD))
-			PacketProcessed();
-		else
-			return false; // handler busy right now; will try later
-	}
-	else {
-		switch(frame->pid) // intercept link only packets - no destination id
-		{
-			case PING: // other end is querying so reply
-				{	
-					Byte ping[3];
-				
-					ping[0] = PING_BACK;
-					ping[1] = frame->who.from;
-					ping[2] = whoami();
-				
-					sendNpTo(ping, sizeof(ping), frame->who.from);
-				}
-				break;
-			case SPS_ACK: // ack frame for SPS
-				spsAcknowledged(link); // pass notice to transmitter
-				break;
-			case SPS: // null packet used for initializing SPS and setting id
-			case PING_BACK: // ignore reply
-			case CONFIG: // ignore test frames
-				IgnoreFrame();
-				break;
-			default:
-				UnknownPid();
-				break;
-		}
-	}
-	returnFrame(frame);
-	return true;
-}
-
-static void retryFrames(void) //process packets for busy handlers
-{
-	if (queryq(retryq)) { // process waiting frames
-		sfpFrame *frame = (sfpFrame*)q(retryq);
-
-        if (processPacket(frame)) {
-			PacketProcessed();
-            returnFrame((sfpFrame*)pullq(retryq));
-		}
-		else if (checkTimeout(&retryTo)) {
-			UnDelivered();
-            returnFrame((sfpFrame*)pullq(retryq));
-            if (queryq(retryq) != 0)
-				setTimeout(STALE_RX_FRAME, &retryTo);
-		}
-	}
-}
-
-static bool processPacket(sfpFrame * frame)
-{
-	packetHandler_t handler = getPacketHandler(frame->pid);
-
-	if (handler != NULL)
-		return handler(frame->packet, frame->length - FRAME_OVERHEAD);
-
-	UnknownPid();
-	return true;
-}
-void breakPoint1(void);
-
 static bool acceptSpsFrame(sfpFrame * frame, sfpLink_t *link) //! accept or reject incoming sps
 {
     Byte sps = frame->pid & SPS_BIT;
@@ -239,28 +105,151 @@ static bool acceptSpsFrame(sfpFrame * frame, sfpLink_t *link) //! accept or reje
 	return true;
 }
 
-
-// Packet services
-static void reRouteFrame(sfpFrame *frame)
+static void routeFrame(sfpFrame *frame)
 {
-    sfpLink_t *link = routeTo(frame->who.to);
-	
-	if ((link != 0) && (link->reroute)) {
+    sfpLink_t *tolink = routeTo(frame->who.to);
+
+	if (tolink) {
 		ReRouted();
+		// transfer received frame from one link to a different one
 		if (frame->pid & ACK_BIT) // check to see if SPS packet
-			pushq((Cell)frame, link->spsq);
+			pushq((Cell)frame, tolink->spsq);
 		else
-			pushq((Cell)frame, link->npsq);
+			pushq((Cell)frame, tolink->npsq);
 	}
+	else
+		putFrame(frame);
+}
+
+static void processLinkFrame(sfpFrame * frame, sfpLink_t *link)
+{
+	if (link->disableSps) {
+		if (frame->pid > MAX_PIDS) {
+			UnknownPid();
+			putFrame(frame);
+			return;
+		}
+	}
+	else if (frame->pid & ACK_BIT) { // ack SPS packets
+		spsReceived(link);
+		if (!acceptSpsFrame(frame, link)) {
+			putFrame(frame);
+			return;
+		}
+	}
+
+	// note: with sps acked 1st, then routing done second, each link is acked
+	// and it will reduce end to end send time
+	if ( (frame->pid & PID_BITS) > WHO_PIDS) // check for routing of packet
+        if (frame->who.to) { // is there a destination?
+			if (whoami() == ME) // do i need an identity? (multi drop)
+				setWhoami(frame->who.to); // become the destination
+			else if (frame->who.to != whoami()) { // is it not for me?				
+				routeFrame(frame);
+				return;
+			}
+        }
+
+	frame->pid &= PID_BITS; // strip sps bits
+
+	if (getPacketHandler(frame->pid) != NULL)
+		linkFrame(frame);
 	else {
-		UnRouted();
-		returnFrame(frame);
+		switch(frame->pid) // intercept link only packets - no destination id
+		{
+			case PING: // other end is querying so reply
+				{	
+					Byte ping[3];
+			
+					ping[0] = PING_BACK;
+					ping[1] = frame->who.from;
+					ping[2] = whoami();
+			
+					sendNpTo(ping, sizeof(ping), frame->who.from);
+				}
+				break;
+			case SPS_ACK: // ack frame for SPS
+				spsAcknowledged(link); // pass notice to transmitter
+				break;
+			case SPS: // null packet used for initializing SPS and setting id
+			case PING_BACK: // ignore reply
+			case CONFIG: // ignore test frames
+				IgnoreFrame();
+				break;
+			default:
+				UnknownPid();
+				break;
+		}
+		putFrame(frame);
 	}
 }
 
-static bool sendPacketToQ(Byte *packet, Byte length, Qtype *que)
+/* default packet handlers
+	Frames come in over links and go to frame queues. A machine processes the
+	frame and then puts it into the retry queue if the packet handler is busy.
+	A timeout is used to manage the retry queue.
+	
+	There are multiple possible actions and paths for frames:
+	 o an ACK packet signals the SPS service and is done
+	 o an SPS packet signals the SPS service and is queued
+	 o a network packet not for this node is rerouted
+	 o other frame level services are handled
+	 o if none of the above, the frame is pushed to the nodes packet queue
+	 
+	Link level frames that have no higher level purpose. They have a pid but not
+	all have networking. All frames are processed by packet handlers. If there is
+	not one, then some have default handlers. If a packet handler does not accept
+	the packet, then it stays in the queue until it is accepted or a timeout occurs.
+*/
+void handleFrame(Byte n)
 {
-	sfpFrame *frame;
+	packetHandler_t handler = getPacketHandler(n);
+	sfpFrame * frame = packetHandlers[n].list;
+	
+	if (handler != 0 && frame != 0) {
+		if (handler(frame->packet, frame->length - FRAME_OVERHEAD))
+			FrameProcessed();
+		else if ((getTime() - frame->timestamp) > STALE_RX_FRAME) // check for stale frame
+			UnDelivered();
+		else
+			return;
+		unlinkFrame(frame->pid);
+		putFrame(frame);
+	}
+}
+
+static void runHandlers(void) // call handlers for frames
+{
+	for (Byte n = 0; n < MAX_PIDS; n++)
+		handleFrame(n);
+}
+
+static void distributer(void) // queue up frame for handler
+{
+	Byte n = 0;
+
+	for (n = 0; n < NUM_LINKS; n++) {
+        sfpLink_t *link = nodeLink(n);
+		if (link == 0)
+			continue;
+
+		if (queryq(link->receivedPool) != 0) {
+			sfpFrame *frame = (sfpFrame *)pullq(link->receivedPool);
+			
+			if (link->listFrames)
+				decodeFrame(frame);
+
+			processLinkFrame(frame, link);
+		}
+	}
+	activate(runHandlers);
+	activate(distributer);
+}
+
+// Packet services
+static bool sendPacketToQ(Byte *packet, Byte length, Qtype *que, sfpLink_t *link)
+{
+	sfpFrame * frame;
 	
 	if ( (length == 0) || (length > MAX_PACKET_LENGTH) ) {
 		PacketSizeBad();
@@ -268,6 +257,7 @@ static bool sendPacketToQ(Byte *packet, Byte length, Qtype *que)
 	}
 
 	frame = getFrame();
+
 	if (frame == NULL)
 		return false;
 
@@ -283,7 +273,7 @@ bool sendNpTo(Byte *packet, Byte length, Byte to) //! send a packet using NPS
 	sfpLink_t *link = routeTo(to);
 	
 	if (link)
-        return sendPacketToQ(packet, length, link->npsq);
+        return sendPacketToQ(packet, length, link->npsq, link);
 
 	// TODO: If for me - accept it?
 	NoDest();
@@ -297,7 +287,7 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 	if (link) {
 		if (link->txSps == NO_SPS)
 			return false;
-		return sendPacketToQ(packet, length, link->spsq);
+		return sendPacketToQ(packet, length, link->spsq, link);
 	}
 		
 	// TODO: If for me - accept it?
@@ -305,28 +295,10 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 	return true;
 }
 
-void queueFrame(sfpFrame *frame) // frame and queue a frame pool frame
-{
-	sfpLink_t *link = routeTo(frame->who.to);
-	
-	if (link) {
-		if (frame->pid & ACK_BIT) // check for SPS bit; need to isolate this - data hide
-			pushq((Cell)frame, link->spsq);
-		else
-			pushq((Cell)frame, link->npsq);
-	}
-	else {
-		UnRouted();
-		returnFrame(frame);
-	}
-		
-}
-
 // initialization
 void initServices(void) //! initialize SFP receiver state machine
 {
-	setTimeout(STALE_RX_FRAME, &retryTo);
-	zeroq(retryq);
+	activateOnce(distributer);
 }
 
 /*

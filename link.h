@@ -24,44 +24,46 @@ typedef enum {NO_LINK, SFP_LINK, SERIAL_LINK, ROUTE_LINK} linkOwner_t;
 
 // Link structure
 typedef struct sfpLink_t{	// Link information
+	// Both
+	void * port;						// data structure for port for link
+	Timeout frameTo;					// maximum time between bytes when framebuilding
+	Timeout packetTo;					// max time for processing a packet
+	Timeout pollTo;						// for polling links
+	Byte inFrameState;					// track where the inframe is
+	char *name;							// link name
+	linkOwner_t linkOwner;				// who owns the linke
+	Byte routeTo;						// which link to route to if linkOwner is ROUTE_LINK
+	bool listFrames;					// if set, then list the frames in frameq
+
+
 	// Receiver
-	Byte * rxq;							// point to queue of incoming bytes
+    Qtype * receivedPool;				// pool of received frames
 	sfpFrame * frameIn;					// pointer to frame used for receiving
 	Byte * sfpRxPtr;					// point to frame being built
 	Byte sfpBytesToRx;					// bytes to receive
-    Qtype * frameq;						// incoming frame queue
 	bool (* sfpRx)(struct sfpLink_t *);	// is there something to receive?
 	Byte (* sfpGet)(struct sfpLink_t *);// get the byte
+	void (* linkIn)(struct sfpLink_t *);	// work the byte
 	sfpRxState_t sfpRxState;			// SFP RX states
 	spsState_t rxSps;					// which secure pid to look for next
-	bool reroute;						// set to true if rerouting can be done
-	bool listRxFrames;	// if set, then list the frames in frameq
 
 	// Transmitter
-	Byte * txq;							// point to queue of outgoing bytes
+    Qtype * npsq;						// point to queue of nps frames to send
+    Qtype * spsq;						// queue of SPS frames to send
+    Qtype * sentPool;					// pool for sent frames
 	sfpFrame * frameOut;				// point to frame being sent if it is to be returned
-	Byte *sfpTxPtr;						// point to byte to be sent
-    Qtype *npsq;						// point to queue of nps frames to send
-    Qtype *spsq;						// queue of SPS frames to send
+	Byte * sfpTxPtr;					// point to byte to be sent
+	Byte sfpBytesToTx;					// bytes to send
 	bool (*sfpTx)(struct sfpLink_t *);	// can something be sent?
 	void (*sfpPut)(Long, struct sfpLink_t *);// put the byte plus any upper bits
 	void (*serviceTx)(struct sfpLink_t *); // service routine for transmitter
-	Byte sfpBytesToTx;					// bytes to send
+	bool (*linkEmpty)(struct sfpLink_t *); // nothing left to send?
+	void (*linkOut)(struct sfpLink_t *);	// put the byte plus any upper bits
 	spsState_t txSps;					// which secure pid to send next
 	Timeout spsTo;						// sps timeout
 	Long spsRetries;					// how many times sps frame has been retried
 	Long txFlags;						// Pending Tx actions
 	Byte disableSps;					// turn off sps service
-	bool listTxFrames;					// display frames if enabled
-
-	// Both
-	Timeout frameTo;	// maximum time between bytes when framebuilding
-	Timeout packetTo;	// max time for processing a packet
-	Timeout pollTo;		// for polling links
-	Byte inFrameState;	// track where the inframe is
-	char *name;			// link name
-	linkOwner_t linkOwner;		// who owns the linke
-	Byte routeTo;		// which link to route to if linkOwner is ROUTE_LINK
 
 	// stats
 	Long LongFrame;

@@ -28,7 +28,7 @@
 
 // one's complement doesn't create a zero while two's complement does
 // one's complement should be better for checksum coverage
-#define sfpSync(length)	((Byte)~(length))	// define sync mechanism
+#define sfpSync(length)	((Byte)(~(length)))	// define sync mechanism
 
 // for routing when part of packet
 typedef struct {
@@ -54,7 +54,9 @@ union { \
 
 typedef packet_union packet_t;
 
-typedef struct { // ''
+typedef struct sfpFrame { // ''
+	struct sfpFrame * list; // used to link frames in a list
+	Long timestamp; // added to frame when received
 	Byte length; // covers following bytes
 	Byte sync;	// two's complement of length used to sync start of frame
 	packet_union;

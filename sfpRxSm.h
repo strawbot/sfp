@@ -7,5 +7,6 @@
 
 #endif
 
-bool sfpRxSm(sfpLink_t *link);
+void checkDataTimeout(sfpLink_t *link);
+void sfpRxSm(sfpLink_t *link);
 void initSfpRxSM(sfpLink_t *, Qtype * frameInq);

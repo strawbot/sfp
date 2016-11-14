@@ -79,22 +79,9 @@ void sendeqSfp(void)
 }
 
 // TODO: need to direct input to rxq or keyq; keep Timbre separate from SFP
-void setSfpTalk(void)
-{
-	setTalkOut(sendeqSfp);
-}
-
-void sendeqSerial(void);
-
-void setSerialTalk(void)
-{
-	setTalkOut(sendeqSerial);
-	activate(serialTalk);
-}
-
 void initTalkHandler(void) // install packet handlers
 {
-	setSfpTalk();
+//	setSfpTalk();
 	setPacketHandler(TALK_IN, keyPacket);
 	setPacketHandler(EVAL, evalPacket);
 	setPacketHandler(TALK_OUT, talkPacket);

@@ -5,8 +5,8 @@
 */
 
 // Includes
-#include "framepool.h"
 #include "frame.h"
+#include "framePool.h"
 #include "stats.h"
 #include "link.h"
 
@@ -16,15 +16,14 @@ static void Acquiring(sfpLink_t *link);
 static void Hunting(Byte length, sfpLink_t *link);
 static void Syncing(Byte sync, sfpLink_t *link);
 static void Receiving(Byte data, sfpLink_t *link);
-static void checkDataTimeout(sfpLink_t *link);
 
-#define EMPTY_SPI_FRAME 0
-#define NO_SPI_RESPONSE 0xFF
+#define EMPTY_FRAME 0
+#define NO_RESPONSE 0xFF
 
 // length validation
 static bool sfpLengthOk(Byte length, sfpLink_t *link)
 {
-	if ((length == EMPTY_SPI_FRAME) || (length == NO_SPI_RESPONSE))
+	if ((length == EMPTY_FRAME) || (length == NO_RESPONSE))
 		return false;
 
 	if (length < MIN_FRAME_LENGTH)
@@ -44,9 +43,11 @@ static bool sfpLengthOk(Byte length, sfpLink_t *link)
 // States definitions
 static void Acquiring(sfpLink_t *link) // waiting to acquire a frame buffer
 {
-    link->frameIn = getFrame();
+	link->frameIn = igetFrame();
 	if (link->frameIn != NULL)
 		link->sfpRxState = HUNTING;
+	else  // toss byte if no frames are available to prevent lockup in interrupt
+		link->sfpGet(link);
 }
 
 static void Hunting(Byte length, sfpLink_t *link) //! waiting for a byte which will be interpreted as a length. It must be not too long and not too short
@@ -61,7 +62,9 @@ static void Hunting(Byte length, sfpLink_t *link) //! waiting for a byte which w
 
 static void Syncing(Byte sync, sfpLink_t *link) //! waiting for the complement of the length. If valid, start receiving a frame
 {
-	if ( sync == sfpSync(link->sfpBytesToRx) ) { // check for sync byte - 1's complement of length
+	Byte check = sfpSync(link->sfpBytesToRx);
+	
+	if (sync ==  check) { // check for sync byte - 1's complement of length
 		link->sfpRxPtr = &link->frameIn->length;
 		*link->sfpRxPtr++ = link->sfpBytesToRx--;
 		*link->sfpRxPtr++ = sync;
@@ -89,8 +92,10 @@ static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame 
 
 		if ( (cs.sum == csf->sum) && (cs.sumsum == csf->sumsum) ) { // check for good frame
 			GoodFrame(link);
-			pushq((Cell)link->frameIn, link->frameq); // pass on to frame layer
+			link->frameIn->timestamp = getTime();
+			pushq((Cell)link->frameIn, link->receivedPool); // pass on to frame layer
 			link->sfpRxState = ACQUIRING;
+			Acquiring(link);
 		}
 		else {
 			BadCheckSum(link);
@@ -99,47 +104,45 @@ static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame 
 	}
 }
 
-static void checkDataTimeout(sfpLink_t *link)
+void checkDataTimeout(sfpLink_t *link)
 {
-	if (checkTimeout(&link->frameTo)) { // limit frame receive time for error detection
-		link->sfpRxState = HUNTING;
-		link->sfpBytesToRx = 0;
-		RxTimeout(link);
-	}
+	if ( (link->sfpRxState == SYNCING) || (link->sfpRxState == RECEIVING) )
+		if (checkTimeout(&link->frameTo)) { // limit frame receive time for error detection
+			link->sfpRxState = HUNTING;
+			link->sfpBytesToRx = 0;
+			RxTimeout(link);
+		}
 }
 
 //! SFP RX state machine
-bool sfpRxSm(sfpLink_t *link) // return true if byte processed
+void sfpRxSm(sfpLink_t *link)
 {
-    if (link->sfpRx(link) != 0) // process any received bytes
-		switch(link->sfpRxState) {
-			case ACQUIRING:
-				Acquiring(link);
-				return false;
-			case HUNTING:
-                Hunting(link->sfpGet(link), link);
-				setTimeout(SFP_FRAME_TIME, &link->frameTo); // need if moving to sync
-				return true;
-			case SYNCING:
-				setTimeout(SFP_FRAME_TIME, &link->frameTo);
-                Syncing(link->sfpGet(link), link);
-				return true;
-			case RECEIVING:
-				setTimeout(SFP_FRAME_TIME, &link->frameTo);
-                Receiving(link->sfpGet(link), link);
-				return true;
-		}
-	
-	if ( (link->sfpRxState == SYNCING) || (link->sfpRxState == RECEIVING) )
-		checkDataTimeout(link);
+	checkDataTimeout(link);
 
-	return false;
+	switch(link->sfpRxState) {
+		case ACQUIRING:
+			Acquiring(link);
+			break;
+		case HUNTING:
+			Hunting(link->sfpGet(link), link);
+			setTimeout(SFP_FRAME_TIME, &link->frameTo); // need if moving to sync
+			break;
+		case SYNCING:
+			setTimeout(SFP_FRAME_TIME, &link->frameTo);
+			Syncing(link->sfpGet(link), link);
+			break;
+		case RECEIVING:
+			setTimeout(SFP_FRAME_TIME, &link->frameTo);
+			Receiving(link->sfpGet(link), link);
+			break;
+	}
 }
 
-void initSfpRxSM(sfpLink_t *link, Qtype * frameInq) //! initialize SFP receiver state machine
+//! initialize SFP receiver state machine
+void initSfpRxSM(sfpLink_t *link, Qtype * receivedPool)
 {
 	link->rxSps = ANY_SPS;
 	link->sfpRxState = ACQUIRING;
-    zeroq(frameInq);
-    link->frameq = frameInq;
+    zeroq(receivedPool);
+    link->receivedPool = receivedPool;
 }

@@ -13,11 +13,7 @@ typedef bool (*packetHandler_t)(Byte *packet, Byte length);
 packetHandler_t getPacketHandler(Byte pid);
 packetHandler_t setPacketHandler(Byte pid, packetHandler_t handler);
 
-void processFrames(void);
-
 bool sendNpTo(Byte *packet, Byte length, Byte to);
 bool sendSpTo(Byte *packet, Byte length, Byte to);
-void queueFrame(sfpFrame *frame);
-void decodeFrame(sfpFrame *frame);
 
 void initServices(void);

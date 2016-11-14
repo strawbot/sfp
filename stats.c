@@ -116,12 +116,12 @@ void showLinkStatus(sfpLink_t * link)
 		print("\nSPS service disabled");
 		
 // Receiver
-	if ((link->rxq) && (qbq(link->rxq)))
-		print("\nBytes in rxq: "), printDec(qbq(link->rxq));
+//	if ((link->rxq) && (qbq(link->rxq)))
+//		print("\nBytes in rxq: "), printDec(qbq(link->rxq));
 	if (link->sfpBytesToRx)
 		print("\nbytes to receive: "), printDec(link->sfpBytesToRx);
-	if (queryq(link->frameq))
-		print("\nincoming frame queue: "), printDec(queryq(link->frameq));
+//	if (queryq(link->frameq))
+//		print("\nincoming frame queue: "), printDec(queryq(link->frameq));
 	print("\nSFP RX state: "), printRxState(link->sfpRxState);
 	if (!link->disableSps)
 		print("\nRx SPS state: "), printSpsState(link->rxSps);
@@ -154,12 +154,6 @@ void showLinkStatus(sfpLink_t * link)
 		printOwner(link->linkOwner);
 	if (link->routeTo)
 		print("\nwhich link to route to if linkOwner is ROUTE_LINK"), printDec(link->routeTo);
-	if (!link->reroute)
-		print("\nrerouting disabled");
-	if (link->listTxFrames)
-		print("\ndisplay outgoing frames");
-	if (link->listRxFrames)
-		print("\ndisplay incoming frames");
 }
 
 void showNodeStatus(void)
