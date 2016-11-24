@@ -74,6 +74,7 @@ static void printSpsState(spsState_t state)
 {
 	switch(state) {
 	case ANY_SPS: print(" ANY_SPS"); break;
+	case NO_SPS: print(" NO_SPS"); break;
 	case ONLY_SPS0: print(" ONLY_SPS0"); break;
 	case ONLY_SPS1: print(" ONLY_SPS1"); break;
 	case WAIT_ACK0: print(" WAIT_ACK0"); break;

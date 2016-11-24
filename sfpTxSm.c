@@ -131,6 +131,7 @@ static void checkSps(sfpLink_t * link)
 		SpsAcked(link);
 
 		switch(link->txSps) {
+		case ANY_SPS:
 		case NO_SPS:
             setSpsState(link, ONLY_SPS0);
 			break;
@@ -151,6 +152,7 @@ static void checkSps(sfpLink_t * link)
 
  
 	switch(link->txSps) {
+	case ANY_SPS:
 	case NO_SPS:
         if (checkTimeout(&link->spsTo)) {
          	sfpFrame * frame = igetFrame();

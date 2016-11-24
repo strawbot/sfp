@@ -262,7 +262,7 @@ void processFrames(void) // queue up frame for handler
 }
 
 // Packet services
-static bool sendPacketToQ(Byte *packet, Byte length, Qtype *que, sfpLink_t *link)
+static bool sendPacketToQ(Byte *packet, Byte length, Qtype *que)
 {
 	sfpFrame * frame;
 	
@@ -288,7 +288,7 @@ bool sendNpTo(Byte *packet, Byte length, Byte to) //! send a packet using NPS
 	sfpLink_t *link = routeTo(to);
 	
 	if (link)
-        return sendPacketToQ(packet, length, link->npsq, link);
+		return sendPacketToQ(packet, length, link->npsq);
 
 	// TODO: If for me - accept it?
 	NoDest();
@@ -302,7 +302,7 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 	if (link) {
 		if (link->txSps == NO_SPS)
 			return false;
-		return sendPacketToQ(packet, length, link->spsq, link);
+		return sendPacketToQ(packet, length, link->spsq);
 	}
 		
 	// TODO: If for me - accept it?
