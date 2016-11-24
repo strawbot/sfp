@@ -12,7 +12,7 @@
 
 // Local Declarations
 static bool sfpLengthOk(Byte length, sfpLink_t *link);
-static void Acquiring(sfpLink_t *link);
+static bool Acquiring(sfpLink_t *link);
 static void Hunting(Byte length, sfpLink_t *link);
 static void Syncing(Byte sync, sfpLink_t *link);
 static void Receiving(Byte data, sfpLink_t *link);
@@ -41,13 +41,16 @@ static bool sfpLengthOk(Byte length, sfpLink_t *link)
 */
 
 // States definitions
-static void Acquiring(sfpLink_t *link) // waiting to acquire a frame buffer
+static bool Acquiring(sfpLink_t *link) // waiting to acquire a frame buffer
 {
 	link->frameIn = igetFrame();
-	if (link->frameIn != NULL)
+	if (link->frameIn != NULL) {
 		link->sfpRxState = HUNTING;
-	else  // toss byte if no frames are available to prevent lockup in interrupt
+		return false;
+	}
+	// toss byte if no frames are available to prevent lockup in interrupt
 		link->sfpGet(link);
+	return true;
 }
 
 static void Hunting(Byte length, sfpLink_t *link) //! waiting for a byte which will be interpreted as a length. It must be not too long and not too short
@@ -115,26 +118,28 @@ void checkDataTimeout(sfpLink_t *link)
 }
 
 //! SFP RX state machine
-void sfpRxSm(sfpLink_t *link)
+bool sfpRxSm(sfpLink_t *link)
 {
 	checkDataTimeout(link);
 
+	if (!link->sfpRx(link))
+		return false;
+
 	switch(link->sfpRxState) {
 		case ACQUIRING:
-			Acquiring(link);
-			break;
+				return Acquiring(link);
 		case HUNTING:
 			Hunting(link->sfpGet(link), link);
 			setTimeout(SFP_FRAME_TIME, &link->frameTo); // need if moving to sync
-			break;
+				return true;
 		case SYNCING:
 			setTimeout(SFP_FRAME_TIME, &link->frameTo);
 			Syncing(link->sfpGet(link), link);
-			break;
+				return true;
 		case RECEIVING:
 			setTimeout(SFP_FRAME_TIME, &link->frameTo);
 			Receiving(link->sfpGet(link), link);
-			break;
+				return true;
 	}
 }
 
