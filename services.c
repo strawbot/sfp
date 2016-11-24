@@ -118,7 +118,7 @@ static void routeFrame(sfpFrame *frame)
 			pushq((Cell)frame, tolink->npsq);
 	}
 	else
-		putFrame(frame);
+		returnFrame(frame);
 }
 
 static void processLinkFrame(sfpFrame * frame, sfpLink_t *link)
@@ -126,14 +126,14 @@ static void processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 	if (link->disableSps) {
 		if (frame->pid > MAX_PIDS) {
 			UnknownPid();
-			putFrame(frame);
+			returnFrame(frame);
 			return;
 		}
 	}
 	else if (frame->pid & ACK_BIT) { // ack SPS packets
 		spsReceived(link);
 		if (!acceptSpsFrame(frame, link)) {
-			putFrame(frame);
+			returnFrame(frame);
 			return;
 		}
 	}
@@ -180,7 +180,7 @@ static void processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 				UnknownPid();
 				break;
 		}
-		putFrame(frame);
+		returnFrame(frame);
 	}
 }
 
@@ -208,13 +208,13 @@ void handleFrame(Byte n)
 	
 	if (handler != 0 && frame != 0) {
 		if (handler(frame->packet, frame->length - FRAME_OVERHEAD))
-			FrameProcessed();
+			PacketProcessed();
 		else if ((getTime() - frame->timestamp) > STALE_RX_FRAME) // check for stale frame
 			UnDelivered();
 		else
 			return;
 		unlinkFrame(frame->pid);
-		putFrame(frame);
+		returnFrame(frame);
 	}
 }
 
@@ -233,10 +233,10 @@ static void distributer(void) // queue up frame for handler
 		if (link == 0)
 			continue;
 
-		if (queryq(link->receivedPool) != 0) {
+		if (queryq(link->receivedPool) != 0) { // check for queued frames
 			sfpFrame *frame = (sfpFrame *)pullq(link->receivedPool);
 			
-			if (link->listFrames)
+			if (link->listFrames) // debug if enabled
 				decodeFrame(frame);
 
 			processLinkFrame(frame, link);

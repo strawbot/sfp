@@ -37,7 +37,7 @@ sfpFrame * getFrame(void)
 	return NULL;
 }
 
-void putFrame(void * frame)
+void returnFrame(void * frame)
 {
 	stuffq((Cell)frame, poolq);
 }
@@ -51,7 +51,7 @@ sfpFrame * igetFrame(void)
 	return NULL;
 }
 
-void iputFrame(void * frame)
+void ireturnFrame(void * frame)
 {
 	pushq((Cell)frame, poolq);
 }
@@ -62,9 +62,9 @@ sfpFrame * iigetFrame(void)
 	return safe(igetFrame());
 }
 
-void iiputFrame(void * frame)
+void iireturnFrame(void * frame)
 {
-	safe(iputFrame(frame));
+	safe(ireturnFrame(frame));
 }
 
 // CLI

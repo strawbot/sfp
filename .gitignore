@@ -1,3 +1,9 @@
 Test/build-SfpUnitTests-Desktop-Debug
 Test/build-SfpUnitTests-Desktop5_2-Debug
 *.autosave
+*.o
+Makefile
+moc_*.cpp
+.qmake.stash
+SfpUnitTests.pro.user.3.3-pre1
+tst_sfpunitteststest

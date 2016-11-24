@@ -6,9 +6,9 @@ void initFramePool(void);
 Long framePoolLeft(void);
 
 sfpFrame * getFrame(void);
-void putFrame(void * frame);
+void returnFrame(void * frame);
 sfpFrame * igetFrame(void);
-void iputFrame(void * frame);
+void ireturnFrame(void * frame);
 sfpFrame * iigetFrame(void);
-void iiputFrame(void * frame);
+void iireturnFrame(void * frame);
 void listFrames(void);

@@ -79,7 +79,7 @@ static void sendNpsFrame(sfpLink_t *link)
     if (transmitFrame(frame, link))
 	{
 		if (link->frameOut) // frame has been transmitted return if needed
-			iputFrame(link->frameOut);
+			ireturnFrame(link->frameOut);
         link->frameOut = frame; // set for returning when done
         pullq(link->npsq);
 
@@ -138,11 +138,11 @@ static void checkSps(sfpLink_t * link)
             UnexpectedAck(link);
 			break;
 		case WAIT_ACK0:
-			iputFrame((sfpFrame *)pullq(link->spsq));
+			ireturnFrame((sfpFrame *)pullq(link->spsq));
             setSpsState(link, ONLY_SPS1);
 			break;
 		case WAIT_ACK1:
-			iputFrame((sfpFrame *)pullq(link->spsq));
+			ireturnFrame((sfpFrame *)pullq(link->spsq));
             setSpsState(link, ONLY_SPS0);
             break;
 		}
@@ -183,7 +183,7 @@ static void checkSps(sfpLink_t * link)
 				setSpsSend(link);
 			}
 			else {
-				iputFrame((sfpFrame *)pullq(link->spsq)); // what if frame not sent but pending?
+				ireturnFrame((sfpFrame *)pullq(link->spsq)); // what if frame not sent but pending?
                 setSpsState(link, NO_SPS);
 				SpsTimeout(link);
 				if (queryq(link->spsq) == 0)
@@ -236,11 +236,11 @@ void resetTransmitter(sfpLink_t *link)
 	link->txFlags = 0;
 
 	if (link->frameOut) // frame has been transmitted return if needed
-		iputFrame(link->frameOut);
+		ireturnFrame(link->frameOut);
 	link->frameOut = NULL;
 
 	while(queryq(link->npsq))
-		iputFrame((sfpFrame *)pullq(link->npsq));
+		ireturnFrame((sfpFrame *)pullq(link->npsq));
 }
 
 void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or just exit if all done
@@ -253,7 +253,7 @@ void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or
     else if (testPollSend(link))	sendPollFrame(link);
     else if (link->sfpBytesToTx == 0) {
 		if (link->frameOut) // frame has been transmitted return if needed
-			iputFrame(link->frameOut);
+			ireturnFrame(link->frameOut);
 		link->frameOut = NULL;
 	}
 }
