@@ -6,7 +6,7 @@
 
 // Link states
 typedef enum {ACQUIRING, HUNTING, SYNCING, RECEIVING} sfpRxState_t;
-typedef enum {ANY_SPS, NO_SPS = ANY_SPS, ONLY_SPS0, ONLY_SPS1, WAIT_ACK0, WAIT_ACK1} spsState_t;
+typedef enum {ANY_SPS, NO_SPS, ONLY_SPS0, ONLY_SPS1, WAIT_ACK0, WAIT_ACK1} spsState_t;
 typedef enum {NO_LINK, SFP_LINK, SERIAL_LINK, ROUTE_LINK} linkOwner_t;
 /*
 	default: set linkOwner as SFP_LINK
@@ -64,7 +64,7 @@ typedef struct sfpLink_t{	// Link information
 	Timeout spsTo;						// sps timeout
 	Long spsRetries;					// how many times sps frame has been retried
 	Long txFlags;						// Pending Tx actions
-	Byte disableSps;					// turn off sps service
+	bool disableSps;					// turn off sps service
 
 	// stats
 	Long LongFrame;

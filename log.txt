@@ -86,3 +86,8 @@ Updates:
    amongst input and output pools in a link to support frame interrupts. Removed
    queueFrame as it was not used and didn't work with update. It also contained
    a bug in that if link was zero, then it was used in the else case!
+15.frame pool retooled to work with interrupts and machines simultaneously.
+16.frames are processed by the node instead of the link. this allows each handler
+   to queue up frames for it from multiple links but not interfere with other handler
+   data flow. also ensures in order execution of frames.
+17.frames are timestamped at time of complete frame. This is used to detect stale frames.

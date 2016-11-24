@@ -32,7 +32,8 @@ static bool transmitFrame(sfpFrame *frame, sfpLink_t *link) //! set a frame up f
 {
 	if (link->sfpBytesToTx == 0)
 	{
-//        frameOut(frame);
+// 		void frameOut(sfpFrame * frame);
+// 		frameOut(frame);
 		link->sfpTxPtr = &frame->length; // set this first
 		link->sfpBytesToTx = frame->length + LENGTH_LENGTH; // set this second
 		return true;

@@ -49,7 +49,7 @@ static bool Acquiring(sfpLink_t *link) // waiting to acquire a frame buffer
 		return false;
 	}
 	// toss byte if no frames are available to prevent lockup in interrupt
-		link->sfpGet(link);
+	link->sfpGet(link);
 	return true;
 }
 
@@ -97,6 +97,8 @@ static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame 
 			GoodFrame(link);
 			link->frameIn->timestamp = getTime();
 			pushq((Cell)link->frameIn, link->receivedPool); // pass on to frame layer
+// 			void frameIn(sfpFrame * frame);
+// 			frameIn(link->frameIn);
 			link->sfpRxState = ACQUIRING;
 			Acquiring(link);
 		}
@@ -127,19 +129,19 @@ bool sfpRxSm(sfpLink_t *link)
 
 	switch(link->sfpRxState) {
 		case ACQUIRING:
-				return Acquiring(link);
+			return Acquiring(link);
 		case HUNTING:
 			Hunting(link->sfpGet(link), link);
 			setTimeout(SFP_FRAME_TIME, &link->frameTo); // need if moving to sync
-				return true;
+			return true;
 		case SYNCING:
 			setTimeout(SFP_FRAME_TIME, &link->frameTo);
 			Syncing(link->sfpGet(link), link);
-				return true;
+			return true;
 		case RECEIVING:
 			setTimeout(SFP_FRAME_TIME, &link->frameTo);
 			Receiving(link->sfpGet(link), link);
-				return true;
+			return true;
 	}
 }
 
