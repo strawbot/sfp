@@ -18,18 +18,20 @@ static BQUEUE(MAX_FRAME_LENGTH-3, loopq);
 
 static bool rxqAvailable(sfpLink_t * link)
 {
-    return (qbq(link->rxq) != 0);
+    return (qbq(loopq) != 0);
+    (void)link;
 }
 
 static Byte rxqGet(sfpLink_t * link)
 {
     BytesIn(link);
-    return pullbq(link->rxq);
+    return pullbq(loopq);
 }
 
 static bool txOk(sfpLink_t * link)
 {
-    return !fullbq(link->rxq);
+    return !fullbq(loopq);
+    (void)link;
 }
 
 bool dropbytes = false;
@@ -37,14 +39,13 @@ bool dropbytes = false;
 static void putTx(Long x, sfpLink_t * link)
 {
     if (!dropbytes)
-        pushbq((Byte)x, link->rxq);
+        pushbq((Byte)x, loopq);
     BytesOut(link);
 }
 
 void initSps()
 {
     initTestNode();
-    alink.rxq = loopq;
     alink.sfpRx = rxqAvailable;
     alink.sfpGet = rxqGet;
     alink.sfpTx = txOk;
@@ -66,14 +67,14 @@ TestSps::TestSps(QObject *parent) :
 
 void TestSps::TestInitSps()
 {
+    sfpLink_t * link = &alink;
+
     initSps();
-    QCOMPARE(alink.rxSps, ANY_SPS);
-    QCOMPARE(alink.txSps, NO_SPS);
+    QCOMPARE(link->rxSps, ANY_SPS);
+    QCOMPARE(link->txSps, NO_SPS);
     runSm(MAX_SFP_SIZE * 2);
-//    showSfpStats();
-//    showLinkStatus();
-    QCOMPARE(alink.rxSps, ONLY_SPS1);
-    QCOMPARE(alink.txSps, ONLY_SPS1);
+    QCOMPARE(link->rxSps, ONLY_SPS1);
+    QCOMPARE(link->txSps, ONLY_SPS1);
 }
 
 bool dropFrame(Byte *packet, Byte length)

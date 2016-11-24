@@ -100,9 +100,10 @@ void TestTransmitterStateMachine::TestSendPoll()
 void TestTransmitterStateMachine::TestSpsInit()
 {
     sfpFrame frame;
-    Byte * pp = &frame.length, packet[3] = {SPS|ACK_BIT, 0, 0};
+    Byte * pp = &frame.length;
+    Byte packet[3] = {SPS|ACK_BIT, 0, 0};
 
-    buildSfpFrame(sizeof(packet) - 1, &packet[1], packet[0], &frame);
+    buildSfpFrame(sizeof(packet) - 1, &packet[1], packet[0], &frame); // for comparing
 
     initTxSm();
     sfpTxSm(&alink);

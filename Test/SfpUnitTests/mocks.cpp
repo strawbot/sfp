@@ -1,6 +1,8 @@
 // Mocks
 
 #include <qdebug.h>
+#include <string>
+#include <sstream>
 
 extern "C" {
 #include <stdio.h>
@@ -8,30 +10,6 @@ extern "C" {
 #include "mocks.h"
 #include "sfpRxSm.h"
 #include "sfpTxSm.h"
-
-void print(const char * message)
-{
-    printf("%s", message);
-}
-
-void printHex(unsigned int hex)
-{
-    printf("%8X ", hex);
-}
-
-void printnHex(unsigned int n, unsigned int hex)
-{
-    if (n)
-        printf("%*X ", n, hex);
-    else
-        printf("%X ", hex);
-}
-
-void printDec(unsigned int dec)
-{
-    printf("%d ", dec);
-}
-
 #include "framepool.c"
 
 bool framePoolFull()
@@ -52,7 +30,12 @@ FOR_EACH_LINK_STAT(GET_LINK_STAT)
 
 void rxFrame(sfpFrame * frame)
 {
-    pushq((Cell)frame, alink.frameq);
+    pushq((Cell)frame, alink.receivedPool);
+}
+
+void DOT_PROMPT()
+{
+
 }
 
 #include "machines.c"
@@ -72,7 +55,6 @@ void setTime(Long t)
     ticktime = t;
 }
 
-#include "link.c"
 #include "node.c"
 
 Byte packet[3];
@@ -91,8 +73,10 @@ void initTestLink()
     alink.serviceTx = serviceTx;
     initSfpRxSM(&alink, frameinq);
     initSfpTxSM(&alink, npsq, spsq);
-    initSfpStats();
     initFramePool();
+    initServices();
+    initNode(&anode);
+    setNode(&anode);
     packet[0] = CONFIG;    // pid
     packet[1] = DIRECT;        // to
     packet[2] = DIRECT;        // from
@@ -100,10 +84,9 @@ void initTestLink()
 
 void initTestNode()
 {
-    initNode(&anode);
-    setNode(&anode);
-    addLink(DIRECT, &alink);
     initTestLink();
+    addLink(DIRECT, &alink);
+    initSfpStats();
     setRouteTo(DIRECT, &alink);
     setWhoami(DIRECT);
     setWhatami(0);
@@ -147,11 +130,12 @@ bool verbose = false;
 
 void frameSay(sfpFrame * frame, const char * dir)
 {
-    Byte pid = frame->pid;
-    Byte to = frame->who.to;
-    Byte from = frame->who.from;
-    Byte me = whoami();
+    Long pid = frame->pid;
+    Long to = frame->who.to;
+    Long from = frame->who.from;
+    Long me = whoami();
     Long time = getTime();
+    Long timestamp = frame->timestamp;
     const char * spstag = "";
 
     if (!verbose) return;
@@ -163,41 +147,49 @@ void frameSay(sfpFrame * frame, const char * dir)
             spstag = "(SPS0)";
     }
 
+    std::ostringstream oss;
+    oss << dir << time;
+    if (me)
+        oss << " Node " << me;
+    oss << " Frame@" << timestamp << " " << spstag << " PID:";
+
     switch(pid&PID_BITS) {
-    case CONFIG:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << " - PID: TEST_FRAME " << to << "," << from; break;
-    case PING:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: PING " << to << "," << from; break;
-    case PING_BACK:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: PING_BACK " << to << "," << from; break;
-    case SPS:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: SPS " << to << "," << from; break;
-    case SPS_ACK:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: SPS_ACK " << to << "," << from; break;
-    case GET_VERSION:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: GET_VERSION " << to << "," << from; break;
-    case VERSION_NO:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: VERSION_NO " << to << "," << from; break;
-    case TALK_IN:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: TALK_IN " << to << "," << from; break;
-    case TALK_OUT:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: TALK_OUT " << to << "," << from; break;
-    case EVAL:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: EVAL " << to << "," << from; break;
-    case CALL_CODE:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: CALL_CODE " << to << "," << from; break;
-    case MEM_READ:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: MEM_READ " << to << "," << from; break;
-    case MEM_DATA:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: MEM_DATA " << to << "," << from; break;
-    case CHECK_MEM:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: CHECK_MEM " << to << "," << from; break;
-    case MEM_CHECK:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: MEM_CHECK " << to << "," << from; break;
-    case FILL_MEM:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: FILL_MEM " << to << "," << from; break;
-    case RAM_WRITE:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: RAM_WRITE " << to << "," << from; break;
-    case FLASH_WRITE:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: FLASH_WRITE " << to << "," << from; break;
-    case WRITE_CONF:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: WRITE_CONF " << to << "," << from; break;
-    case ERASE_MEM:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: ERASE_MEM " << to << "," << from; break;
-    case ERASE_CONF:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: ERASE_CONF " << to << "," << from; break;
-    case MAX_PIDS:     qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- PID: MAX_PIDS " << to << "," << from; break;
-    default: qDebug() << time << "Node" << me << "Frame" << dir << spstag << "- Unknown PID: " << pid; break;
+    case CONFIG:		oss<< "CONFIG "; break;
+    case PING:			oss<< "PING "; break;
+    case PING_BACK:		oss<< "PING_BACK "; break;
+    case SPS:			oss<< "SPS "; break;
+    case SPS_ACK:		oss<< "SPS_ACK "; break;
+    case GET_VERSION:	oss<< "GET_VERSION "; break;
+    case VERSION_NO:	oss<< "VERSION_NO "; break;
+    case TALK_IN:		oss<< "TALK_IN "; break;
+    case TALK_OUT:		oss<< "TALK_OUT "; break;
+    case EVAL:			oss<< "EVAL "; break;
+    case CALL_CODE:		oss<< "CALL_CODE "; break;
+    case MEM_READ:		oss<< "MEM_READ "; break;
+    case MEM_DATA:		oss<< "MEM_DATA "; break;
+    case CHECK_MEM:		oss<< "CHECK_MEM "; break;
+    case MEM_CHECK:		oss<< "MEM_CHECK "; break;
+    case FILL_MEM:		oss<< "FILL_MEM "; break;
+    case RAM_WRITE:		oss<< "RAM_WRITE "; break;
+    case FLASH_WRITE:	oss<< "FLASH_WRITE "; break;
+    case WRITE_CONF:	oss<< "WRITE_CONF "; break;
+    case ERASE_MEM:		oss<< "ERASE_MEM "; break;
+    case ERASE_CONF:	oss<< "ERASE_CONF "; break;
+    case MAX_PIDS:		oss<< "MAX_PIDS "; break;
+    default:			oss<< "- Unknown: " << (pid&PID_BITS); break;
     }
+    oss << "t:" << to << " f:" << from;
+    qDebug() << oss.str().c_str();
 }
 
 void frameOut(sfpFrame * frame)
 {
-    frameSay(frame, "out");
+    frameSay(frame, "->@");
 }
 
 void frameIn(sfpFrame * frame)
 {
-    frameSay(frame, "in");
+    frameSay(frame, "<-@");
 }
 
 const char * spsState(spsState_t state)

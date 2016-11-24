@@ -7,6 +7,7 @@ extern "C" {
 #include "sfpRxSm.h"
 #include "sfpTxSm.h"
 #include "mocks.h"
+void processFrames();
 }
 
 #include <stdio.h>
@@ -46,6 +47,8 @@ extern "C" {
  * A queue joins the master tx to the slave rx.
  */
 sfpNode_t nodes[4];
+
+void processFrames(void);
 
 struct qlink links[6];
 const char *names[6] = {"link0", "link1", "link2", "link3", "link4", "link5"};
@@ -123,7 +126,6 @@ void initRoutes()
     for (Long i=0; i<elementsof(links); i++) { // initialize link SM's and queues
         sfpLink_t * link = &links[i].link;
 
-        initLink(link, (char *)names[i]);
         initSfpRxSM(link, frameqs[i]);
         initSfpTxSM(link, npsqs[i], spsqs[i]);
         INIT_BQ(links[i].byteq);
@@ -133,6 +135,7 @@ void initRoutes()
         link->sfpTx = txOk;
         link->sfpPut = txPut;
         link->serviceTx = serviceTx;
+        link->name = (char *)names[i];
     }
 
     for (Long i=0; i<elementsof(nodes); i++) { // setup node who and what

@@ -18,31 +18,47 @@ void TestPool::initTestCase()
     setNode(&anode);
 }
 
+void TestPool::init()
+{
+    initFramePool();
+}
+
 void TestPool::TestGetFrame()
 {
-    QCOMPARE((Long)getFrame(), (Long)0);
-    QVERIFY(1 == getFramePoolEmpty());
-}
-
-void TestPool::TestInitPoolEmpty()
-{
-    initSfpStats();
-    initFramePool();
     for (Long i= MAX_FRAMES; i; i--)
-        QVERIFY((Long)getFrame() != (Long)0);
-    QCOMPARE((Long)getFrame(), (Long)0);
-    QVERIFY(1 == getFramePoolEmpty());
+        QVERIFY(getFrame() != NULL);
+    QVERIFY(getFrame() == NULL);
 }
 
-void TestPool::TestReturnFrame()
+void TestPool::TestPoolEmpty()
 {
-    initSfpStats();
-    initFramePool();
+    QVERIFY(framePoolLeft() != 0);
+    for (Long i= MAX_FRAMES; i; i--)
+        getFrame();
+    QVERIFY(framePoolLeft() == 0);
+}
+
+void TestPool::TestreturnFrame()
+{
     for (Long i= MAX_FRAMES + 1; i; i--) {
         sfpFrame * frame = getFrame();
 
         QVERIFY(frame != NULL);
         returnFrame(frame);
     }
-    QVERIFY(0 == getFramePoolEmpty());
+    QVERIFY(framePoolLeft() != 0);
+}
+
+void TestPool::TestIgetFrame()
+{
+    for (Long i= MAX_FRAMES - 1; i; i--)
+        QVERIFY(igetFrame() != NULL);
+    QVERIFY(igetFrame() == NULL);
+}
+
+void TestPool::TestIreturnFrame()
+{
+    for (Long i= MAX_FRAMES; i; i--)
+        ireturnFrame(igetFrame());
+    QVERIFY(igetFrame() != NULL);
 }

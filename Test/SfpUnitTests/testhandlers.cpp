@@ -11,7 +11,9 @@ extern "C" {
 #include "framepool.h"
 #include "frame.h"
 #include "sfpRxSm.h"
+void processFrames(void);
 }
+
 
 TestHandlers::TestHandlers(QObject *parent) :
     QObject(parent)
@@ -72,11 +74,12 @@ void TestHandlers::TestPacketRetry()
     setupFrame();
     acceptframe = false;
     processFrames();
-    QCOMPARE(testframes, (Long)2);
-    QCOMPARE(getFrameProcessed(), (Long)0);
+    QCOMPARE(testframes, (Long)1);
+    QCOMPARE(getFrameProcessed(), (Long)1);
+    QCOMPARE(getPacketProcessed(), (Long)0);
     acceptframe = true;
     processFrames();
-    QCOMPARE(testframes, (Long)3);
+    QCOMPARE(testframes, (Long)2);
     QCOMPARE(getPacketProcessed(), (Long)1);
 }
 
@@ -85,13 +88,13 @@ void TestHandlers::TestStaleFrame()
     setupFrame();
     acceptframe = false;
     processFrames();
+    QCOMPARE(testframes, (Long)1);
+    setTime(getTime() + STALE_RX_FRAME + 1);
+    processFrames();
     QCOMPARE(testframes, (Long)2);
-    setTime(STALE_RX_FRAME + 1);
     processFrames();
-    QCOMPARE(testframes, (Long)3);
-    processFrames();
-    QCOMPARE(testframes, (Long)3);
-    QCOMPARE(getFrameProcessed(), (Long)0);
+    QCOMPARE(testframes, (Long)2);
+    QCOMPARE(getFrameProcessed(), (Long)1);
     QCOMPARE(getPacketProcessed(), (Long)0);
 }
 

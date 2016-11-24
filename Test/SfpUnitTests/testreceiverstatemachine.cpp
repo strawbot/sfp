@@ -45,7 +45,7 @@ void TestReceiverStateMachine::TestAcquiring()
     initRxSm();
     QCOMPARE(alink.sfpRxState, ACQUIRING); // initial state
     QCOMPARE(sfpRxSm(&alink), false);
-    QCOMPARE(alink.sfpRxState, ACQUIRING); // no data - no state change
+    QCOMPARE(alink.sfpRxState, ACQUIRING); // got frame looking for data
     pushbq(0, testrxq);
     QCOMPARE(sfpRxSm(&alink), false);
     QCOMPARE(alink.sfpRxState, HUNTING); // data and frame buffer available -> start receiving
@@ -104,7 +104,7 @@ void TestReceiverStateMachine::TestReceiving()
         pushbq(fp[i], testrxq);
     while (qbq(testrxq))
         sfpRxSm(&alink);
-    QCOMPARE(alink.sfpRxState, ACQUIRING);
+    QCOMPARE(alink.sfpRxState, HUNTING);
     QCOMPARE(getGoodFrame(&alink), (Long)1);
 
     for (i = 0; i < frame->length; i++) // bad frame
@@ -130,7 +130,7 @@ void TestReceiverStateMachine::TestReceiving()
         sfpRxSm(&alink);
         sfpRxSm(&alink);
     }
-    QCOMPARE(alink.sfpRxState, ACQUIRING);
+    QCOMPARE(alink.sfpRxState, HUNTING);
 }
 
 void TestReceiverStateMachine::TestOverflow()

@@ -29,6 +29,7 @@ extern bool exitflag;
 void breakPoint1(void);
 
 void rxFrame(sfpFrame * frame);
+void runDistrubuter();
 
 void setTime(Long t);
 

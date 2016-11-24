@@ -10,10 +10,13 @@ public:
     explicit TestPool(QObject *parent = 0);
 
 private slots:
+    void init();
     void initTestCase();
     void TestGetFrame();
-    void TestInitPoolEmpty();
-    void TestReturnFrame();
+    void TestPoolEmpty();
+    void TestreturnFrame();
+    void TestIgetFrame();
+    void TestIreturnFrame();
 };
 
 #endif // TESTPOOL_H

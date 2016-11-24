@@ -13,6 +13,7 @@ CONFIG   += console
 CONFIG   -= app_bundle
 
 TEMPLATE = app
+QMAKE_MAC_SDK = macosx10.12
 
 INCLUDEPATH += ../../ \
 	../../../Timbre \
@@ -35,7 +36,8 @@ SOURCES += \
     testtransmitterstatemachine.cpp \
     testsps.cpp \
     smallNetwork.cpp \
-    testtalk.cpp
+    testtalk.cpp \
+    ../../../Timbre/printersHost.c
 
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
