@@ -1,5 +1,7 @@
 // Stats  Robert Chapman III  Feb 21, 2015
 
+#include "services.h"
+#include "frame.h"
 #include "stats.h"
 #include "node.h"
 #include "link.h"
@@ -33,7 +35,7 @@ void initSfpStats(void)
 {
     Long i;
     sfpNode_t * node = getNode();
-    
+
 #define ZERO_NODE_STAT(stat) node->stat = 0;
 #define ZERO_LINK_STAT(stat) link->stat = 0;
 
@@ -41,7 +43,7 @@ void initSfpStats(void)
 
 	for (i = 0; i < NUM_LINKS; i++) {
         sfpLink_t *link = nodeLink(i);
-        if (link) {
+		if (link) {
             FOR_EACH_LINK_STAT(ZERO_LINK_STAT)
         }
 	}
@@ -62,6 +64,7 @@ void showSfpStats(void)
         sfpLink_t *link = nodeLink(i);
         if (link) {
             print("\n*** Link#"), printDec(i);
+            print(" - "), print(link->name);
             FOR_EACH_LINK_STAT(PRINT_LINK_STAT)
         }
     }
@@ -120,8 +123,8 @@ void showLinkStatus(sfpLink_t * link)
 //		print("\nBytes in rxq: "), printDec(qbq(link->rxq));
 	if (link->sfpBytesToRx)
 		print("\nbytes to receive: "), printDec(link->sfpBytesToRx);
-//	if (queryq(link->frameq))
-//		print("\nincoming frame queue: "), printDec(queryq(link->frameq));
+	if (queryq(link->receivedPool))
+		print("\nincoming frame queue: "), printDec(queryq(link->receivedPool));
 	print("\nSFP RX state: "), printRxState(link->sfpRxState);
 	if (!link->disableSps)
 		print("\nRx SPS state: "), printSpsState(link->rxSps);
@@ -173,4 +176,14 @@ void showNodeStatus(void)
     printDec(framePoolLeft());
     print(" out of ");
     printDec(MAX_FRAMES);
+    print("\nFrames per handler:");
+    for (Byte i = 0; i<MAX_PIDS; i++) {
+    	packetHandler_t handler = getPacketHandler(i);
+		sfpFrame * frame = getHandlerFrame(i);
+	
+		if (handler != 0 && frame != 0) {
+			printHex2(i), print(":");
+			while (frame) print("*"), frame = frame->list;
+		}
+	}
 }
