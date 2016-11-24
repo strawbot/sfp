@@ -27,6 +27,13 @@ packetHandler_t getPacketHandler(Byte pid)
 	return NULL;
 }
 
+sfpFrame * getHandlerFrame(Byte pid)
+{
+	if (pid < MAX_PIDS)
+		return packetHandlers[pid].list;
+	return NULL;
+}
+
 packetHandler_t setPacketHandler(Byte pid, packetHandler_t handler)
 {
 	packetHandler_t oldHandler = getPacketHandler(pid);
@@ -42,7 +49,7 @@ static void linkFrame(sfpFrame *frame)
 	
 	while (link->list != NULL) // find end of list
 		link = link->list;
-	link = frame;
+	link->list = frame;
 	frame->list = NULL;
 }
 
@@ -50,7 +57,7 @@ static void unlinkFrame(Byte n)
 {
 	sfpFrame * link = (sfpFrame *)&packetHandlers[n].list;
 	
-	link = link->list;
+	link->list = link->list->list;
 }
 
 // SFP Frame decoder 
@@ -60,7 +67,7 @@ static void decodeFrame(sfpFrame *frame)
 {
 	print("\n");
 	switch(frame->pid) {
-		FOR_EACH_PID(PRINT_PID)
+//	FOR_EACH_PID(PRINT_PID)
 	}
 	print(" frame from "), printDec(frame->who.from), print("to "), printDec(frame->who.to);
 }
@@ -138,6 +145,10 @@ static void processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 		}
 	}
 
+	// unhandled cases:
+	// 1. a pid > MAX_PIDS with SPS is received with SPS enabled
+	// 2. a pid > MAX_PIDS without SPS is received with SPS enabled
+
 	// note: with sps acked 1st, then routing done second, each link is acked
 	// and it will reduce end to end send time
 	if ( (frame->pid & PID_BITS) > WHO_PIDS) // check for routing of packet
@@ -152,9 +163,9 @@ static void processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 
 	frame->pid &= PID_BITS; // strip sps bits
 
-	if (getPacketHandler(frame->pid) != NULL)
+	if (getPacketHandler(frame->pid) != NULL) // queue up for installed packet handler
 		linkFrame(frame);
-	else {
+	else { // default behaviuor for no handlers
 		switch(frame->pid) // intercept link only packets - no destination id
 		{
 			case PING: // other end is querying so reply
@@ -173,7 +184,7 @@ static void processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 				break;
 			case SPS: // null packet used for initializing SPS and setting id
 			case PING_BACK: // ignore reply
-			case CONFIG: // ignore test frames
+			case CONFIG: // ignore config frames
 				IgnoreFrame();
 				break;
 			default:
@@ -218,18 +229,17 @@ void handleFrame(Byte n)
 	}
 }
 
-static void runHandlers(void) // call handlers for frames
+void runHandlers(void) // call handlers for frames
 {
 	for (Byte n = 0; n < MAX_PIDS; n++)
 		handleFrame(n);
 }
 
-static void distributer(void) // queue up frame for handler
+void distributeFrames(void)
 {
-	Byte n = 0;
+	for (Byte n = 0; n < NUM_LINKS; n++) {
+        sfpLink_t *link = nodeLink(n); // scan for available link
 
-	for (n = 0; n < NUM_LINKS; n++) {
-        sfpLink_t *link = nodeLink(n);
 		if (link == 0)
 			continue;
 
@@ -239,11 +249,16 @@ static void distributer(void) // queue up frame for handler
 			if (link->listFrames) // debug if enabled
 				decodeFrame(frame);
 
-			processLinkFrame(frame, link);
+			processLinkFrame(frame, link); // deal with the frame
+			FrameProcessed();
 		}
 	}
-	activate(runHandlers);
-	activate(distributer);
+}
+
+void processFrames(void) // queue up frame for handler
+{
+	distributeFrames();
+	runHandlers();
 }
 
 // Packet services
@@ -298,7 +313,10 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 // initialization
 void initServices(void) //! initialize SFP receiver state machine
 {
-	activateOnce(distributer);
+	for (Byte i=0; i<MAX_PIDS; i++) {
+		packetHandlers[i].handler = NULL;
+		packetHandlers[i].list = NULL;
+	}
 }
 
 /*

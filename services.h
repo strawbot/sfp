@@ -15,5 +15,10 @@ packetHandler_t setPacketHandler(Byte pid, packetHandler_t handler);
 
 bool sendNpTo(Byte *packet, Byte length, Byte to);
 bool sendSpTo(Byte *packet, Byte length, Byte to);
+sfpFrame * getHandlerFrame(Byte pid);
+
+void distributeFrames(void);
+void runHandlers(void);
+void processFrames(void);
 
 void initServices(void);
