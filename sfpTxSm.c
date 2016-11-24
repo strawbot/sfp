@@ -271,14 +271,16 @@ void initSfpTxSM(sfpLink_t *link, Qtype * npsq, Qtype * spsq) //! initialize SFP
 	link->txFlags = 0;
     link->frameOut = 0;
     link->serviceTx = serviceTx;
+	link->txSps = NO_SPS;
 
     zeroq(npsq);
     if (spsq) {
     	zeroq(spsq);
      	link->spsq = spsq;
+    	link->disableSps = false;
     }
     else {
-    	link->disableSps = 1;
+    	link->disableSps = true;
      	link->spsq = npsq;
     }
 	link->npsq = npsq;
