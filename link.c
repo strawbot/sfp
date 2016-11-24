@@ -68,4 +68,6 @@ void initLink(sfpLink_t * link, char * name)
 	link->sfpPut = voidSfpPut;
 	link->serviceTx = voidServiceTx;
 	link->listFrames = false;
+	link->rxq = NULL;
+	link->txq = NULL;
 }
