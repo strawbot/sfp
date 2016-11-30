@@ -1,6 +1,5 @@
 // Define node of links  Robert Chapman  Apr 21, 2013
 
-//#include "memorymaps.h"
 #include "link.h"
 
 #ifndef node_h

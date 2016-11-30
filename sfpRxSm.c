@@ -133,16 +133,17 @@ bool sfpRxSm(sfpLink_t *link)
 		case HUNTING:
 			Hunting(link->sfpGet(link), link);
 			setTimeout(SFP_FRAME_TIME, &link->frameTo); // need if moving to sync
-			return true;
+			break;
 		case SYNCING:
 			setTimeout(SFP_FRAME_TIME, &link->frameTo);
 			Syncing(link->sfpGet(link), link);
-			return true;
+			break;
 		case RECEIVING:
 			setTimeout(SFP_FRAME_TIME, &link->frameTo);
 			Receiving(link->sfpGet(link), link);
-			return true;
+			break;
 	}
+	return true;
 }
 
 //! initialize SFP receiver state machine

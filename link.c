@@ -47,6 +47,8 @@ void voidSfpPut(Long n, sfpLink_t * link)
 		called = true;
 		print("\nError: '"), print(link->name), print("'.sfpPut is undefined");
 	}
+	(void)link;
+	(void)n;
 }
 
 void voidServiceTx(sfpLink_t * link)

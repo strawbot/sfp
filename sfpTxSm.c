@@ -51,7 +51,7 @@ static void transmitPoll(Byte n, sfpLink_t *link) //! set number of poll bytes f
 }
 
 // support Functions
-static void sendAckFrame(sfpLink_t *link)
+static void transmitAckFrame(sfpLink_t *link)
 {
 	if (transmitFrame(&ackFrame, link)) {
 		SendFrame(link);
@@ -59,7 +59,7 @@ static void sendAckFrame(sfpLink_t *link)
 	}
 }
 
-static void sendSpsFrame(sfpLink_t * link)
+static void transmitSpsFrame(sfpLink_t * link)
 {
     if (queryq(link->spsq)) {
         if (transmitFrame((sfpFrame *)q(link->spsq), link)) {
@@ -73,7 +73,7 @@ static void sendSpsFrame(sfpLink_t * link)
     }
 }
 
-static void sendNpsFrame(sfpLink_t *link)
+static void transmitNpsFrame(sfpLink_t *link)
 {
     sfpFrame * frame = (sfpFrame *)q(link->npsq);
 
@@ -88,7 +88,7 @@ static void sendNpsFrame(sfpLink_t *link)
 	}
 }
 
-static void sendPollFrame(sfpLink_t *link)
+static void transmitPollFrame(sfpLink_t *link)
 {
 	Byte n = pollTrain;
 
@@ -250,10 +250,10 @@ void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or
 {
     checkSps(link);
 	// prioritized transmission actions
-    if 		(testAckSend(link))		sendAckFrame(link);
-    else if (testSpsSend(link))		sendSpsFrame(link);
-    else if (queryq(link->npsq))    sendNpsFrame(link);
-    else if (testPollSend(link))	sendPollFrame(link);
+    if 		(testAckSend(link))		transmitAckFrame(link);
+    else if (testSpsSend(link))		transmitSpsFrame(link);
+    else if (queryq(link->npsq))    transmitNpsFrame(link);
+    else if (testPollSend(link))	transmitPollFrame(link);
     else if (link->sfpBytesToTx == 0) {
 		if (link->frameOut) // frame has been transmitted return if needed
 			ireturnFrame(link->frameOut);
