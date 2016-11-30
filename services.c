@@ -310,6 +310,21 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 	return true;
 }
 
+// send frame already allocated from pool
+void sendNpsFrame(sfpFrame * frame, Byte packetLength)
+{
+	sfpLink_t *link;
+
+	link = routeTo(frame->who.to);
+	if (link) {
+		addSfpFrame(frame, packetLength);
+		pushq((Cell)frame, link->npsq);
+	} else {
+		NoDest();
+		returnFrame(frame);
+	}
+}
+
 // initialization
 void initServices(void) //! initialize SFP receiver state machine
 {

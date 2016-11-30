@@ -3,6 +3,7 @@
 #include "localio.h"
 #include "library.h"
 #include "services.h"
+#include "framePool.h"
 #include "talkhandler.h"
 #include "node.h"
 
@@ -50,31 +51,33 @@ Byte talkWho(void) // who are we talking to
 
 void sendeqSfp(void)
 {
-	Byte c, *p, packet[MAX_PACKET_LENGTH];
-	whoPacket_t *w=(whoPacket_t *)packet;
 	Byte length = qbq(eq);
 
-	w->pid = TALK_OUT;
-	w->who.to = talkTo;
-	w->who.from = whoami();
-	p = &w->payload[0];
+	if (length) {
+		sfpFrame * frame = getFrame();
+		
+		if (frame) {
+			Byte *p = &frame->whoload[0];
+
+			if (length >= MAX_WHO_PAYLOAD_LENGTH)
+				length = MAX_WHO_PAYLOAD_LENGTH;
 	
-	if (length >= MAX_WHO_PAYLOAD_LENGTH)
-		length = MAX_WHO_PAYLOAD_LENGTH;
-	
-	while (length--)
-	{
-		c = pullbq(eq);
-		if (c != 0xD)
-			*p++ = c;
-	}
-	
-	length = (Byte)(p - &w->payload[0]);
-	if (length)
-	{
-		length += WHO_HEADER_SIZE;
-		while(!sendNpTo(packet, length, talkTo))
-			runMachines();
+			while (length--) {
+				Byte c = pullbq(eq);
+				
+				if (c != 0xD)
+					*p++ = c;
+			}
+			length = (Byte)(p - &frame->whoload[0]);
+
+			if (length) {
+				frame->pid = TALK_OUT;
+				frame->who.to = talkTo;
+				frame->who.from = whoami();
+				sendNpsFrame(frame, length + WHO_HEADER_SIZE);
+			} else
+				returnFrame(frame);
+		}
 	}
 }
 
