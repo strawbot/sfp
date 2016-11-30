@@ -23,18 +23,18 @@
 	EVAL		++		evaluate text with destination; who, text
 	CALL_CODE	++		call code starting at this location; who, addr32
 //
-	MEM_READ	++		read memory request; who, addr32, len8
-	MEM_DATA	++		memory contents; who, addr32, len8
-	CHECK_MEM	++		check memory contents; who, addr32, len32, method8
-	MEM_CHECK	++		value returned from checking memory contents; who, addr32, len32, method8, code
-	FILL_MEM	++		fill memory chunks with pattern of length bytes; who, addr32, len32, len8, pattern
-//
-	RAM_WRITE	++		request write to RAM; who, 32bit addr, 8bit length, bytes
-	FLASH_WRITE	++		request write to flash; who, 32bit addr, 8bit length, bytes
-	WRITE_CONF	++		confirm a write to memory; who, addr32, len8
-//
-	ERASE_MEM	++		erase memory range froms start to end
-	ERASE_CONF	++		confirm memory erased (0) or not (!0)
+	MEMORY		++		use for memory transactions: read/write/erase/confirm...
+	FILES		++		user for file transactions: read/write/delete/...
 
 // Must be last PID
 	MAX_PIDS	++		number of PIDS defined
+
+// Parameters
+	MAX_FRAME_LENGTH (254)	no more than 254; set according to link resources
+	MAX_FRAMES (30)			number of frames floating around system
+	SPS_RETRIES			(5)		maximum number of SPS retries
+	SFP_POLL_TIME		(2)		polling in link down
+	SFP_SPS_TIME		(2500)	time between retransmissions
+	SFP_FRAME_TIME		(50)	maximum time to wait between bytes for a frame
+	SFP_FRAME_PROCESS	(1000)	maximum time to wait for frame processing
+	STALE_RX_FRAME 		(1000)	number of milliseconds to hang onto a received frame

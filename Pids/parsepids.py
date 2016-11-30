@@ -16,7 +16,7 @@ printme = 0
 # single list can be used to keep embedded and host software in sync
 
 pydest = '../../TimbreTalk/' # place a copy here for Timbre Talk
-hdest = '../' # for testing
+hdest = '../'
 
 pidlist = []
 pidused = [0]*256
@@ -28,6 +28,8 @@ pidused = [0]*256
 
 	SPS			0x00	used for initializing SPS frame acks
 	SPS_ACK		++		confirm sps
+	
+	macro_name  (some value)  some comments
 '''
 def readPids(file):
 	if printme: print "Executing: ", inspect.stack()[0][3]
@@ -36,13 +38,19 @@ def readPids(file):
 	lines = open(file, 'r').readlines()
 	for line in lines:
 		if line.strip():
-			l = line.split()
-			if l[0] != '//' and len(l) > 1:
-				pid = l[1]
-				if pid[0] == '(':
-					pass
-					# pidlast = pid
+			l = line.split(None, 1) # only split off first entry
+			if l[0] != '//' and len(l) > 1: # remove comments
+				if l[1][0] == '(':
+					rest = l[1].rsplit(')',1)
+					pid = rest[0] + ')'
+					comment = rest[1].strip()
 				else:
+					rest = l[1].split(None, 1)
+					pid = rest[0]
+					if len(rest) > 1:
+						comment = rest[1].strip()
+					else:
+						comment = ''
 					if pid == '++': # increment from last id
 						pidlast += 1
 						pid = hex(pidlast)
@@ -52,7 +60,7 @@ def readPids(file):
 						pidused[pidlast] = l[0]
 					else:
 						raise Exception("PID %X declared by %s is already declared by %s." % (pidlast, l[0], pidused[pidlast]))
-				pidlist.append([l[0],pid,' '.join(w for w in l[2:])])
+				pidlist.append([l[0],pid,comment])
 
 
 ''' C header looks like:
