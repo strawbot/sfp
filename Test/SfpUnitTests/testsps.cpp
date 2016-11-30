@@ -72,7 +72,7 @@ void TestSps::TestInitSps()
     initSps();
     QCOMPARE(link->rxSps, ANY_SPS);
     QCOMPARE(link->txSps, NO_SPS);
-    runSm(MAX_SFP_SIZE * 2);
+    runSm(SFP_SPS_TIME * 2);
     QCOMPARE(link->rxSps, ONLY_SPS1);
     QCOMPARE(link->txSps, ONLY_SPS1);
 }

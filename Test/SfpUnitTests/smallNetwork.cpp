@@ -108,8 +108,6 @@ static void txPut(Long x, sfpLink_t * link)
 // For SPI slave, use the one below
 //need to set parameters here like NUM_LINKS, ROUTING_POINTS
 //can we use undef? but that would have to be before includes or after sfp.f
-//                  or take parameters.h out of sfp.h; manually include everywhere and then replace it?
-// change parameters.h into exampleparameters.h  Have user create their own parameters.h
 void initNetworkStats()
 {
     for (Long i=0; i<elementsof(nodes); i++) { // setup node who and what

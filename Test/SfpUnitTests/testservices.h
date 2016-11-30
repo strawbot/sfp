@@ -19,6 +19,8 @@ private slots:
     void TestSpsLink(void);
     void TestSpsNull();
     void TestSpsOversize();
+    void TestPidList();
+    void TestPing();
 };
 
 #endif // TESTSERVICES_H

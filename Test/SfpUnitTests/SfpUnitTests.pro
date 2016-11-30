@@ -62,6 +62,5 @@ HEADERS += \
     testreceiverstatemachine.h \
     testtransmitterstatemachine.h \
     testsps.h \
-    parameters.h \
     smallNetwork.h \
     testtalk.h

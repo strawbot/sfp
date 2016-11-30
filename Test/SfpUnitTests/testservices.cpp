@@ -8,6 +8,7 @@ extern "C" {
 #include "mocks.h"
 #include "link.h"
 #include "node.h"
+#include "framePool.h"
 }
 
 void initNodeServices(void)
@@ -107,6 +108,46 @@ void TestServices::TestSpsOversize()
     QVERIFY(framePoolFull());
 }
 
-/*
- * need a check for multiple frames in the retry q and first one times out but the next one doesn't until next timeout
- */
+void TestServices::TestPidList()
+{
+    Long ts = 0;
+
+    initTestNode();
+    alink.disableSps = true;
+    alink.sfpRx = falseSfpRx;
+    setPacketHandler(CONFIG, falseHandler);
+
+    for (Byte i=0; i<3; i++)
+        sendNpTo(packet, sizeof(packet), DIRECT);
+    QCOMPARE(queryq(alink.npsq), (Long)3);
+
+    while (queryq(alink.npsq)) { // queue up frames and add separated timestamps
+        sfpFrame * frame = (sfpFrame * )pullq(alink.npsq);
+
+        ts += 10;
+        frame->timestamp = ts; // need to stagger timestamps to test each one separately
+        pushq((Cell)frame, alink.receivedPool);
+    }
+    setTime(ts);
+    QCOMPARE(framePoolLeft(), (Long)(MAX_FRAMES-3));
+    runSm(STALE_RX_FRAME-ts+1);
+    QCOMPARE(framePoolLeft(), (Long)(MAX_FRAMES-3));
+    runSm(10);
+    QCOMPARE(framePoolLeft(), (Long)(MAX_FRAMES-2));
+    runSm(10);
+    QCOMPARE(framePoolLeft(), (Long)(MAX_FRAMES-1));
+    runSm(10);
+    QCOMPARE(framePoolLeft(), (Long)(MAX_FRAMES));
+}
+
+void TestServices::TestPing()
+{
+    sfpFrame pingframe;
+
+    pingframe.pid = PING;
+    initNodeServices();
+    rxFrame(&pingframe);
+    QCOMPARE(getNoDest(), (Long)0); // no destination since it can't route it to self
+    processFrames();
+    QCOMPARE(getNoDest(), (Long)1); // no destination since it can't route it to self
+}

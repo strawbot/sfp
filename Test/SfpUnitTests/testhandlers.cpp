@@ -20,6 +20,11 @@ TestHandlers::TestHandlers(QObject *parent) :
 {
 }
 
+void TestHandlers::init()
+{
+    initServices();
+}
+
 void TestHandlers::TestGetHandler()
 {
     QCOMPARE((Long)getPacketHandler(0), (Long)NULL);

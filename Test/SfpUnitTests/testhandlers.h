@@ -10,6 +10,7 @@ public:
     explicit TestHandlers(QObject *parent = 0);
 
 private slots:
+    void init();
     void TestGetHandler();
     void TestSetHandler();
     void TestPacketIn();

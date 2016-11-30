@@ -11,6 +11,7 @@ extern "C" {
 #include "sfpRxSm.h"
 #include "sfpTxSm.h"
 #include "framepool.c"
+#include "link.c"
 
 bool framePoolFull()
 {
@@ -30,6 +31,7 @@ FOR_EACH_LINK_STAT(GET_LINK_STAT)
 
 void rxFrame(sfpFrame * frame)
 {
+    frame->timestamp = getTime();
     pushq((Cell)frame, alink.receivedPool);
 }
 
@@ -70,6 +72,7 @@ QUEUE(MAX_FRAMES, spsq);
 void initTestLink()
 {
     setTime(0);
+    initLink(&alink, (char *)"Lynx");
     alink.serviceTx = serviceTx;
     initSfpRxSM(&alink, frameinq);
     initSfpTxSM(&alink, npsq, spsq);
@@ -165,16 +168,8 @@ void frameSay(sfpFrame * frame, const char * dir)
     case TALK_OUT:		oss<< "TALK_OUT "; break;
     case EVAL:			oss<< "EVAL "; break;
     case CALL_CODE:		oss<< "CALL_CODE "; break;
-    case MEM_READ:		oss<< "MEM_READ "; break;
-    case MEM_DATA:		oss<< "MEM_DATA "; break;
-    case CHECK_MEM:		oss<< "CHECK_MEM "; break;
-    case MEM_CHECK:		oss<< "MEM_CHECK "; break;
-    case FILL_MEM:		oss<< "FILL_MEM "; break;
-    case RAM_WRITE:		oss<< "RAM_WRITE "; break;
-    case FLASH_WRITE:	oss<< "FLASH_WRITE "; break;
-    case WRITE_CONF:	oss<< "WRITE_CONF "; break;
-    case ERASE_MEM:		oss<< "ERASE_MEM "; break;
-    case ERASE_CONF:	oss<< "ERASE_CONF "; break;
+    case MEMORY:		oss<< "MEM_READ "; break;
+    case FILES:		    oss<< "MEM_DATA "; break;
     case MAX_PIDS:		oss<< "MAX_PIDS "; break;
     default:			oss<< "- Unknown: " << (pid&PID_BITS); break;
     }
@@ -222,10 +217,17 @@ void runSm(Long n) // run the transmitter and receiver state machines n times
     }
 }
 
-void sendeqSerial()
-{ }
+bool falseHandler(Byte *packet, Byte length)
+{
+    return false;
+    (void)packet;
+    (void)length;
+}
 
-void serialTalk()
-{ }
+bool falseSfpRx(sfpLink_t * link)
+{
+    return false;
+    (void)link;
+}
 
 }

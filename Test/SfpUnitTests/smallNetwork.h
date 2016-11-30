@@ -6,6 +6,8 @@ extern "C" {
 #include "link.h"
 }
 
+#define NUM_LINKS 2				// number of links in this node
+
 extern sfpNode_t nodes[4];
 extern struct qlink{
     sfpLink_t link;

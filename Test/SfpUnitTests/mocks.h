@@ -32,5 +32,7 @@ void rxFrame(sfpFrame * frame);
 void runDistrubuter();
 
 void setTime(Long t);
+bool falseHandler(Byte *packet, Byte length);
+bool falseSfpRx(sfpLink_t * link);
 
 #endif // MOCKS_H
