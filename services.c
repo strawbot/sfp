@@ -5,12 +5,10 @@
 #include "framepool.h"
 #include "frame.h"
 #include "services.h"
-#include "sfp.h"
 #include "link.h"
 #include "node.h"
 #include "stats.h"
 #include "sfpTxSm.h"
-#include "pids.h"
 #include "printers.h"
 
 // Handlers and frame list
@@ -195,22 +193,22 @@ static void processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 	}
 }
 
-/* default packet handlers
-	Frames come in over links and go to frame queues. A machine processes the
-	frame and then puts it into the retry queue if the packet handler is busy.
-	A timeout is used to manage the retry queue.
+/* packet handlers
+	Frames come in over links and go to a frame queue. A machine processes the
+	frame and then puts it into the the handler list if there is a handler. Otherwise
+	it tries to process it as a link only frame. It stays in the handler list
+	until it is either processed by the handler or becomes stale.
 	
 	There are multiple possible actions and paths for frames:
 	 o an ACK packet signals the SPS service and is done
 	 o an SPS packet signals the SPS service and is queued
 	 o a network packet not for this node is rerouted
 	 o other frame level services are handled
-	 o if none of the above, the frame is pushed to the nodes packet queue
+	 o if none of the above, the frame is appended to the handler packet list
 	 
-	Link level frames that have no higher level purpose. They have a pid but not
+	Link level frames have no higher level purpose. They have a pid but not
 	all have networking. All frames are processed by packet handlers. If there is
-	not one, then some have default handlers. If a packet handler does not accept
-	the packet, then it stays in the queue until it is accepted or a timeout occurs.
+	not one, then some have default handlers.
 */
 void handleFrame(Byte n)
 {

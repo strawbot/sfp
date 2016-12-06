@@ -122,10 +122,10 @@ void checkDataTimeout(sfpLink_t *link)
 //! SFP RX state machine
 bool sfpRxSm(sfpLink_t *link)
 {
-	checkDataTimeout(link);
-
 	if (!link->sfpRx(link))
 		return false;
+
+	checkDataTimeout(link);
 
 	switch(link->sfpRxState) {
 		case ACQUIRING:

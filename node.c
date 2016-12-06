@@ -1,5 +1,4 @@
 #include "node.h"
-#include "link.h"
 
 static sfpNode_t *currentNode = NULL;
 

@@ -1,6 +1,5 @@
 // SFP Services: sending packets and packet handlers  Robert Chapman III  Feb 20, 2015
 
-#include "bktypes.h"
 #include "sfp.h"
 
 #ifndef _SERVICES_H_

@@ -6,7 +6,7 @@
 #include "link.h"
 #include "printers.h"
 
-bool voidSfpRx(sfpLink_t * link)
+static bool voidSfpRx(sfpLink_t * link)
 {
 	static bool called = false;
 	
@@ -17,7 +17,7 @@ bool voidSfpRx(sfpLink_t * link)
 	return false;
 }
 
-bool voidSfpTx(sfpLink_t * link)
+static bool voidSfpTx(sfpLink_t * link)
 {
 	static bool called = false;
 	
@@ -28,7 +28,7 @@ bool voidSfpTx(sfpLink_t * link)
 	return false;
 }
 
-Byte voidSfpGet(sfpLink_t * link)
+static Byte voidSfpGet(sfpLink_t * link)
 {
 	static bool called = false;
 	
@@ -39,7 +39,7 @@ Byte voidSfpGet(sfpLink_t * link)
 	return 0;
 }
 
-void voidSfpPut(Long n, sfpLink_t * link)
+static void voidSfpPut(Long n, sfpLink_t * link)
 {
 	static bool called = false;
 	
@@ -51,7 +51,7 @@ void voidSfpPut(Long n, sfpLink_t * link)
 	(void)n;
 }
 
-void voidServiceTx(sfpLink_t * link)
+static void voidServiceTx(sfpLink_t * link)
 {
 	static bool called = false;
 	

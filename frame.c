@@ -2,7 +2,6 @@
 
 #include <string.h>
 
-#include "sfp.h"
 #include "frame.h"
 
 // build a frame with the proper structure

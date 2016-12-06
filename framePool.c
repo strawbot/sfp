@@ -6,7 +6,6 @@
  * interrupting interrupts, protection must be used on the interrupt side.
 */
 
-#include "sfp.h"
 #include "stats.h"
 #include "framePool.h"
 #include "printers.h"
