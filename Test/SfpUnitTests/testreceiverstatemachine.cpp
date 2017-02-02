@@ -44,10 +44,10 @@ void TestReceiverStateMachine::TestAcquiring()
 {
     initRxSm();
     QCOMPARE(alink.sfpRxState, ACQUIRING); // initial state
-    QCOMPARE(sfpRxSm(&alink), false);
+    QVERIFY(sfpRxSm(&alink) == false);
     QCOMPARE(alink.sfpRxState, ACQUIRING); // got frame looking for data
     pushbq(0, testrxq);
-    QCOMPARE(sfpRxSm(&alink), false);
+    QVERIFY(sfpRxSm(&alink) == false);
     QCOMPARE(alink.sfpRxState, HUNTING); // data and frame buffer available -> start receiving
 }
 
@@ -55,25 +55,25 @@ void TestReceiverStateMachine::TestHunting()
 {
     initRxSm();
     pushbq(0, testrxq);
-    QCOMPARE(sfpRxSm(&alink), false);
-    QCOMPARE(sfpRxSm(&alink), true);
+    QVERIFY(sfpRxSm(&alink) == false);
+    QVERIFY(sfpRxSm(&alink) == true);
     QVERIFY(qbq(testrxq) == 0);
     QCOMPARE(alink.sfpRxState, HUNTING); // Test 0
     pushbq(MIN_FRAME_LENGTH - 1, testrxq);
-    QCOMPARE(sfpRxSm(&alink), true);
+    QVERIFY(sfpRxSm(&alink) == true);
     QCOMPARE(alink.sfpRxState, HUNTING); // Test lower limit
     pushbq(0xFF, testrxq);
-    QCOMPARE(sfpRxSm(&alink), true);
+    QVERIFY(sfpRxSm(&alink) == true);
     QCOMPARE(alink.sfpRxState, HUNTING); // Test FF
     pushbq(MAX_FRAME_LENGTH + 1, testrxq);
-    QCOMPARE(sfpRxSm(&alink), true);
+    QVERIFY(sfpRxSm(&alink) == true);
     QCOMPARE(alink.sfpRxState, HUNTING); // Test upper limit
     pushbq(MIN_FRAME_LENGTH, testrxq);
-    QCOMPARE(sfpRxSm(&alink), true);
+    QVERIFY(sfpRxSm(&alink) == true);
     QCOMPARE(alink.sfpRxState, SYNCING); // Test minimimum
     alink.sfpRxState = HUNTING;
     pushbq(MAX_FRAME_LENGTH, testrxq);
-    QCOMPARE(sfpRxSm(&alink), true);
+    QVERIFY(sfpRxSm(&alink) == true);
     QCOMPARE(alink.sfpRxState, SYNCING); // Test maximimum
 }
 

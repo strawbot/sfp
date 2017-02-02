@@ -55,7 +55,7 @@ void TestTransmitterStateMachine::TestSendFrame()
     buildSfpFrame(sizeof(packet) - 1, &packet[1], packet[0], &frame);
 
     initTxSm();
-    QCOMPARE(sendNpTo(packet, sizeof(packet), DIRECT), true);
+    QVERIFY(sendNpTo(packet, sizeof(packet), DIRECT) == true);
     sfpTxSm(&alink);
     for(Long i = frame.length + LENGTH_LENGTH; i; i--) {
         serviceTx(&alink);

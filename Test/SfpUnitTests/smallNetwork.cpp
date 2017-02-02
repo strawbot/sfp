@@ -251,13 +251,15 @@ void networkStats()
 
 Long nodeStat(Long node, Long (*stat)(sfpLink_t *link))
 {
-    sfpLink_t * link;
     Long sum = 0;
 
     selectNode(node);
-    for (Long l=0; l<NUM_LINKS; l++)
+    for (Long l=0; l<NUM_LINKS; l++) {
+		sfpLink_t * link;
+	
         if ( (link = nodeLink(l)) != 0 )
             sum += stat(link);
+	}
     return sum;
 }
 

@@ -52,7 +52,7 @@ void sfpMachine(void)
 
 void initSfp(void)
 {
-	sfpLink_t *link = &uartLink;
+	sfpLink_t *link;
 
 	// initialize pool of frame buffers
     initFramePool();
