@@ -2,7 +2,7 @@
 #ifndef SFP_TM_SM_H
 #define SFP_TM_SM_H
 
-#include "bktypes.h"
+#include "ttypes.h"
 
 // tx flag bits
 #define SEND_POLL_BIT		0x01

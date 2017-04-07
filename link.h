@@ -37,7 +37,7 @@ typedef struct sfpLink_t{	// Link information
 
 
 	// Receiver
-    Byte * rxq;						// queue for incoming bytes if needed
+	byteq_t * rxq;						// queue for incoming bytes if needed
     Qtype * receivedPool;				// pool of received frames
 	sfpFrame * frameIn;					// pointer to frame used for receiving
 	Byte * sfpRxPtr;					// point to frame being built
@@ -49,7 +49,7 @@ typedef struct sfpLink_t{	// Link information
 	spsState_t rxSps;					// which secure pid to look for next
 
 	// Transmitter
-	Byte * txq;						// queue for outgoing bytes if needed
+	byteq_t * txq;						// queue for outgoing bytes if needed
     Qtype * npsq;						// point to queue of nps frames to send
     Qtype * spsq;						// queue of SPS frames to send
 	sfpFrame * frameOut;				// point to frame being sent if it is to be returned

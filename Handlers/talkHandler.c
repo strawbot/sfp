@@ -1,7 +1,6 @@
 // Timbre talk handler  Robert Chapman III  Jun 25, 2012
 
-#include "localio.h"
-#include "library.h"
+#include "cli.h"
 #include "services.h"
 #include "framePool.h"
 #include "talkhandler.h"
@@ -20,7 +19,7 @@ static bool keyPacket(Byte * packet, Byte length) // feed input into Timbre
 
 	talkTo = p->who.from;
     while (length-- > WHO_HEADER_SIZE)
-		keyin(*payload++);
+		keyIn(*payload++);
 	return true;
 }
 
@@ -40,7 +39,7 @@ static bool talkPacket(Byte *packet, Byte length) // send packet output to timbr
     Byte * payload = p->whoload;
 
     while (length-- > WHO_HEADER_SIZE)
-		safe_emit(*payload++);
+    	safeEmit(*payload++);
 	return true;
 }
 
@@ -51,7 +50,7 @@ Byte talkWho(void) // who are we talking to
 
 void sendeqSfp(void)
 {
-	Byte length = qbq(eq);
+	Cell length = qbq(emitq);
 
 	if (length) {
 		sfpFrame * frame = getFrame();
@@ -63,7 +62,7 @@ void sendeqSfp(void)
 				length = MAX_WHO_PAYLOAD_LENGTH;
 	
 			while (length--) {
-				Byte c = pullbq(eq);
+				Byte c = pullbq(emitq);
 				
 				if (c != 0xD)
 					*p++ = c;
