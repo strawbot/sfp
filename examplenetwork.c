@@ -1,6 +1,12 @@
 // Simple network: two nodes sharing a link  Robert Chapman III  Apr 7, 2015
 
 #include "node.h"
+#include "stats.h"
+#include "sfpTxSm.h"
+#include "sfpRxSm.h"
+#include "services.h"
+#include "framepool.h"
+#include "byteq.h"
 
 sfpNode_t myNode;
 sfpLink_t uartLink;
@@ -33,6 +39,8 @@ static void txPut(Long x, sfpLink_t * link)
     BytesOut(link);
 }
 
+void sendeqSfp(void);
+
 void sfpMachine(void)
 {
 	Byte i;
@@ -45,10 +53,13 @@ void sfpMachine(void)
 			sfpRxSm(link);
 		}
 	}
+	sendeqSfp();
 	processFrames();
 	activate(sfpMachine);
 }
 
+void setInputq(byteq_t * q);
+void setOutputq(byteq_t * q);
 
 void initSfp(void)
 {
@@ -68,6 +79,8 @@ void initSfp(void)
 	initLink(link, "UART Link");
 	link->rxq = rxq;
 	link->txq = txq; // would be loopback if use same q
+	setInputq(rxq);
+	setOutputq(txq);
 
 	// initialize state machines
 	initSfpRxSM(link, frameq);
@@ -85,6 +98,7 @@ void initSfp(void)
 	// initialize services and stats
     initSfpStats();
 	initServices();
-    
+	initTalkHandler();
+
     activateOnce(sfpMachine);
 }
