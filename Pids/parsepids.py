@@ -15,66 +15,86 @@ printme = 0
 # read in a text file and generate a C header file and a Python file so a
 # single list can be used to keep embedded and host software in sync
 
-pydest = '../../TimbreTalk/' # place a copy here for Timbre Talk
-hdest = '../'
+# platform dependancy
+if sys.platform[:3] == 'win':
+	SEPARATOR = '\\'
+else:
+	SEPARATOR = '/'
 
-pidlist = []
+pydest = '.' + SEPARATOR # place a copy here for TimbreTalk unless empty
+hdest = '.' + SEPARATOR
+
 pidused = [0]*256
+pids = [] # list of pids
+macros = [] # list of macros
+whos = [] # list of who ids
 
 ''' Text file source looks like:
-	ACK_BIT		0x80	used for tagging acked frames. High bit is set for acked frames. next high bit is sfs 1 or 2
-	SPS_BIT		0x40	used for indicating sfs type if an acked frame
-	PID_BITS	0x2F	used to mask off upper bits
+	CONFIG		0x00	for exchanging configurations on a link: spid + specifics; ie testframe
+	SPS_ACK		++		confirm sps; link only - not networkable
 
-	SPS			0x00	used for initializing SPS frame acks
-	SPS_ACK		++		confirm sps
+	SPS			++		used for initializing SPS frame acks and setting id
+
+	PING		++		to check other end
 	
-	macro_name  (some value)  some comments
+	macro_name  some value  some comments
 '''
 def readPids(file):
 	if printme: print "Executing: ", inspect.stack()[0][3]
-	global pidlist
 	pidlast = 0
+	param = pids
 	lines = open(file, 'r').readlines()
 	for line in lines:
 		if line.strip():
 			l = line.split(None, 1) # only split off first entry
-			if l[0] != '//' and len(l) > 1: # remove comments
-				if l[1][0] == '(':
+			if l[0] == '//': # remove comments
+				pass
+			elif l[0] == 'Pids':
+				param = pids
+			elif l[0] == 'Macros':
+				param = macros
+			elif l[0] == 'Whos':
+				param = whos
+			elif len(l) > 1:
+				if l[1][0] == '(': # check for keep as is
 					rest = l[1].rsplit(')',1)
 					pid = rest[0] + ')'
 					comment = rest[1].strip()
 				else:
 					rest = l[1].split(None, 1)
 					pid = rest[0]
+
 					if len(rest) > 1:
 						comment = rest[1].strip()
 					else:
 						comment = ''
+
 					if pid == '++': # increment from last id
 						pidlast += 1
 						pid = hex(pidlast)
 					else:
 						pidlast = int(pid, 0)
-					if pidused[pidlast] == 0:
-						pidused[pidlast] = l[0]
-					else:
-						raise Exception("PID %X declared by %s is already declared by %s." % (pidlast, l[0], pidused[pidlast]))
-				pidlist.append([l[0],pid,comment])
 
+					if param == pids: # prevent duplicate PIDs
+						if pidused[pidlast] == 0:
+							pidused[pidlast] = l[0]
+						else:
+							raise Exception("PID %X declared by %s is already declared by %s." % (pidlast, l[0], pidused[pidlast]))
+				param.append([l[0],pid,comment])
 
 ''' C header looks like:
 #ifndef PID_H
 #define PID_H
 
-#define ACK_BIT 0x80 	// used for tagging acked frames. High bit is set for acked frames. next high bit is sfs 1 or 2
-#define SPS_BIT 0x40 	// used for indicating sfs type if an acked frame
-#define PID_BITS 0x2F 	// used to mask off upper bits
-...
+#define CONFIG 0x00 	// for exchanging configurations on a link: spid + specifics; ie testframe
+#define SPS_ACK 0x1 	// confirm sps; link only - not networkable
+#define SPS 0x2 	// used for initializing SPS frame acks and setting id
 
 // provide a macro of all pids - should only be for pids > WHO_PIDS and < MAX_PIDS
 #define FOR_EACH_PID(P) \
-	P(PID) \
+	P(EVAL) /* 0x9 */ \
+	P(TALK_OUT) /* 0x8 */ \
+
 #endif
 '''
 def generateC(file):
@@ -82,31 +102,41 @@ def generateC(file):
 	file = open(file, 'w')
 	file.write('// PID declarations  %s'%genby())
 	file.write('#ifndef PID_H\n#define PID_H\n\n')
-	for pid in pidlist:
+	for pid in pids:
 		file.write('#define %s %s \t// %s\n'%(pid[0], pid[1], pid[2]))
 	file.write('\n#define FOR_EACH_PID(P) \\\n')
 	unique = {}
-	for p in pidlist:
+	for p in pids:
 		try:
 			int(p[1], 16)
 			unique[p[1]] = p[0] # get unique list using hex value as key
 		except:
 			pass
-	for pid in unique: file.write('\tP(%s) /* %s */ \\\n'%(unique[pid], pid))
+	for pid in unique:
+		file.write('\tP(%s) /* %s */ \\\n'%(unique[pid], pid))
+
+	file.write("\n// Macros\n")
+	for macro in macros:
+		file.write('#define %s %s \t// %s\n' % (macro[0], macro[1], macro[2]))
+
+	file.write("\n// Whos\n")
+	for who in whos:
+		file.write('#define %s %s \t// %s\n' % (who[0], who[1], who[2]))
+
 	file.write('\n#endif')
 	file.close()
 
 
 ''' Python looks like:
-# packet types
-ACK_BIT=0x80	# used for tagging acked frames. High bit is set for acked frames. next high bit is sfs 1 or 2
-SPS_BIT=0x40	# used for indicating sfs type if an acked frame
-PID_BITS=0x2F	# used to mask off upper bits
+# PIDs (packet identifiers)
+CONFIG=0x00	# for exchanging configurations on a link: spid + specifics; ie testframe
+SPS_ACK=0x1	# confirm sps; link only - not networkable
+SPS=0x2	# used for initializing SPS frame acks and setting id
 
 pids = {
-	0x80:"ACK_BIT",	# used for tagging acked frames. High bit is set for acked frames. next high bit is sfs 1 or 2
-	0x40:"SPS_BIT",	# used for indicating sfs type if an acked frame
-	0x2F:"PID_BITS",	# used to mask off upper bits
+	CONFIG:"CONFIG",	# for exchanging configurations on a link: spid + specifics; ie testframe
+	SPS_ACK:"SPS_ACK",	# confirm sps; link only - not networkable
+	SPS:"SPS",	# used for initializing SPS frame acks and setting id
 }
 '''
 def generatePython(filename):
@@ -114,17 +144,31 @@ def generatePython(filename):
 	import shutil
 	file = open(filename, 'w')
 	file.write('# PID declarations  %s'%genby())
-	file.write('# packet types')
-	for pid in pidlist:
+	file.write('# PIDs (packet identifiers)')
+	for pid in pids:
 		file.write('\n%s=%s\t# %s'%(pid[0], pid[1], pid[2]))
 	file.write('\n\npids = {')
-	for pid in pidlist:
-		if pid is pidlist[-1]:
+	for pid in pids:
+		if pid is pids[-1]:
 			comma = ''
 		else:
 			comma = ','
 		file.write('\n\t%s:"%s"%s\t# %s'%(pid[0], pid[0], comma, pid[2]))
 	file.write('\n}')
+
+	file.write("\n\n# macros")
+	for macro in macros:
+		file.write('\n%s=%s\t# %s' % (macro[0], macro[1], macro[2]))
+
+	file.write("\n\n# whos")
+	for who in whos:
+		file.write('\n%s=%s\t# %s' % (who[0], who[1], who[2]))
+
+	file.write('\n\n# who dictionary\nwhoDict = {')
+	for who in whos:
+		file.write("\n    '%s': %s,"%(who[0].replace('_',' ').title(), who[0]))
+	file.write("\n	'':0\n}")
+
 	file.close()
 
 def genby(): # string for heading
@@ -144,14 +188,18 @@ def generatePids():
 		generatePython(pydest+'pids.py')
 
 if __name__ == '__main__':
+	arg = sys.argv[-1] # accept a file argument
+	if arg.endswith('pids.txt') == False:
+		arg = None
+	else:
+		dir, file = arg.rsplit(SEPARATOR, 1)
+		os.chdir(dir)
+		hdest = ''
+		pydest = '.' + SEPARATOR
+
 	try:
 		hfile = hdest+'pids.h'
-		if os.path.isfile(hfile):
-			if fileModTime('pids.txt') > fileModTime(hfile) or \
-				fileModTime('parsepids.py') > fileModTime('pids.txt'):
-				generatePids()
-		else:
-			generatePids()
+		generatePids()
 	except Exception as message:
 		print type(message)     # the exception instance
 		traceback.print_exc(file=sys.stderr)
