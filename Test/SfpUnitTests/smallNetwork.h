@@ -7,11 +7,12 @@ extern "C" {
 }
 
 #define NUM_LINKS 2				// number of links in this node
+#define QLINK_SIZE (MAX_FRAME_LENGTH-3)
 
 extern sfpNode_t nodes[4];
 extern struct qlink{
     sfpLink_t link;
-    NEW_BQ(MAX_FRAME_LENGTH-3, byteq);
+    NEW_BQ(QLINK_SIZE, byteq);
 } links[6];
 
 void initNetworkStats();

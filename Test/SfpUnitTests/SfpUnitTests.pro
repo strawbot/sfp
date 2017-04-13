@@ -16,7 +16,7 @@ TEMPLATE = app
 QMAKE_MAC_SDK = macosx10.12
 
 INCLUDEPATH += ../../ \
-	../../../Timbre \
+        ../../../TimbreOS \
 	../../Handlers
 
 SOURCES += \
@@ -29,7 +29,7 @@ SOURCES += \
 	testRunner.cpp \
     ../../frame.c \
     testpool.cpp \
-    ../../../Timbre/queue.c \
+    ../../../TimbreOS/queue.c \
     mocks.cpp \
     testhandlers.cpp \
     testreceiverstatemachine.cpp \
@@ -37,7 +37,7 @@ SOURCES += \
     testsps.cpp \
     smallNetwork.cpp \
     testtalk.cpp \
-    ../../../Timbre/printersHost.c
+    ../../../TimbreOS/printersHost.c
 
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
@@ -50,12 +50,12 @@ HEADERS += \
 	testspi.h \
     ../../frame.h \
     ../../sfp.h \
-    ../../../Timbre/bktypes.h \
-    ../../../Timbre/byteq.h \
-    ../../../Timbre/machines.h \
-    ../../../Timbre/queue.h \
-    ../../../Timbre/timbre.h \
-    ../../../Timbre/timeout.h \
+    ../../../TimbreOS/ttypes.h \
+    ../../../TimbreOS/byteq.h \
+    ../../../TimbreOS/machines.h \
+    ../../../TimbreOS/queue.h \
+    ../../../TimbreOS/timbre.h \
+    ../../../TimbreOS/timeout.h \
     testpool.h \
     mocks.h \
     testhandlers.h \

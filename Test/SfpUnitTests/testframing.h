@@ -1,7 +1,7 @@
 #ifndef TESTFRAMING_H
 #define TESTFRAMING_H
 
-#include "bktypes.h"
+#include "ttypes.h"
 
 #include <QObject>
 

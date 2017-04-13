@@ -7,7 +7,7 @@ extern "C" {
 
 #include "talkHandler.c"
 
-Byte eq[100];
+Cell emitq[100];
 
 void setTalkOut(vector talkOutPtr)
 {
@@ -21,12 +21,12 @@ void evaluate(Byte *string)
 
 BQUEUE(100, keyq);
 
-void keyin(Byte c)
+void keyIn(Byte c)
 {
     pushbq(c, keyq);
 }
 
-void safe_emit(Byte c)
+void safeEmit(Byte c)
 {
     (void)c;
 }
@@ -56,5 +56,5 @@ void TestTalk::TestKeyin()
     sendNpTo(packet, 9, 2);
     verbose = true;
     runNodes(SFP_SPS_TIME/2);
-    QCOMPARE(qbq(keyq), (Byte)6);
+    QCOMPARE(qbq(keyq), (Cell)6);
 }

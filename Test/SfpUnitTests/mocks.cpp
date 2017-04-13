@@ -35,7 +35,7 @@ void rxFrame(sfpFrame * frame)
     pushq((Cell)frame, alink.receivedPool);
 }
 
-void DOT_PROMPT()
+void dotPrompt()
 {
 
 }

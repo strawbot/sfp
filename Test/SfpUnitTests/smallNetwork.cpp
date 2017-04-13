@@ -126,7 +126,7 @@ void initRoutes()
 
         initSfpRxSM(link, frameqs[i]);
         initSfpTxSM(link, npsqs[i], spsqs[i]);
-        INIT_BQ(links[i].byteq);
+        setsizebq(QLINK_SIZE, links[i].byteq);
         link->rxq = links[i].byteq;
         link->sfpRx = rxAvailable;
         link->sfpGet = rxGet;
