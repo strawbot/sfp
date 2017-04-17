@@ -27,10 +27,10 @@ static bool evalPacket(Byte *packet, Byte l) // silently evaluate input string
 {
 	packet_t * p = (packet_t *)packet;
 
+	(void)l;
 	talkTo = p->who.from;
 	evaluate(p->whoload);
 	return true;
-	(void)l;
 }
 
 static bool talkPacket(Byte *packet, Byte length) // send packet output to timbre output
