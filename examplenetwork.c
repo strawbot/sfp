@@ -10,8 +10,8 @@
 
 sfpNode_t myNode;
 sfpLink_t uartLink;
-BQUEUE(MAX_FRAME_LENGTH-3, rxq);
-BQUEUE(MAX_FRAME_LENGTH-3, txq);
+BQUEUE(MAX_FRAME_LENGTH, rxq);
+BQUEUE(MAX_FRAME_LENGTH, txq);
 QUEUE(MAX_FRAMES, frameq);
 QUEUE(MAX_FRAMES, npsq);
 QUEUE(MAX_FRAMES, spsq);
