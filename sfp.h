@@ -1,8 +1,6 @@
 // SFP interface  Robert Chapman III  Feb 13, 2015
 
 #include "timbre.h"
-#include "parameters.h"
-#include "who.h"
 #include "pids.h"
 
 #ifndef _SFP_H_
@@ -51,6 +49,8 @@ union { \
 	}; \
 	Byte packet[MAX_PAYLOAD_LENGTH]; \
 }
+
+#pragma anon_unions
 
 typedef packet_union packet_t;
 

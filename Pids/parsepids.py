@@ -123,7 +123,7 @@ def generateC(file):
 	for who in whos:
 		file.write('#define %s %s \t// %s\n' % (who[0], who[1], who[2]))
 
-	file.write('\n#endif')
+	file.write('\n#endif\n')
 	file.close()
 
 

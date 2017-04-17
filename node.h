@@ -1,6 +1,7 @@
 // Define node of links  Robert Chapman  Apr 21, 2013
 
 #include "link.h"
+#include "pids.h"
 
 #ifndef node_h
 #define node_h

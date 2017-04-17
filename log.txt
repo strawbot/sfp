@@ -92,3 +92,9 @@ Updates:
    to queue up frames for it from multiple links but not interfere with other handler
    data flow. also ensures in order execution of frames.
 17.frames are timestamped at time of complete frame. This is used to detect stale frames.
+18.Folded who and parameters into pids.txt. Updated python parsing script to have sections
+   in the file for each part. The script can be fed a parameter which is a pids.txt file
+   that is in the source code. It then generates pids.h and pids.py in the same folder.
+   This decouples the repository script from the application and keeps everything it the
+   right place. The folder Who has been removed. The file exampleparameters.h has also
+   been removed.
