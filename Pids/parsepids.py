@@ -5,11 +5,6 @@ import os, sys, time, traceback
 import inspect
 import os.path
 
-# make script runable from anywhere from any os
-abspath = os.path.abspath(__file__)
-dirname = os.path.dirname(abspath)
-os.chdir(dirname)
-
 printme = 0
 
 # read in a text file and generate a C header file and a Python file so a
@@ -182,9 +177,14 @@ if __name__ == '__main__':
 	file = 'pids.txt'
 	try:
 		if arg.endswith(file) == True:
+			# put results in same directory as input file
 			dir, file = os.path.split(arg)
-			os.chdir(dir)
-
+			os.chdir(os.path.join(os.path.abspath('.'),dir))
+		else:
+			# run in default directory
+			abspath = os.path.abspath(__file__)
+			dirname = os.path.dirname(abspath)
+			os.chdir(dirname)
 		generatePids(file)
 	except Exception as message:
 		print (type(message))    # the exception instance
