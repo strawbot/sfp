@@ -51,6 +51,7 @@ Issues:
     never gets used anywhere. Either that means it is useless or something is falling
     through the cracks.
 13. Consider moving spids.h file into SFP generic libarary files.
+14. consider "sfp.h" as the only file a user need include to get all they need.
 
 Updates:
 1. SPS enhanced for network mode - multiple reliable links between two nodes form a

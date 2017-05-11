@@ -88,6 +88,13 @@ typedef struct { // 'BBB0B'
 	Byte payload[];
 } whoPacket_t;
 
+typedef struct { // 'BBBB0B'
+	Byte pid;
+	who_t who;
+	Byte spid;
+	Byte payload[];
+} spidPacket_t;
+
 typedef struct {
 	Byte pid;
 	who_t who;
