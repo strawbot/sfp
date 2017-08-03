@@ -58,7 +58,10 @@ void ireturnFrame(void * frame)
 // interrupts interrupting interrupts
 sfpFrame * iigetFrame(void)
 {
-	return safe(igetFrame());
+	sfpFrame * frame;
+
+	safe(frame = igetFrame());
+	return frame;
 }
 
 void iireturnFrame(void * frame)

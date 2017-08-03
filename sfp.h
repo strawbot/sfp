@@ -50,7 +50,7 @@ union { \
 	Byte packet[MAX_PAYLOAD_LENGTH]; \
 }
 
-#pragma anon_unions
+//#pragma anon_unions
 
 typedef packet_union packet_t;
 
