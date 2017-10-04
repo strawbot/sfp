@@ -8,7 +8,7 @@
 #include "printers.h"
 #include "timeout.h"
 #include "sfpTxSm.h"
-#include "framepool.h"
+#include "framePool.h"
 
 #define SET_NODE_STAT(stat) \
 void stat(void) { sfpNode_t * node = getNode(); node->stat++; }
