@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#include "framepool.h"
+#include "framePool.h"
 #include "frame.h"
 #include "services.h"
 #include "link.h"
