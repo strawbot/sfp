@@ -85,6 +85,6 @@ void initTalkHandler(void) // install packet handlers
 {
 //	setSfpTalk();
 	setPacketHandler(TALK_IN, keyPacket);
-	setPacketHandler(EVAL, evalPacket);
+	setPacketHandler(EVAL_PID, evalPacket);
 	setPacketHandler(TALK_OUT, talkPacket);
 }
