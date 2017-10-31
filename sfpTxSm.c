@@ -23,19 +23,17 @@ Byte pollTrain = 3; // how many consecutive polls to send - empirically determin
 static sfpFrame pollFrame;
 static sfpFrame ackFrame;
 
-// debugging
+// hook for interrupts and other things
 void frameOut(sfpFrame * frame);
-void txSpsState(sfpLink_t * link, spsState_t state);
 
 // setup for transmitter
-static bool transmitFrame(sfpFrame *frame, sfpLink_t *link) //! set a frame up for transmission
+static bool transmitFrame(sfpFrame *frame, Byte length, sfpLink_t *link) //! set a frame up for transmission
 {
 	if (link->sfpBytesToTx == 0)
 	{
-// 		void frameOut(sfpFrame * frame);
-// 		frameOut(frame);
 		link->sfpTxPtr = &frame->length; // set this first
-		link->sfpBytesToTx = frame->length + LENGTH_LENGTH; // set this second
+		link->sfpBytesToTx = length; // set this second
+ 		frameOut(frame);
 		return true;
 	}
 	return false;
@@ -43,17 +41,13 @@ static bool transmitFrame(sfpFrame *frame, sfpLink_t *link) //! set a frame up f
 
 static void transmitPoll(Byte n, sfpLink_t *link) //! set number of poll bytes for transmission
 {
-	if (link->sfpBytesToTx == 0)
-	{
-		link->sfpTxPtr = &pollFrame.length; // set this first
-		link->sfpBytesToTx = n; // set this second
-	}
+    transmitFrame(&pollFrame, n, link);
 }
 
 // support Functions
 static void transmitAckFrame(sfpLink_t *link)
 {
-	if (transmitFrame(&ackFrame, link)) {
+	if (transmitFrame(&ackFrame, ackFrame.length+LENGTH_LENGTH, link)) {
 		SendFrame(link);
 		clearAckSend(link);
 	}
@@ -61,8 +55,9 @@ static void transmitAckFrame(sfpLink_t *link)
 
 static void transmitSpsFrame(sfpLink_t * link)
 {
+    sfpFrame * frame = (sfpFrame *)q(link->spsq);
     if (queryq(link->spsq)) {
-        if (transmitFrame((sfpFrame *)q(link->spsq), link)) {
+        if (transmitFrame(frame, frame->length+LENGTH_LENGTH, link)) {
             clearSpsSend(link);
             SpsSent(link);
        }
@@ -77,13 +72,11 @@ static void transmitNpsFrame(sfpLink_t *link)
 {
     sfpFrame * frame = (sfpFrame *)q(link->npsq);
 
-    if (transmitFrame(frame, link))
-	{
-		if (link->frameOut) // frame has been transmitted return if needed
+    if (transmitFrame(frame, frame->length+LENGTH_LENGTH, link)) {
+		if (link->frameOut) // NPS frame has been transmitted return if needed
 			ireturnFrame(link->frameOut);
         link->frameOut = frame; // set for returning when done
         pullq(link->npsq);
-
 		SendFrame(link);
 	}
 }
