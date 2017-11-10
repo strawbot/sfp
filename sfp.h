@@ -15,6 +15,7 @@
 #define WHO_LENGTH			sizeof(who_t)
 #define WHO_HEADER_SIZE		(PID_LENGTH + WHO_LENGTH)
 #define MAX_WHO_PAYLOAD_LENGTH  (MAX_PACKET_LENGTH - WHO_HEADER_SIZE)
+#define MAX_SPID_PAYLOAD_LENGTH  (MAX_WHO_PAYLOAD_LENGTH - 1)
 #define FRAME_OVERHEAD		(MIN_FRAME_LENGTH - PID_LENGTH)
 #define FRAME_HEADER        (LENGTH_LENGTH + SYNC_LENGTH)
 #define PACKET_HEADER       (PID_LENGTH)
@@ -41,9 +42,15 @@ union { \
 		Byte pid;  /* packet id upper two bits are for ack and sps */ \
 		union { /* for packet with and without routing header who_t */ \
 			Byte payload[MAX_PAYLOAD_LENGTH]; \
-			struct { \
+			struct {\
 				who_t who;	/* routing ids */ \
-				Byte whoload[MAX_WHO_PAYLOAD_LENGTH]; \
+				union { \
+					Byte whoload[MAX_WHO_PAYLOAD_LENGTH]; \
+					struct { \
+						Byte spid; \
+						Byte spidload[MAX_SPID_PAYLOAD_LENGTH]; \
+					}; \
+				}; \
 			}; \
 		}; \
 	}; \
