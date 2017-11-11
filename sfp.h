@@ -15,6 +15,7 @@
 #define WHO_LENGTH			sizeof(who_t)
 #define WHO_HEADER_SIZE		(PID_LENGTH + WHO_LENGTH)
 #define MAX_WHO_PAYLOAD_LENGTH  (MAX_PACKET_LENGTH - WHO_HEADER_SIZE)
+#define MAX_SPID_PAYLOAD_LENGTH  (MAX_WHO_PAYLOAD_LENGTH - SPID_LENGTH)
 #define FRAME_OVERHEAD		(MIN_FRAME_LENGTH - PID_LENGTH)
 #define FRAME_HEADER        (LENGTH_LENGTH + SYNC_LENGTH)
 #define PACKET_HEADER       (PID_LENGTH)
@@ -22,6 +23,7 @@
 #define LENGTH_LENGTH 	1
 #define SYNC_LENGTH		1
 #define PID_LENGTH		1
+#define SPID_LENGTH		1
 #define CHECKSUM_LENGTH 2
 
 // one's complement doesn't create a zero while two's complement does
@@ -43,7 +45,13 @@ union { \
 			Byte payload[MAX_PAYLOAD_LENGTH]; \
 			struct { \
 				who_t who;	/* routing ids */ \
-				Byte whoload[MAX_WHO_PAYLOAD_LENGTH]; \
+				union { \
+					Byte whoload[MAX_WHO_PAYLOAD_LENGTH]; \
+					struct { \
+						Byte spid; \
+						Byte spidload[MAX_SPID_PAYLOAD_LENGTH]; \
+					}; \
+				}; \
 			}; \
 		}; \
 	}; \
