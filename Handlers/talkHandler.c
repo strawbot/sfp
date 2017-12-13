@@ -23,13 +23,13 @@ static bool keyPacket(Byte * packet, Byte length) // feed input into Timbre
 	return true;
 }
 
-static bool evalPacket(Byte *packet, Byte l) // silently evaluate input string
+static bool evalPacket(Byte *packet, Byte length) // silently evaluate input string
 {
 	packet_t * p = (packet_t *)packet;
-
-	(void)l;
+    Byte * string = p->whoload;
+    
 	talkTo = p->who.from;
-	evaluate(p->whoload);
+	listenQuietly(string, length-WHO_HEADER_SIZE);
 	return true;
 }
 
