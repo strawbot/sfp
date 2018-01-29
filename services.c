@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#include "framepool.h"
+#include "framePool.h"
 #include "frame.h"
 #include "services.h"
 #include "link.h"
@@ -182,7 +182,7 @@ static void processLinkFrame(sfpFrame * frame, sfpLink_t *link)
 				break;
 			case SPS: // null packet used for initializing SPS and setting id
 			case PING_BACK: // ignore reply
-			case CONFIG: // ignore config frames
+			case CONFIG_PID: // ignore config frames
 				IgnoreFrame();
 				break;
 			default:
