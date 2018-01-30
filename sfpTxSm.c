@@ -216,6 +216,18 @@ void serviceTx(sfpLink_t *link) // try to send a byte if there are bytes to send
 		transmitSfpByte(link);
 }
 
+void serviceTxq(sfpLink_t *link) // try to send a byte to q queue if there are bytes to send
+{
+    Cell l = link->sfpBytesToTx;
+    Cell q = qbq(link->txq);
+	Cell n =  l < q ? l : q;
+	
+	link->sfpBytesToTx -= n;
+
+	while (n--)
+	    pushbq(*link->sfpTxPtr++, link->txq);
+}
+
 void serviceMasterTx(sfpLink_t *link) // try to send a byte if there are bytes to send
 {
     if (link->sfpBytesToTx)
