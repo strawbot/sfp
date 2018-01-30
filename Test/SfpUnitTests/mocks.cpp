@@ -88,7 +88,7 @@ void initTestLink()
 void initTestNode()
 {
     initTestLink();
-    addLink(DIRECT, &alink);
+    addLink(&alink);
     initSfpStats();
     setRouteTo(DIRECT, &alink);
     setWhoami(DIRECT);

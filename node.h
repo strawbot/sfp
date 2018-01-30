@@ -19,7 +19,7 @@ typedef struct  {
 sfpNode_t *getNode(void);
 sfpNode_t *setNode(sfpNode_t *node);
 sfpLink_t *nodeLink(Long n);
-void addLink(Long n, sfpLink_t * link);
+void addLink(sfpLink_t * link);
 Byte whoami(void);
 void setWhoami(Byte who);
 Byte whatAmI(void);

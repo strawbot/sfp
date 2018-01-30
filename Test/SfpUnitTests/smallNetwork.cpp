@@ -144,24 +144,24 @@ void initRoutes()
 
     initNetworkStats();
     setNode(&nodes[0]);    // Node 1 connections
-    addLink(0, &links[0].link); // attached links
-    addLink(1, &links[2].link);
+    addLink(&links[0].link); // attached links
+    addLink(&links[2].link);
     setRouteTo(2, &links[0].link); // routes for other nodes
     setRouteTo(3, &links[2].link);
     setRouteTo(4, &links[2].link);
     setNode(&nodes[1]);    // Node 2 connections
-    addLink(0, &links[1].link);
+    addLink(&links[1].link);
     setRouteTo(1, &links[1].link);
     setRouteTo(3, &links[1].link);
     setRouteTo(4, &links[1].link);
     setNode(&nodes[2]);    // Node 3 connections
-    addLink(0, &links[3].link);
-    addLink(1, &links[4].link);
+    addLink(&links[3].link);
+    addLink(&links[4].link);
     setRouteTo(1, &links[3].link);
     setRouteTo(2, &links[3].link);
     setRouteTo(4, &links[4].link);
     setNode(&nodes[3]);    // Node 4 connections
-    addLink(0, &links[5].link);
+    addLink(&links[5].link);
     setRouteTo(1, &links[5].link);
     setRouteTo(2, &links[5].link);
     setRouteTo(3, &links[5].link);

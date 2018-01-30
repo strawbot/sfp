@@ -71,9 +71,15 @@ void initSfp(void)
 	// initialize the node
     initNode(&myNode);
     setNode(&myNode);
+	addLink(&uartLink);
+	addLink(&etmLink);
+
     setWhoami(MAIN_CPU);
     setWhatami(0);
- 
+	
+    setRouteTo(MAIN_HOST, &uartLink);
+	setRouteTo(ETM_HOST, &etmLink);
+
 	// initialize UART link
 	link = &uartLink;
 	initLink(link, "UART Link");
@@ -85,15 +91,25 @@ void initSfp(void)
 	// initialize state machines
 	initSfpRxSM(link, frameq);
 	initSfpTxSM(link, npsq, spsq);
-
 	link->sfpRx = rxAvailable;
 	link->sfpGet = rxGet;
 	link->sfpTx = txOk;
 	link->sfpPut = txPut;
 
-	addLink(0, link); // attached links
-	setRouteTo(DIRECT, link);
-    setRouteTo(MAIN_HOST, link); // routes for other nodes
+    // init ETM link
+    initEtmLink(etmTxq, etmRxq);
+	link = &etmLink;
+	initLink(link, "ETM Link");
+	link->disableSps = true;
+	link->rxq = etmRxq;
+	link->txq = etmTxq;
+
+	// initialize state machines
+	initSfpRxSM(link, etmFrameq);
+	initSfpTxSM(link, etmNpsq, etmSpsq);
+    link->serviceTx = serviceTxq;
+	link->sfpRx = rxAvailable;
+	link->sfpGet = rxGet;
 
 	// initialize services and stats
     initSfpStats();

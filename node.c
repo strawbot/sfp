@@ -24,11 +24,14 @@ sfpLink_t *nodeLink(Long n)
 	return NULL;
 }
 
-void addLink(Long n, sfpLink_t * link)
+void addLink(sfpLink_t * link)
 {
     if (currentNode)
-        if (n < NUM_LINKS)
-            currentNode->links[n] = link;
+        for (Byte i = 0; i < NUM_LINKS; i++)
+            if (currentNode->links[i] == NULL) {
+                currentNode->links[i] = link;
+                break;
+            }
 }
 
 Byte whoami(void) // return my identity
