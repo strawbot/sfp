@@ -26,80 +26,81 @@ static sfpFrame ackFrame;
 // hook for interrupts and other things
 void frameOut(sfpFrame * frame);
 
-// setup for transmitter
-static bool transmitFrame(sfpFrame *frame, Byte length, sfpLink_t *link) //! set a frame up for transmission
-{
-	if (link->sfpBytesToTx == 0)
-	{
-		link->sfpTxPtr = &frame->length; // set this first
-		link->sfpBytesToTx = length; // set this second
+//! set a frame up for transmission
+static bool transmitFrame(sfpFrame *frame, sfpLink_t *link, bool keep) {
+    Byte length = frame->length+LENGTH_LENGTH;
+    
+    if (link->txq) { // use queue if its there
+        Long left = leftbq(link->txq);
+        if (left < length)
+            return false;
+            
+        Byte * data = frame->content;
+        
+        while (length--)
+            pushbq(*data++, link->txq);
+ 		frameOut(frame);
+        ireturnFrame(frame);
+        return true;
+    }
+    
+    if (link->sfpBytesToTx == 0) { // frame has moved on
+		link->sfpTxPtr = frame->content; // set this first
+		link->sfpBytesToTx = length+LENGTH_LENGTH; // set this second
+		if (link->frameOut)
+            ireturnFrame(link->frameOut);
+		link->frameOut = (keep) ? frame : NULL;
  		frameOut(frame);
 		return true;
 	}
+	
 	return false;
 }
 
-static void transmitPoll(Byte n, sfpLink_t *link) //! set number of poll bytes for transmission
-{
-    transmitFrame(&pollFrame, n, link);
-}
-
 // support Functions
-static void transmitAckFrame(sfpLink_t *link)
-{
-	if (transmitFrame(&ackFrame, ackFrame.length+LENGTH_LENGTH, link)) {
+static void transmitAckFrame(sfpLink_t *link) {
+	if (transmitFrame(&ackFrame, link, false)) {
 		SendFrame(link);
 		clearAckSend(link);
 	}
 }
 
-static void transmitSpsFrame(sfpLink_t * link)
-{
-    sfpFrame * frame = (sfpFrame *)q(link->spsq);
+static void transmitSpsFrame(sfpLink_t * link) {
     if (queryq(link->spsq)) {
-        if (transmitFrame(frame, frame->length+LENGTH_LENGTH, link)) {
+        if (transmitFrame((sfpFrame *)q(link->spsq), link, false)) {
             clearSpsSend(link);
             SpsSent(link);
-       }
-    }
-    else {
+        }
+    } else {
         clearSpsSend(link);
         SpsqUnderflow(link); // this happens because frame was never sent!
     }
 }
 
-static void transmitNpsFrame(sfpLink_t *link)
-{
-    sfpFrame * frame = (sfpFrame *)q(link->npsq);
-
-    if (transmitFrame(frame, frame->length+LENGTH_LENGTH, link)) {
-		if (link->frameOut) // NPS frame has been transmitted return if needed
-			ireturnFrame(link->frameOut);
-        link->frameOut = frame; // set for returning when done
+static void transmitNpsFrame(sfpLink_t *link) {
+    if (transmitFrame((sfpFrame *)q(link->npsq), link, true)) {
         pullq(link->npsq);
 		SendFrame(link);
 	}
 }
 
-static void transmitPollFrame(sfpLink_t *link)
-{
+static void transmitPollFrame(sfpLink_t *link) {
 	Byte n = pollTrain;
 
 	if (bytesToReceive(link) > n)
 		n = bytesToReceive(link);
-	transmitPoll(n,link);
+    pollFrame.length = n;
+    transmitFrame(&pollFrame, link, false);
 	clearPollSend(link);
 	PollFrame(link);
 }
 
 // SPS transmitter state machine
-static void setSpsState(sfpLink_t * link, spsState_t state)
-{
+static void setSpsState(sfpLink_t * link, spsState_t state) {
 	link->txSps = state;
 }
 
-static void setSpsBits(sfpLink_t * link)
-{
+static void setSpsBits(sfpLink_t * link) {
 	sfpFrame * frame = (sfpFrame *)q(link->spsq);
 	
 	frame->pid &= PID_BITS;
@@ -115,8 +116,7 @@ static void setSpsBits(sfpLink_t * link)
 	addChecksum(frame); // must recalculate since bits were changed
 }
 
-static void checkSps(sfpLink_t * link)
-{
+static void checkSps(sfpLink_t * link) {
 	if (link->disableSps) return;
 
     if (testAckReceived(link)) {
@@ -143,7 +143,6 @@ static void checkSps(sfpLink_t * link)
 		}
 	}
 
- 
 	switch(link->txSps) {
 	case ANY_SPS:
 	case NO_SPS:
@@ -191,18 +190,15 @@ static void checkSps(sfpLink_t * link)
 }
 
 // API
-void spsAcknowledged(sfpLink_t *link)
-{
+void spsAcknowledged(sfpLink_t *link) {
 	setAckReceived(link);
 }
 
-void spsReceived(sfpLink_t *link)
-{
+void spsReceived(sfpLink_t *link) {
 	setAckSend(link);
 }
 
-void transmitSfpByte(sfpLink_t *link) // send a byte if transmitter is able to
-{
+void transmitSfpByte(sfpLink_t *link) { // send a byte if transmitter is able to
     if (link->sfpTx(link))
 	{
 		link->sfpBytesToTx--;
@@ -210,14 +206,12 @@ void transmitSfpByte(sfpLink_t *link) // send a byte if transmitter is able to
 	}
 }
 
-void serviceTx(sfpLink_t *link) // try to send a byte if there are bytes to send
-{
+void serviceTx(sfpLink_t *link) { // try to send a byte if there are bytes to send
 	if (link->sfpBytesToTx)
 		transmitSfpByte(link);
 }
 
-void serviceTxq(sfpLink_t *link) // try to send a byte to q queue if there are bytes to send
-{
+void serviceTxq(sfpLink_t *link) { // try to send a byte to q queue if there are bytes to send
     Cell l = link->sfpBytesToTx;
     Cell q = leftbq(link->txq);
 	Cell n =  l < q ? l : q;
@@ -228,8 +222,7 @@ void serviceTxq(sfpLink_t *link) // try to send a byte to q queue if there are b
 	    pushbq(*link->sfpTxPtr++, link->txq);
 }
 
-void serviceMasterTx(sfpLink_t *link) // try to send a byte if there are bytes to send
-{
+void serviceMasterTx(sfpLink_t *link) { // try to send a byte if there are bytes to send
     if (link->sfpBytesToTx)
         transmitSfpByte(link);
     if (checkTimeout(&link->pollTo)) {
@@ -238,8 +231,7 @@ void serviceMasterTx(sfpLink_t *link) // try to send a byte if there are bytes t
     }
 }
 
-void resetTransmitter(sfpLink_t *link)
-{
+void resetTransmitter(sfpLink_t *link) {
 	link->sfpBytesToTx = 0;
 	link->txFlags = 0;
 
@@ -251,23 +243,16 @@ void resetTransmitter(sfpLink_t *link)
 		ireturnFrame((sfpFrame *)pullq(link->npsq));
 }
 
-void sfpTxSm(sfpLink_t *link) //! continue to send a frame or start a new one or just exit if all done
-{
+void sfpTxSm(sfpLink_t *link) { //! continue to send a frame or start a new one or just exit if all done
     checkSps(link);
 	// prioritized transmission actions
     if 		(testAckSend(link))		transmitAckFrame(link);
     else if (testSpsSend(link))		transmitSpsFrame(link);
     else if (queryq(link->npsq))    transmitNpsFrame(link);
     else if (testPollSend(link))	transmitPollFrame(link);
-    else if (link->sfpBytesToTx == 0) {
-		if (link->frameOut) // frame has been transmitted return if needed
-			ireturnFrame(link->frameOut);
-		link->frameOut = NULL;
-	}
 }
 
-void initSfpTxSM(sfpLink_t *link, Qtype * npsq, Qtype * spsq) //! initialize SFP receiver state machine
-{
+void initSfpTxSM(sfpLink_t *link, Qtype * npsq, Qtype * spsq) { //! initialize SFP receiver state machine
 	who_t who = {DIRECT, DIRECT};
 
 	setTimeout(SFP_SPS_TIME, &link->spsTo);  // startup sps service - use giveup timeout

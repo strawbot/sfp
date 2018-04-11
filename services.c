@@ -317,6 +317,7 @@ void sendNpsFrame(sfpFrame * frame, Byte packetLength)
 	if (link) {
 		addSfpFrame(frame, packetLength);
 		pushq((Cell)frame, link->npsq);
+		sfpTxSm(link);
 	} else {
 		NoDest();
 		returnFrame(frame);
