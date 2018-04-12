@@ -26,8 +26,10 @@ static sfpFrame ackFrame;
 // hook for interrupts and other things
 void frameOut(sfpFrame * frame);
 
+typedef enum { NOT_POOL, FROM_POOL }frame_t;
+
 //! set a frame up for transmission
-static bool transmitFrame(sfpFrame *frame, sfpLink_t *link, bool keep) {
+static bool transmitFrame(sfpFrame *frame, sfpLink_t *link, frame_t source) {
     Byte length = frame->length+LENGTH_LENGTH;
     
     if (link->txq) { // use queue if its there
@@ -39,8 +41,9 @@ static bool transmitFrame(sfpFrame *frame, sfpLink_t *link, bool keep) {
         
         while (length--)
             pushbq(*data++, link->txq);
+        if (source == FROM_POOL)
+            ireturnFrame(frame);
  		frameOut(frame);
-        ireturnFrame(frame);
         return true;
     }
     
@@ -49,7 +52,7 @@ static bool transmitFrame(sfpFrame *frame, sfpLink_t *link, bool keep) {
 		link->sfpBytesToTx = length+LENGTH_LENGTH; // set this second
 		if (link->frameOut)
             ireturnFrame(link->frameOut);
-		link->frameOut = (keep) ? frame : NULL;
+		link->frameOut = (source == FROM_POOL) ? frame : NULL;
  		frameOut(frame);
 		return true;
 	}
@@ -59,7 +62,7 @@ static bool transmitFrame(sfpFrame *frame, sfpLink_t *link, bool keep) {
 
 // support Functions
 static void transmitAckFrame(sfpLink_t *link) {
-	if (transmitFrame(&ackFrame, link, false)) {
+	if (transmitFrame(&ackFrame, link, NOT_POOL)) {
 		SendFrame(link);
 		clearAckSend(link);
 	}
@@ -67,7 +70,7 @@ static void transmitAckFrame(sfpLink_t *link) {
 
 static void transmitSpsFrame(sfpLink_t * link) {
     if (queryq(link->spsq)) {
-        if (transmitFrame((sfpFrame *)q(link->spsq), link, false)) {
+        if (transmitFrame((sfpFrame *)q(link->spsq), link, NOT_POOL)) {
             clearSpsSend(link);
             SpsSent(link);
         }
@@ -78,7 +81,7 @@ static void transmitSpsFrame(sfpLink_t * link) {
 }
 
 static void transmitNpsFrame(sfpLink_t *link) {
-    if (transmitFrame((sfpFrame *)q(link->npsq), link, true)) {
+    if (transmitFrame((sfpFrame *)q(link->npsq), link, FROM_POOL)) {
         pullq(link->npsq);
 		SendFrame(link);
 	}
@@ -90,7 +93,7 @@ static void transmitPollFrame(sfpLink_t *link) {
 	if (bytesToReceive(link) > n)
 		n = bytesToReceive(link);
     pollFrame.length = n;
-    transmitFrame(&pollFrame, link, false);
+    transmitFrame(&pollFrame, link, NOT_POOL);
 	clearPollSend(link);
 	PollFrame(link);
 }
