@@ -29,7 +29,7 @@ static bool evalPacket(Byte *packet, Byte length) // silently evaluate input str
     Byte * string = p->whoload;
     
 	talkTo = p->who.from;
-	listenQuietly(string, length-WHO_HEADER_SIZE);
+	evaluate(string);
 	return true;
 }
 
