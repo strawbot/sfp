@@ -11,7 +11,7 @@
 #include "printers.h"
 
 static QUEUE(MAX_FRAMES, poolq);
-static Byte frames[MAX_FRAMES][(MAX_SFP_SIZE + 3) & ~0x3];
+static Byte frames[MAX_FRAMES][sizeof(sfpFrame)];
 
 void initFramePool(void)
 {
