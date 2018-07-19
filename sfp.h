@@ -72,6 +72,7 @@ typedef struct sfpFrame { // ''
             Byte length; // covers following bytes
             Byte sync;	// two's complement of length used to sync start of frame
             packet_union;
+            Byte __checksum[CHECKSUM_LENGTH]; // only included for sizing - not for indexing
         };
 	};
 } sfpFrame;
