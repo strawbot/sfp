@@ -44,16 +44,18 @@ static bool transmitFrame(sfpFrame *frame, sfpLink_t *link, frame_t source) {
         if (source == FROM_POOL)
             ireturnFrame(frame);
  		frameOut(frame);
+ 		
         return true;
     }
     
     if (link->sfpBytesToTx == 0) { // frame has moved on
 		link->sfpTxPtr = frame->content; // set this first
-		link->sfpBytesToTx = length+LENGTH_LENGTH; // set this second
+		link->sfpBytesToTx = length; // set this second
 		if (link->frameOut)
             ireturnFrame(link->frameOut);
 		link->frameOut = (source == FROM_POOL) ? frame : NULL;
  		frameOut(frame);
+ 		
 		return true;
 	}
 	
