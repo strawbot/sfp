@@ -115,7 +115,7 @@ void TestServices::TestPidList()
     initTestNode();
     alink.disableSps = true;
     alink.sfpRx = falseSfpRx;
-    setPacketHandler(CONFIG, falseHandler);
+    setPacketHandler(CONFIG_PID, falseHandler);
 
     for (Byte i=0; i<3; i++)
         sendNpTo(packet, sizeof(packet), DIRECT);

@@ -40,7 +40,7 @@ void dotPrompt()
 
 }
 
-#include "machines.c"
+//#include "machines.c"
 
 #include "timeout.c"
 
@@ -80,7 +80,7 @@ void initTestLink()
     initServices();
     initNode(&anode);
     setNode(&anode);
-    packet[0] = CONFIG;    // pid
+    packet[0] = CONFIG_PID;    // pid
     packet[1] = DIRECT;        // to
     packet[2] = DIRECT;        // from
 }
@@ -157,7 +157,7 @@ void frameSay(sfpFrame * frame, const char * dir)
     oss << " Frame@" << timestamp << " " << spstag << " PID:";
 
     switch(pid&PID_BITS) {
-    case CONFIG:		oss<< "CONFIG "; break;
+    case CONFIG_PID:	oss<< "CONFIG "; break;
     case PING:			oss<< "PING "; break;
     case PING_BACK:		oss<< "PING_BACK "; break;
     case SPS:			oss<< "SPS "; break;
@@ -166,7 +166,7 @@ void frameSay(sfpFrame * frame, const char * dir)
     case VERSION_NO:	oss<< "VERSION_NO "; break;
     case TALK_IN:		oss<< "TALK_IN "; break;
     case TALK_OUT:		oss<< "TALK_OUT "; break;
-    case EVAL:			oss<< "EVAL "; break;
+    case EVAL_PID:		oss<< "EVAL "; break;
     case CALL_CODE:		oss<< "CALL_CODE "; break;
     case MEMORY:		oss<< "MEM_READ "; break;
     case FILES:		    oss<< "MEM_DATA "; break;
@@ -230,4 +230,13 @@ bool falseSfpRx(sfpLink_t * link)
     (void)link;
 }
 
+void listenQuietly(Byte * string, Byte length) {
+    while (length--)
+        keyIn(*string++);
+}
+
+void protectCli() { }
+void unprotectCli() { }
+Cell ret() { return 0; }
+void runMachines() { }
 }
