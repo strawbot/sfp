@@ -6,7 +6,6 @@ extern "C" {
 #include "link.h"
 }
 
-#define NUM_LINKS 2				// number of links in this node
 #define QLINK_SIZE (MAX_FRAME_LENGTH-3)
 
 extern sfpNode_t nodes[4];

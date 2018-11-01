@@ -43,19 +43,25 @@ packetHandler_t setPacketHandler(Byte pid, packetHandler_t handler)
 
 static void linkFrame(sfpFrame *frame)
 {
-	sfpFrame * link = (sfpFrame *)&packetHandlers[frame->pid].list;
-	
-	while (link->list != NULL) // find end of list
-		link = link->list;
-	link->list = frame;
-	frame->list = NULL;
+    if (validFrame(frame)) {
+        sfpFrame * link = (sfpFrame *)&packetHandlers[frame->pid].list;
+    
+        while (link->list != NULL) // find end of list
+            link = link->list;
+        link->list = frame;
+        frame->list = NULL;
+    }
 }
 
 static void unlinkFrame(Byte n)
 {
 	sfpFrame * link = (sfpFrame *)&packetHandlers[n].list;
+	sfpFrame * next = link->list->list;
 	
-	link->list = link->list->list;
+	if (next)
+		if (!validFrame(next))
+			return;
+	link->list = next;
 }
 
 // SFP Frame decoder 
@@ -216,14 +222,16 @@ void handleFrame(Byte n)
 	sfpFrame * frame = packetHandlers[n].list;
 	
 	if (handler != 0 && frame != 0) {
-		if (handler(frame->packet, frame->length - FRAME_OVERHEAD))
-			PacketProcessed();
-		else if ((getTime() - frame->timestamp) > STALE_RX_FRAME) // check for stale frame
-			UnDelivered();
-		else
-			return;
-		unlinkFrame(frame->pid);
-		returnFrame(frame);
+		if (validFrame(frame)) {
+			if (handler(frame->packet, frame->length - FRAME_OVERHEAD))
+				PacketProcessed();
+			else if ((getTime() - frame->timestamp) > STALE_RX_FRAME) // check for stale frame
+				UnDelivered();
+			else
+				return;
+			unlinkFrame(frame->pid);
+			returnFrame(frame);
+		}
 	}
 }
 

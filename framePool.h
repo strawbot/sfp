@@ -12,3 +12,4 @@ void ireturnFrame(void * frame);
 sfpFrame * iigetFrame(void);
 void iireturnFrame(void * frame);
 void listFrames(void);
+bool validFrame(void * frame);

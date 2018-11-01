@@ -44,7 +44,7 @@ void TestRouting::TestNoRoutes()
         for (Long i = 1; i <= numnodes; i++) {
             selectNode(n);
             if (i != n)
-                sendPacket(CONFIG, i);
+                sendPacket(CONFIG_PID, i);
         }
     runNodes(SFP_SPS_TIME/2);
 //    networkStats();

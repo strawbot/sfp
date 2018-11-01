@@ -11,7 +11,7 @@
 #include "printers.h"
 
 static QUEUE(MAX_FRAMES, poolq);
-static Byte frames[MAX_FRAMES][(MAX_SFP_SIZE + 3) & ~0x3];
+static Byte frames[MAX_FRAMES][sizeof(sfpFrame)];
 
 void initFramePool(void)
 {
@@ -36,9 +36,18 @@ sfpFrame * getFrame(void)
 	return NULL;
 }
 
+bool validFrame(void * frame) {
+    if ((Cell)frame - (Cell)frames > sizeof(frames)) {
+		print("\nError - Invalid frame:"), printHex((Cell)frame);
+		return false;
+	}
+	return true;		
+}
+
 void returnFrame(void * frame)
 {
-	stuffq((Cell)frame, poolq);
+	if (validFrame(frame))
+		stuffq((Cell)frame, poolq);
 }
 
 // interrupt access
@@ -52,7 +61,8 @@ sfpFrame * igetFrame(void)
 
 void ireturnFrame(void * frame)
 {
-	pushq((Cell)frame, poolq);
+	if (validFrame(frame))
+		pushq((Cell)frame, poolq);
 }
 
 // interrupts interrupting interrupts

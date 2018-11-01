@@ -48,6 +48,14 @@ Byte talkWho(void) // who are we talking to
 	return talkTo;
 }
 
+void talkToMe() {
+    talkTo = ME;
+}
+
+void talkToThem(Byte who) {
+	talkTo = who;
+}
+
 void sendeqSfp(void)
 {
 	Cell length = qbq(emitq);
