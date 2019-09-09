@@ -30,8 +30,9 @@ Long framePoolLeft(void)
 // machine access
 sfpFrame * getFrame(void)
 {
-    if (framePoolLeft() > 0)
+    if (framePoolLeft() > 0) {
         return (sfpFrame *)pullq(poolq);
+    }
 	FramePoolEmpty();
 	return NULL;
 }
@@ -53,8 +54,9 @@ void returnFrame(void * frame)
 // interrupt access
 sfpFrame * igetFrame(void)
 {
-    if (framePoolLeft() > 1)
+    if (framePoolLeft() > 1) {
         return (sfpFrame *)popq(poolq);
+    }
 	FramePoolEmpty();
 	return NULL;
 }

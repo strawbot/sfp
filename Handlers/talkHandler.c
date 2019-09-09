@@ -38,8 +38,9 @@ static bool talkPacket(Byte *packet, Byte length) // send packet output to timbr
 	packet_t * p = (packet_t *)packet;
     Byte * payload = p->whoload;
 
-    while (length-- > WHO_HEADER_SIZE)
+    while (length-- > WHO_HEADER_SIZE) {
     	safeEmit(*payload++);
+    }
 	return true;
 }
 
