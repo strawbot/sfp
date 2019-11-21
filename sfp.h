@@ -1,6 +1,9 @@
 // SFP interface  Robert Chapman III  Feb 13, 2015
 
-#include "timbre.h"
+#include "tea.h"
+#include "timeout.h"
+#include "byteq.h"
+#include "queue.h"
 #include "pids.h"
 
 #ifndef _SFP_H_

@@ -23,9 +23,6 @@ Byte pollTrain = 3; // how many consecutive polls to send - empirically determin
 static sfpFrame pollFrame;
 static sfpFrame ackFrame;
 
-// hook for interrupts and other things
-void frameOut(sfpFrame * frame);
-
 typedef enum { NOT_POOL, FROM_POOL }frame_t;
 
 //! set a frame up for transmission

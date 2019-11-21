@@ -97,8 +97,6 @@ static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame 
 			GoodFrame(link);
 			link->frameIn->timestamp = getTime();
 			pushq((Cell)link->frameIn, link->receivedPool); // pass on to frame layer
-// 			void frameIn(sfpFrame * frame);
-// 			frameIn(link->frameIn);
 			link->sfpRxState = ACQUIRING;
 			Acquiring(link);
 		}
