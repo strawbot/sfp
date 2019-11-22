@@ -31,8 +31,10 @@ static bool transmitFrame(sfpFrame *frame, sfpLink_t *link, frame_t source) {
     
     if (link->txq) { // use queue if its there
         Long left = leftbq(link->txq);
-        if (left < length)
+        if (left < length) {
+            link->serviceTx(link);
             return false;
+        }
             
         Byte * data = frame->content;
         
@@ -40,6 +42,7 @@ static bool transmitFrame(sfpFrame *frame, sfpLink_t *link, frame_t source) {
             pushbq(*data++, link->txq);
         if (source == FROM_POOL)
             ireturnFrame(frame);
+        link->serviceTx(link);
  		frameOut(frame);
  		
         return true;
