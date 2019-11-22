@@ -57,7 +57,7 @@ void talkToThem(Byte who) {
 	talkTo = who;
 }
 
-void sendeqSfp(void)
+bool sendeqSfp(void)
 {
 	Cell length = qbq(emitq);
 
@@ -86,7 +86,9 @@ void sendeqSfp(void)
 			} else
 				returnFrame(frame);
 		}
+		return true;
 	}
+	return false;
 }
 
 // TODO: need to direct input to rxq or keyq; keep Timbre separate from SFP

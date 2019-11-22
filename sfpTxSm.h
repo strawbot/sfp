@@ -10,6 +10,8 @@
 #define SEND_SPS_BIT		0x04
 #define RCVD_ACK_BIT		0x08
 
+#define TX_WORK             0x0F
+
 // Macros
 #define bytesToSend(link)		(link->sfpBytesToTx != 0)
 

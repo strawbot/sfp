@@ -267,6 +267,20 @@ void processFrames(void) // queue up frame for handler
 	runHandlers();
 }
 
+bool processFramesNeeded() {
+	for (Byte n = 0; n < NUM_LINKS; n++) {
+        sfpLink_t *link = nodeLink(n); // scan for available link
+		if (link  && queryq(link->receivedPool) != 0) // check for queued frames
+			return true;
+	}
+
+	for (Byte n = 0; n < MAX_PIDS; n++)
+		if (getPacketHandler(n) && packetHandlers[n].list)
+			return true;
+
+	return false;
+}
+
 // Packet services
 static bool sendPacketToQ(Byte *packet, Byte length, Qtype *que)
 {

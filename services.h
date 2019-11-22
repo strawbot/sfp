@@ -21,5 +21,6 @@ sfpFrame * getHandlerFrame(Byte pid);
 void distributeFrames(void);
 void runHandlers(void);
 void processFrames(void);
+bool processFramesNeeded();
 
 void initServices(void);
