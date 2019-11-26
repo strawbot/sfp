@@ -5,10 +5,9 @@
 #include "framePool.h"
 #include "talkhandler.h"
 #include "node.h"
+#include "tea.h"
 
-static bool keyPacket(Byte *packet, Byte length);
-static bool evalPacket(Byte *packet, Byte);
-static bool talkPacket(Byte *packet, Byte length);
+Event RxLine;
 
 static Byte talkTo = 0;
 
@@ -20,6 +19,7 @@ static bool keyPacket(Byte * packet, Byte length) // feed input into Timbre
 	talkTo = p->who.from;
     while (length-- > WHO_HEADER_SIZE)
 		keyIn(*payload++);
+	later(*RxLine);
 	return true;
 }
 
@@ -30,6 +30,7 @@ static bool evalPacket(Byte *packet, Byte length) // silently evaluate input str
     
 	talkTo = p->who.from;
     listenQuietly(string, length-WHO_HEADER_SIZE);
+	later(*RxLine);
 	return true;
 }
 
@@ -95,6 +96,7 @@ bool sendeqSfp(void)
 void initTalkHandler(void) // install packet handlers
 {
 //	setSfpTalk();
+	never(RxLine);
 	setPacketHandler(TALK_IN, keyPacket);
 	setPacketHandler(EVAL_PID, evalPacket);
 	setPacketHandler(TALK_OUT, talkPacket);

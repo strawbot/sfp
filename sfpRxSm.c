@@ -9,6 +9,9 @@
 #include "framePool.h"
 #include "stats.h"
 #include "link.h"
+#include "tea.h"
+
+Event RxFrame;
 
 // Local Declarations
 static bool sfpLengthOk(Byte length, sfpLink_t *link);
@@ -97,6 +100,7 @@ static void Receiving(Byte data, sfpLink_t *link) //! accumulate bytes in frame 
 			GoodFrame(link);
 			link->frameIn->timestamp = getTime();
 			pushq((Cell)link->frameIn, link->receivedPool); // pass on to frame layer
+			later(*RxFrame);
 			link->sfpRxState = ACQUIRING;
 			Acquiring(link);
 		}
@@ -147,6 +151,7 @@ bool sfpRxSm(sfpLink_t *link)
 //! initialize SFP receiver state machine
 void initSfpRxSM(sfpLink_t *link, Qtype * receivedPool)
 {
+	never(RxFrame);
 	link->rxSps = ANY_SPS;
 	link->sfpRxState = ACQUIRING;
     zeroq(receivedPool);
