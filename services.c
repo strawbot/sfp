@@ -330,6 +330,8 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 	return true;
 }
 
+Event NpsEvent;
+
 // send frame already allocated from pool
 void sendNpsFrame(sfpFrame * frame, Byte packetLength)
 {
@@ -340,6 +342,7 @@ void sendNpsFrame(sfpFrame * frame, Byte packetLength)
 		addSfpFrame(frame, packetLength);
 		pushq((Cell)frame, link->npsq);
 		sfpTxSm(link);
+		now(*NpsEvent);
 	} else {
 		NoDest();
 		returnFrame(frame);
@@ -349,6 +352,7 @@ void sendNpsFrame(sfpFrame * frame, Byte packetLength)
 // initialization
 void initServices(void) //! initialize SFP receiver state machine
 {
+	never(NpsEvent);
 	for (Byte i=0; i<MAX_PIDS; i++) {
 		packetHandlers[i].handler = NULL;
 		packetHandlers[i].list = NULL;

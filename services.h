@@ -1,6 +1,7 @@
 // SFP Services: sending packets and packet handlers  Robert Chapman III  Feb 20, 2015
 
 #include "sfp.h"
+#include "tea.h"
 
 #ifndef _SERVICES_H_
 #define _SERVICES_H_
@@ -8,6 +9,8 @@
 typedef bool (*packetHandler_t)(Byte *packet, Byte length);
 
 #endif
+
+extern Event NpsEvent;
 
 packetHandler_t getPacketHandler(Byte pid);
 packetHandler_t setPacketHandler(Byte pid, packetHandler_t handler);
