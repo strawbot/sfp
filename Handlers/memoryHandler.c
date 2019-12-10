@@ -69,14 +69,14 @@ static memoryPacket_t wconfirm;
 static void writeReply(void)
 {
 	if (false == sendNpTo((Byte *)&wconfirm, sizeof(wconfirm), wconfirm.who.to))
-		activate(writeReply);
+		later(writeReply);
 }
 
 // Notify when the flash has finished writing
 static void writeConfirm(void)
 {
 	if (flashBusy())
-		activate(writeConfirm);
+		later(writeConfirm);
 	else {
 		wconfirm.data[0] = flashError();
 		writeReply();
@@ -112,14 +112,14 @@ static erasePacket_t econfirm;
 static void eraseReply(void)
 {
 	if (false == sendNpTo((Byte *)&econfirm, sizeof(econfirm), econfirm.who.to))
-		activate(eraseReply);
+		later(eraseReply);
 }
 
 // Reply once flash is finished erasing
 static void eraseConfirm(void)
 {
 	if (flashBusy())
-		activate(eraseConfirm);
+		later(eraseConfirm);
 	else {
 		econfirm.flag = flashError();
 		eraseReply();
