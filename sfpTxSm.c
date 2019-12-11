@@ -10,6 +10,10 @@
 
 #include <string.h>
 
+#ifndef frameOut
+void frameOut(sfpFrame * frame);
+#endif
+
 /*
  Transmitter is either sending a frame, or waiting for a frame
  if an sps frame is ready to send then it is sent before the nps frame
