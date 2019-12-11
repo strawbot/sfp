@@ -11,7 +11,7 @@
 #include "link.h"
 #include "tea.h"
 
-Event RxFrame;
+Event RxFrame = {no_action};
 
 // Local Declarations
 static bool sfpLengthOk(Byte length, sfpLink_t *link);

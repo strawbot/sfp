@@ -7,7 +7,7 @@
 #include "node.h"
 #include "tea.h"
 
-Event RxLine;
+Event RxLine = {no_action};
 
 static Byte talkTo = 0;
 

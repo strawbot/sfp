@@ -330,7 +330,7 @@ bool sendSpTo(Byte *packet, Byte length, Byte to) //! send a packet using SPS
 	return true;
 }
 
-Event NpsEvent;
+Event NpsEvent = {no_action};
 
 // send frame already allocated from pool
 void sendNpsFrame(sfpFrame * frame, Byte packetLength)
