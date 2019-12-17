@@ -307,9 +307,14 @@ bool sendNpTo(Byte *packet, Byte length, Byte to) //! send a packet using NPS
 {
 	sfpLink_t *link = routeTo(to);
 	
-	if (link)
-		return sendPacketToQ(packet, length, link->npsq);
-
+	if (link) {
+		if (sendPacketToQ(packet, length, link->npsq)) {
+			now(*NpsEvent);
+			return true;
+		}
+		else
+			return false;
+	}
 	// TODO: If for me - accept it?
 	NoDest();
 	return true;
