@@ -357,6 +357,7 @@ void sendNpsFrame(sfpFrame * frame, Byte packetLength)
 // initialization
 void initServices(void) //! initialize SFP receiver state machine
 {
+	namedAction(processFrames);
 	never(NpsEvent);
 	for (Byte i=0; i<MAX_PIDS; i++) {
 		packetHandlers[i].handler = NULL;
