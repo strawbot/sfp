@@ -11,7 +11,7 @@
 #include "printers.h"
 
 static QUEUE(MAX_FRAMES, poolq);
-static Byte frames[MAX_FRAMES][sizeof(sfpFrame)];
+static sfpFrame frames[MAX_FRAMES];
 
 void initFramePool(void)
 {
@@ -19,7 +19,7 @@ void initFramePool(void)
 
     zeroq(poolq);
 	while (n--)
-		pushq((Cell)&frames[n][0], poolq);
+		pushq((Cell)&frames[n], poolq);
 }
 
 Long framePoolLeft(void)
@@ -87,5 +87,5 @@ void listFrames(void)
 	Long n = MAX_FRAMES;
 
 	while (n--)
-        printHex((Cell)&frames[n][0]);
+        printHex((Cell)&frames[n]);
 }
